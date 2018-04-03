@@ -1,0 +1,7 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    // https://github.com/vuejs/vue/issues/6999
+    "declaration": false
+  }
+}

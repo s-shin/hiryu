@@ -1,0 +1,98 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body { height: 100%; }
+
+body { margin: 0; }
+
+.hiryu_game {
+  display: flex;
+  flex-direction: row;
+  background-color: #D3E08B;
+
+  &_column {
+    // justify-content: space-between;
+
+    &-side {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+
+      .hiryu_hand {
+        margin: 2% 0.5%;
+      }
+
+      .hiryu_hand-black {
+        order: 10;
+      }
+    }
+  }
+}
+
+$board_height: 270;
+
+.hiryu_board {
+  // In general, the real board size is:
+  // W: 33.3cm (1尺1寸)
+  // H: 36.4cm (1尺2寸)
+  width: $board_height * 33.3 / 36.4 + 0px;
+  height: $board_height + 0px;
+  background-image: url(./img/board.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  padding: 3.25%;
+
+  &_row {
+    display: flex;
+    flex-direction: row-reverse;
+    height: 11.1%;
+  }
+
+  &_cell {
+    width: 11.1%;
+    height: 100%;
+
+    &:before {
+      display: block;
+      content: "";
+      width: 100%;
+      height: 100%;
+      background-size: 87%;
+      background-origin: content-box;
+      background-position: center -10%;
+      background-repeat: no-repeat;
+    }
+
+    &-white:before {
+      transform: rotate(180deg);
+    }
+
+    &-fu:before { background-image: url(./img/piece_fu.png); }
+    &-ky:before { background-image: url(./img/piece_ky.png); }
+    &-ke:before { background-image: url(./img/piece_ke.png); }
+    &-gi:before { background-image: url(./img/piece_gi.png); }
+    &-ki:before { background-image: url(./img/piece_ki.png); }
+    &-ka:before { background-image: url(./img/piece_ka.png); }
+    &-hi:before { background-image: url(./img/piece_hi.png); }
+    &-ou:before { background-image: url(./img/piece_ou.png); }
+    &-gy:before { background-image: url(./img/piece_gy.png); }
+    &-to:before { background-image: url(./img/piece_to.png); }
+    &-ny:before { background-image: url(./img/piece_ny.png); }
+    &-nk:before { background-image: url(./img/piece_nk.png); }
+    &-ng:before { background-image: url(./img/piece_ng.png); }
+    &-um:before { background-image: url(./img/piece_um.png); }
+    &-ry:before { background-image: url(./img/piece_ry.png); }
+  }
+}
+
+$hand_height: $board_height * 0.33;
+
+.hiryu_hand {
+  width: $hand_height * 489 / 551 + 0px;
+  height: $hand_height + 0px;
+  background-image: url(./img/hand.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  padding: 1% + (($board_height - 360) / 90 * 0.25); // adjust for image
+}

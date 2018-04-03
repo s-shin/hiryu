@@ -1,0 +1,56 @@
+{
+  "name": "@hiryu/simple-usi-server",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "scripts": {
+    "build": "rimraf lib && tsc",
+    "lint": "tslint src/**/*",
+    "test": "jest",
+    "serve": "node ./lib/index.js",
+    "serve:dev": "nodemon ./lib/index.js"
+  },
+  "dependencies": {
+    "@hiryu/eventemitter-util": "^0.1.0",
+    "@hiryu/node-usi": "^0.1.0",
+    "@hiryu/usi": "^0.1.0",
+    "@types/ajv": "^1.0.0",
+    "@types/express": "^4.11.1",
+    "@types/jest": "^22.1.4",
+    "@types/morgan": "^1.7.35",
+    "ajv": "^6.2.1",
+    "config": "^1.30.0",
+    "express": "^4.16.2",
+    "express-validator": "^5.0.3",
+    "morgan": "^1.9.0"
+  },
+  "devDependencies": {
+    "jest": "^22.1.4",
+    "nodemon": "^1.17.1",
+    "rimraf": "^2.6.2",
+    "ts-jest": "^22.0.1",
+    "tslint": "^5.9.1",
+    "typescript": "^2.6.2"
+  },
+  "files": [
+    "package.json",
+    "README.md",
+    "lib"
+  ],
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
+  }
+}

@@ -1,0 +1,7 @@
+// Configurations for IDE
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": false,
+  }
+}

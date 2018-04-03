@@ -1,0 +1,13 @@
+{
+  "name": "hiryu",
+  "version": "0.1.0",
+  "author": "Shintaro Seki <s2pch.luck@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "lerna": "^2.9.0"
+  },
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
+}

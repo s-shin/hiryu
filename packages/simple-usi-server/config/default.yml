@@ -1,0 +1,9 @@
+---
+port: 8080
+engines:
+  apery:
+    path: $HOME/shogi/ukamuse_sdt4/bin/apery
+    options: {}
+engineProcessPool:
+  apery:
+    limit: 2

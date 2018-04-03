@@ -1,0 +1,15 @@
+#!/usr/bin/env node
+const process = require("process");
+const fs = require("fs");
+const JKFPlayer = require("json-kifu-format").default;
+
+const chunks = [];
+
+process.stdin.on("data", (chunk) => {
+  chunks.push(chunk.toString());
+})
+
+process.stdin.on("end", () => {
+  const player = JKFPlayer.parseKIF(chunks.join(""));
+  console.log(player.toJKF());
+});

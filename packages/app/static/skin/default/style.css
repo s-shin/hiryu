@@ -1,0 +1,85 @@
+* {
+  box-sizing: border-box; }
+
+html, body {
+  height: 100%; }
+
+body {
+  margin: 0; }
+
+.hiryu_game {
+  display: flex;
+  flex-direction: row;
+  background-color: #D3E08B; }
+  .hiryu_game_column-side {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; }
+    .hiryu_game_column-side .hiryu_hand {
+      margin: 2% 0.5%; }
+    .hiryu_game_column-side .hiryu_hand-black {
+      order: 10; }
+
+.hiryu_board {
+  width: 247.00549px;
+  height: 270px;
+  background-image: url(./img/board.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  padding: 3.25%; }
+  .hiryu_board_row {
+    display: flex;
+    flex-direction: row-reverse;
+    height: 11.1%; }
+  .hiryu_board_cell {
+    width: 11.1%;
+    height: 100%; }
+    .hiryu_board_cell:before {
+      display: block;
+      content: "";
+      width: 100%;
+      height: 100%;
+      background-size: 87%;
+      background-origin: content-box;
+      background-position: center -10%;
+      background-repeat: no-repeat; }
+    .hiryu_board_cell-white:before {
+      transform: rotate(180deg); }
+    .hiryu_board_cell-fu:before {
+      background-image: url(./img/piece_fu.png); }
+    .hiryu_board_cell-ky:before {
+      background-image: url(./img/piece_ky.png); }
+    .hiryu_board_cell-ke:before {
+      background-image: url(./img/piece_ke.png); }
+    .hiryu_board_cell-gi:before {
+      background-image: url(./img/piece_gi.png); }
+    .hiryu_board_cell-ki:before {
+      background-image: url(./img/piece_ki.png); }
+    .hiryu_board_cell-ka:before {
+      background-image: url(./img/piece_ka.png); }
+    .hiryu_board_cell-hi:before {
+      background-image: url(./img/piece_hi.png); }
+    .hiryu_board_cell-ou:before {
+      background-image: url(./img/piece_ou.png); }
+    .hiryu_board_cell-gy:before {
+      background-image: url(./img/piece_gy.png); }
+    .hiryu_board_cell-to:before {
+      background-image: url(./img/piece_to.png); }
+    .hiryu_board_cell-ny:before {
+      background-image: url(./img/piece_ny.png); }
+    .hiryu_board_cell-nk:before {
+      background-image: url(./img/piece_nk.png); }
+    .hiryu_board_cell-ng:before {
+      background-image: url(./img/piece_ng.png); }
+    .hiryu_board_cell-um:before {
+      background-image: url(./img/piece_um.png); }
+    .hiryu_board_cell-ry:before {
+      background-image: url(./img/piece_ry.png); }
+
+.hiryu_hand {
+  width: 79.07423px;
+  height: 89.1px;
+  background-image: url(./img/hand.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  padding: 0.75%; }

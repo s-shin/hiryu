@@ -1,0 +1,47 @@
+{
+  "name": "@hiryu/node-usi",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "bin": {
+    "hiryu-usi-engine-info": "./lib/bin/usi-engine-info.js"
+  },
+  "scripts": {
+    "build": "rimraf lib && tsc",
+    "lint": "tslint src/**/*",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@hiryu/usi": "^0.1.0",
+    "@types/jest": "^22.0.1",
+    "yargs": "^11.0.0"
+  },
+  "devDependencies": {
+    "jest": "^22.1.4",
+    "rimraf": "^2.6.2",
+    "ts-jest": "^22.0.1",
+    "tslint": "^5.9.1",
+    "typescript": "^2.6.2"
+  },
+  "files": [
+    "package.json",
+    "README.md",
+    "lib"
+  ],
+  "jest": {
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    },
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ]
+  }
+}

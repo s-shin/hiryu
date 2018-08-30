@@ -10,11 +10,11 @@
     "test": "jest"
   },
   "devDependencies": {
-    "jest": "^22.1.4",
+    "jest": "^23.5.0",
     "rimraf": "^2.6.2",
-    "ts-jest": "^22.0.1",
-    "tslint": "^5.9.1",
-    "typescript": "^2.6.2"
+    "ts-jest": "^23.0.1",
+    "tslint": "^5.11.0",
+    "typescript": "^3.0.1"
   },
   "files": [
     "package.json",

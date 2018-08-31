@@ -27,6 +27,10 @@ function newRootGameNode(state = definitions_1.HIRATE_STATE, moveNum = 1) {
     };
 }
 exports.newRootGameNode = newRootGameNode;
+function cloneGameNode(node, opts = { withoutParent: false }) {
+    return Object.assign({}, node, { byEvent: node.byEvent ? definitions_1.cloneEvent(node.byEvent) : undefined, violations: [...node.violations], children: [...node.children], parent: opts.withoutParent ? node.parent : (node.parent ? cloneGameNode(node.parent) : undefined) });
+}
+exports.cloneGameNode = cloneGameNode;
 function findParent(leaf, cond) {
     const node = leaf.parent;
     return node ? (cond(node) ? node : findParent(node, cond)) : null;

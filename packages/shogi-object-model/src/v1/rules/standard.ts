@@ -43,6 +43,16 @@ export function newRootGameNode(state = HIRATE_STATE, moveNum = 1): GameNode {
   };
 }
 
+export function cloneGameNode(node: GameNode, opts = { withoutParent: false }): GameNode {
+  return {
+    ...node,
+    byEvent: node.byEvent ? cloneEvent(node.byEvent) : undefined,
+    violations: [...node.violations],
+    children: [...node.children],
+    parent: opts.withoutParent ? node.parent : (node.parent ? cloneGameNode(node.parent) : undefined),
+  };
+}
+
 function findParent(leaf: GameNode, cond: (node: GameNode) => boolean): GameNode | null {
   const node = leaf.parent;
   return node ? (cond(node) ? node : findParent(node, cond)) : null;

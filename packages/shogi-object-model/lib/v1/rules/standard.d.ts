@@ -23,6 +23,9 @@ export interface GameNode {
     parent?: GameNode;
 }
 export declare function newRootGameNode(state?: State, moveNum?: number): GameNode;
+export declare function cloneGameNode(node: GameNode, opts?: {
+    withoutParent: boolean;
+}): GameNode;
 export declare function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Event>): GameNode;
 export declare function isDroppablePiece(piece: Piece): boolean;
 export declare function isInPromortableArea(sq: Square, color: Color): boolean;

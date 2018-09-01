@@ -69,6 +69,15 @@ export interface MoveEvent extends CommonEventProps {
     sameDstSquare?: boolean;
     movements?: Movement[];
 }
+export interface CompleteMoveEvent extends MoveEvent {
+    srcSquare: Square | null;
+    srcPiece: Piece;
+    dstSquare: Square;
+    dstPiece: Piece;
+    promote: boolean;
+    sameDstSquare: boolean;
+    movements: Movement[];
+}
 export interface ResignEvent extends CommonEventProps {
     type: EventType.RESIGN;
     color: Color;
@@ -160,3 +169,4 @@ export declare function cloneHand(hand: Hand): Hand;
 export declare function cloneHands(hand: Hands): Hands;
 export declare function cloneState(state: State): State;
 export declare function cloneEvent(event: Event): Event;
+export declare function isCompleteMoveEvent(e: MoveEvent): e is CompleteMoveEvent;

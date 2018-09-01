@@ -87,6 +87,16 @@ export interface MoveEvent extends CommonEventProps {
   movements?: Movement[];
 }
 
+export interface CompleteMoveEvent extends MoveEvent {
+  srcSquare: Square | null;
+  srcPiece: Piece;
+  dstSquare: Square;
+  dstPiece: Piece;
+  promote: boolean;
+  sameDstSquare: boolean;
+  movements: Movement[];
+}
+
 export interface ResignEvent extends CommonEventProps {
   type: EventType.RESIGN;
   color: Color;
@@ -428,4 +438,11 @@ export function cloneState(state: State): State {
 
 export function cloneEvent(event: Event): Event {
   return { ...event };
+}
+
+export function isCompleteMoveEvent(e: MoveEvent): e is CompleteMoveEvent {
+  return e.srcSquare !== undefined && e.srcPiece !== undefined
+    && e.dstSquare !== undefined && e.dstPiece !== undefined
+    && e.promote !== undefined && e.sameDstSquare !== undefined
+    && e.movements !== undefined;
 }

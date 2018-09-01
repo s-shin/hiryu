@@ -41,7 +41,11 @@ export function Game(props: GameProps) {
         />
       </Column>
       <Column>
-        <Board board={state.board} />
+        <Board
+          board={state.board}
+          activeSquare={active && active.type === GameObjectType.BOARD_SQUARE ? active.square : undefined}
+          onClickSquare={sq => props.onClickGameObject({ type: GameObjectType.BOARD_SQUARE, square: sq })}
+        />
       </Column>
       <Column>
         <Hand

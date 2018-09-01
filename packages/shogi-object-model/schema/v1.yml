@@ -154,7 +154,9 @@ definitions:
       color:
         $ref: "#/definitions/Color"
       srcSquare:
-        $ref: "#/definitions/Square"
+        oneOf:
+        - $ref: "#/definitions/Square"
+        - type: "null"
       srcPiece:
         $ref: "#/definitions/Piece"
       dstSquare:

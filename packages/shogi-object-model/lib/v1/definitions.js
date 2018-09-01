@@ -317,4 +317,11 @@ function cloneEvent(event) {
     return Object.assign({}, event);
 }
 exports.cloneEvent = cloneEvent;
+function isCompleteMoveEvent(e) {
+    return e.srcSquare !== undefined && e.srcPiece !== undefined
+        && e.dstSquare !== undefined && e.dstPiece !== undefined
+        && e.promote !== undefined && e.sameDstSquare !== undefined
+        && e.movements !== undefined;
+}
+exports.isCompleteMoveEvent = isCompleteMoveEvent;
 //# sourceMappingURL=definitions.js.map

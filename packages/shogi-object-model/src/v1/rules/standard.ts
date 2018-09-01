@@ -4,7 +4,7 @@ import {
   promote, demote, canPromote, flipColor, getBoardSquare, setBoardSquare, isSquare, flipSquare, getHand,
   getNumPieces, addNumPieces, cloneState, cloneEvent,
   filterBoardSquare, squareEquals,
-  SQUARE_NUMBERS, HIRATE_STATE,
+  SQUARE_NUMBERS, HIRATE_STATE, isCompleteMoveEvent,
 } from "../definitions";
 import { DeepReadonly } from "../../util";
 
@@ -103,6 +103,8 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
       if (prevMoveEventNode) {
         const pe = prevMoveEventNode.byEvent as MoveEvent;
         e.sameDstSquare = e.dstSquare === pe.dstSquare!;
+      } else if (e.sameDstSquare === undefined) {
+        e.sameDstSquare = false;
       }
       // sameDstSquare!
       if (e.srcSquare) {
@@ -150,7 +152,7 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
         // # dstPiece!, promote!
       } else if (e.srcPiece) { // in case of japanese notations style.
         // # srcPiece!
-        if (event.movements && event.movements.indexOf(Movement.DROPPED) !== -1) {
+        if (e.srcSquare === null || event.movements && event.movements.indexOf(Movement.DROPPED) !== -1) {
           isDrop = true;
           if (e.promote || !canPromote(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
             ret.violations.push(Violation.INVALID_MOVE_EVENT);
@@ -230,10 +232,11 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
         ret.violations.push(Violation.INVALID_MOVE_EVENT);
         return ret;
       }
-      if (!e.srcPiece || !e.srcSquare || !e.dstPiece || !e.dstSquare || e.promote === undefined) {
-        throw new Error("assert");
-      }
+      e.movements = [];  // to be fixed
       // props without movements were fixed!
+      if (!isCompleteMoveEvent(e)) {
+        throw new Error("assert error: isCompleteMoveEvent");
+      }
 
       if (isDrop) {
         // droppable piece?
@@ -276,13 +279,13 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
         ret.state.nextTurn = flipColor(e.color);
         ret.moveNum++;
       } else {
-        const srcCP = getBoardSquare(node.state.board, e.srcSquare);
+        const srcCP = getBoardSquare(node.state.board, e.srcSquare!);
         // TODO: このチェックは不要か、fix時点で出すべきか
         if (!srcCP || srcCP.color !== e.color) {
           ret.violations.push(Violation.NO_PIECE_TO_BE_MOVED);
           return ret;
         }
-        const mcs = searchMoveCandidates(node.state.board, e.srcSquare);
+        const mcs = searchMoveCandidates(node.state.board, e.srcSquare!);
         const mc = mcs.find(mc => squareEquals(mc.dst, e.dstSquare!) && mc.promote === e.promote);
         if (!mc) {
           ret.violations.push(Violation.NOT_MOVABLE_PIECE_TO_SQUARE);
@@ -295,10 +298,10 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
             throw new Error("TODO");
           }
           // capture
-          addNumPieces(getHand(node.state.hands, e.color), demote(dstCP.piece, dstCP.piece)!, 1);
+          addNumPieces(getHand(ret.state.hands, e.color), demote(dstCP.piece, dstCP.piece)!, 1);
         }
 
-        setBoardSquare(ret.state.board, e.srcSquare, null);
+        setBoardSquare(ret.state.board, e.srcSquare!, null);
         setBoardSquare(ret.state.board, e.dstSquare, { color: e.color, piece: e.dstPiece });
         ret.state.nextTurn = flipColor(e.color);
         ret.moveNum++;
@@ -335,7 +338,7 @@ export function isInPromortableArea(sq: Square, color: Color) {
 
 export function isNeverMovable(sq: Square, color: Color, piece: Piece) {
   const bsq = color === Color.BLACK ? sq : flipSquare(sq);
-  return ((piece === Piece.FU || piece === Piece.KY) && bsq[0] <= 1) || ((piece === Piece.KE) && bsq[1] <= 2);
+  return ((piece === Piece.FU || piece === Piece.KY) && bsq[1] <= 1) || ((piece === Piece.KE) && bsq[1] <= 2);
 }
 
 export interface MoveCandidate {

@@ -25,8 +25,10 @@ export function drop(game: Game, piece: som.Piece, to: som.Square): Game {
   const e: som.MoveEvent = {
     type: som.EventType.MOVE,
     color: game.current.state.nextTurn,
+    srcSquare: null,
     srcPiece: piece,
     dstSquare: to,
+    dstPiece: piece,
   };
   return applyEvent(game, e);
 }

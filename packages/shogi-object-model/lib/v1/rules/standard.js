@@ -78,6 +78,9 @@ function applyEvent(node, event) {
                 const pe = prevMoveEventNode.byEvent;
                 e.sameDstSquare = e.dstSquare === pe.dstSquare;
             }
+            else if (e.sameDstSquare === undefined) {
+                e.sameDstSquare = false;
+            }
             // sameDstSquare!
             if (e.srcSquare) {
                 // # srcSquare
@@ -126,7 +129,7 @@ function applyEvent(node, event) {
             }
             else if (e.srcPiece) { // in case of japanese notations style.
                 // # srcPiece!
-                if (event.movements && event.movements.indexOf(definitions_1.Movement.DROPPED) !== -1) {
+                if (e.srcSquare === null || event.movements && event.movements.indexOf(definitions_1.Movement.DROPPED) !== -1) {
                     isDrop = true;
                     if (e.promote || !definitions_1.canPromote(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
                         ret.violations.push(Violation.INVALID_MOVE_EVENT);
@@ -207,10 +210,11 @@ function applyEvent(node, event) {
                 ret.violations.push(Violation.INVALID_MOVE_EVENT);
                 return ret;
             }
-            if (!e.srcPiece || !e.srcSquare || !e.dstPiece || !e.dstSquare || e.promote === undefined) {
-                throw new Error("assert");
-            }
+            e.movements = []; // to be fixed
             // props without movements were fixed!
+            if (!definitions_1.isCompleteMoveEvent(e)) {
+                throw new Error("assert error: isCompleteMoveEvent");
+            }
             if (isDrop) {
                 // droppable piece?
                 if (!isDroppablePiece(e.dstPiece)) {
@@ -270,7 +274,7 @@ function applyEvent(node, event) {
                         throw new Error("TODO");
                     }
                     // capture
-                    definitions_1.addNumPieces(definitions_1.getHand(node.state.hands, e.color), definitions_1.demote(dstCP.piece, dstCP.piece), 1);
+                    definitions_1.addNumPieces(definitions_1.getHand(ret.state.hands, e.color), definitions_1.demote(dstCP.piece, dstCP.piece), 1);
                 }
                 definitions_1.setBoardSquare(ret.state.board, e.srcSquare, null);
                 definitions_1.setBoardSquare(ret.state.board, e.dstSquare, { color: e.color, piece: e.dstPiece });
@@ -306,7 +310,7 @@ function isInPromortableArea(sq, color) {
 exports.isInPromortableArea = isInPromortableArea;
 function isNeverMovable(sq, color, piece) {
     const bsq = color === definitions_1.Color.BLACK ? sq : definitions_1.flipSquare(sq);
-    return ((piece === definitions_1.Piece.FU || piece === definitions_1.Piece.KY) && bsq[0] <= 1) || ((piece === definitions_1.Piece.KE) && bsq[1] <= 2);
+    return ((piece === definitions_1.Piece.FU || piece === definitions_1.Piece.KY) && bsq[1] <= 1) || ((piece === definitions_1.Piece.KE) && bsq[1] <= 2);
 }
 exports.isNeverMovable = isNeverMovable;
 function searchMoveCandidates(board, src) {

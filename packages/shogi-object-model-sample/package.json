@@ -8,7 +8,8 @@
   "scripts": {
     "build": "rimraf out && tsc",
     "lint": "tslint src/**/*",
-    "test": "jest"
+    "test": "jest",
+    "dev": "parcel index.html"
   },
   "dependencies": {
     "@hiryu/shogi-object-model": "^0.1.0",

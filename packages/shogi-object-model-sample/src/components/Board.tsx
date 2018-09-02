@@ -2,16 +2,60 @@ import React from "react";
 import styled, { css } from "styled-components";
 import * as som from "@hiryu/shogi-object-model";
 
-const Square = styled<{ isActive: boolean }, 'td'>('td')`
+const Table = styled.table`
+  border-collapse: collapse;
+`
+
+const Cell = styled.td`
+  position: relative;
+  border: 1px solid;
+  padding: 0;
+`
+
+const BasicSquare = styled.div`
+  width: 1.6em;
+  height: 1.8em;
+  line-height: 1.8em;
+  text-align: center;
+  user-select: none;
+`
+
+const BoardSquare = styled<
+  { isActive: boolean, color?: som.Color } & React.HTMLAttributes<HTMLDivElement>
+>(({ isActive, color, ...rest }) => <BasicSquare {...rest} />)`
+  ${props => props.color === som.Color.WHITE && css`
+    transform: rotate(180deg);
+  `}
   ${props => props.isActive && css`
     color: red;
   `}
 `
 
+const PromotionSelector = styled<{ square: som.Square }, "div">("div")`
+  position: absolute;
+  top: -1px;
+  left: -50%;
+  z-index: 1;
+  display: flex;
+  background-color: lightgray;
+  border: 1px solid;
+
+  > :first-child {
+    border-right: 1px solid;
+  }
+`
+
+export interface PromotionSelectorProps {
+  square: som.Square;
+  piece: som.Piece;
+  onSelect: (promote: boolean) => void;
+}
+
 export interface BoardProps {
   board: som.Board;
   activeSquare?: som.Square;
   onClickSquare: (sq: som.Square) => void;
+  promotionSelector?: PromotionSelectorProps;
 }
 
 export function Board(props: BoardProps) {
@@ -22,24 +66,37 @@ export function Board(props: BoardProps) {
       const cp = som.getBoardSquare(props.board, [x, y]);
       const isActive = props.activeSquare !== undefined && som.squareEquals(props.activeSquare, [x, y]);
       cols.push(
-        <Square
-          key={`${x}${y}`}
-          isActive={isActive}
-          onClick={e => { e.stopPropagation(); props.onClickSquare([x, y]) }}
-        >
-          {cp ? `${cp.color === som.Color.BLACK ? "+" : "-"}${cp.piece}` : "."}
-        </Square>);
+        <Cell key={`${x}${y}`}>
+          <BoardSquare
+            isActive={isActive}
+            color={cp && cp.color || undefined}
+            onClick={e => { e.stopPropagation(); props.onClickSquare([x, y]) }}
+          >
+            {cp ? som.formats.general.stringifyPiece(cp.piece) : ""}
+          </BoardSquare>
+          {props.promotionSelector && som.squareEquals(props.promotionSelector.square, [x, y]) && (
+            <PromotionSelector square={[x, y]}>
+              <BasicSquare onClick={e => { e.stopPropagation(); props.promotionSelector!.onSelect(true) }}>
+                {som.formats.general.stringifyPiece(som.promote(props.promotionSelector.piece)!)}
+              </BasicSquare>
+              <BasicSquare onClick={e => { e.stopPropagation(); props.promotionSelector!.onSelect(false) }}>
+                {som.formats.general.stringifyPiece(props.promotionSelector.piece)}
+              </BasicSquare>
+            </PromotionSelector>
+          )}
+        </Cell>
+      );
     }
     rows.push(<tr key={`${y}`}>{cols}</tr>);
   }
 
   return (
     <div>
-      <table>
+      <Table>
         <tbody>
           {rows}
         </tbody>
-      </table>
+      </Table>
     </div>
   )
 }

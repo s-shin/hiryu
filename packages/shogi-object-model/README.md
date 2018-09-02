@@ -1,15 +1,15 @@
-# @hiryu/shogi-object-format
+# @hiryu/shogi-object-model
 
 ## Synopsis
 
 ```ts
-import { schema, Record } from "@hiryu/shogi-object-format";
+import * as som from "@hiryu/shogi-object-model";
 
 const recordData = { /* ... */ };
 
 anyJsonSchemaValidator.validate({
   schema: som.schema,
-  key: `${schema.$id}/definitions/Record`,
+  key: `${som.schema.$id}/definitions/Record`,
   data: recordData,
 });
 

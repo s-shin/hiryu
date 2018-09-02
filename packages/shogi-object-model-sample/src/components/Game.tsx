@@ -5,11 +5,13 @@ import Hand from "./Hand";
 import Board from "./Board";
 import * as gameHelper from "../helpers/game";
 import { GameObject, GameObjectType } from "../helpers/game_objects";
+import { PromotionSelectorProps } from "./Board";
 
 export interface GameProps {
   game: gameHelper.Game;
   activeGameObject?: GameObject;
   onClickGameObject: (obj: GameObject) => void;
+  promotionSelector?: PromotionSelectorProps;
 }
 
 export function Game(props: GameProps) {
@@ -44,6 +46,7 @@ export function Game(props: GameProps) {
         <Board
           board={state.board}
           activeSquare={active && active.type === GameObjectType.BOARD_SQUARE ? active.square : undefined}
+          promotionSelector={props.promotionSelector}
           onClickSquare={sq => props.onClickGameObject({ type: GameObjectType.BOARD_SQUARE, square: sq })}
         />
       </Column>

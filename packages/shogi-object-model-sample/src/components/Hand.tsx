@@ -17,15 +17,19 @@ export interface HandProps {
 
 export function Hand(props: HandProps) {
   const els = [];
-  const pieces = [som.Piece.FU, som.Piece.KY, som.Piece.KE, som.Piece.KI, som.Piece.KA, som.Piece.HI];
+  const pieces = [som.Piece.FU, som.Piece.KY, som.Piece.KE, som.Piece.GI, som.Piece.KI, som.Piece.KA, som.Piece.HI];
   for (const p of pieces) {
     const n = som.getNumPieces(props.hand, p);
     const isActive = props.activePiece === p;
-    els.push(<Piece key={p} isActive={isActive} onClick={e => { e.stopPropagation(); props.onClickPiece(p) }}>{p} {n}</Piece>);
+    els.push(
+      <Piece key={`${p}-${n}`} isActive={isActive} onClick={e => { e.stopPropagation(); props.onClickPiece(p) }}>
+        {som.formats.general.stringifyPiece(p)} {n}
+      </Piece>
+    );
   }
   return (
     <div>
-      <h4>{props.color}</h4>
+      <h4>{som.formats.general.stringifyColor(props.color)}</h4>
       {els}
     </div>
   )

@@ -9,6 +9,7 @@ import { PromotionSelectorProps } from "./components/Board";
 interface ShogiViewProps {
   G: GameState;
   moves: any;
+  events: any;
 }
 
 interface ShogiViewState {
@@ -63,6 +64,7 @@ export default class ShogiView extends React.Component<ShogiViewProps, ShogiView
                 const g = gameHelper.move(this.props.G, prev.square, obj.square, promote);
                 if (g.current.violations.length === 0) {
                   this.props.moves.move(prev.square, obj.square, promote);
+                  this.props.events.endTurn();
                   return this.resetActivatedState();
                 }
               };
@@ -101,7 +103,8 @@ export default class ShogiView extends React.Component<ShogiViewProps, ShogiView
               const g = gameHelper.drop(this.props.G, prev.piece, obj.square);
               if (g.current.violations.length === 0) {
                 this.props.moves.drop(prev.piece, obj.square);
-                return this.setActiveGameObject();
+                this.props.events.endTurn();
+                return this.resetActivatedState();
               }
               break;
             }

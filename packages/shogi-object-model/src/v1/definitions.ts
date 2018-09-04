@@ -446,3 +446,26 @@ export function isCompleteMoveEvent(e: MoveEvent): e is CompleteMoveEvent {
     && e.promote !== undefined && e.sameDstSquare !== undefined
     && e.movements !== undefined;
 }
+
+export function newMoveEvent(color: Color, from: Square, to: Square, promote = false) {
+  const e: MoveEvent = {
+    type: EventType.MOVE,
+    color,
+    srcSquare: from,
+    dstSquare: to,
+    promote,
+  };
+  return e;
+}
+
+export function newDropEvent(color: Color, piece: Piece, to: Square) {
+  const e: MoveEvent = {
+    type: EventType.MOVE,
+    color,
+    srcSquare: null,
+    srcPiece: piece,
+    dstSquare: to,
+    dstPiece: piece,
+  };
+  return e;
+}

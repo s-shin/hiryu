@@ -324,4 +324,27 @@ function isCompleteMoveEvent(e) {
         && e.movements !== undefined;
 }
 exports.isCompleteMoveEvent = isCompleteMoveEvent;
+function newMoveEvent(color, from, to, promote = false) {
+    const e = {
+        type: EventType.MOVE,
+        color,
+        srcSquare: from,
+        dstSquare: to,
+        promote,
+    };
+    return e;
+}
+exports.newMoveEvent = newMoveEvent;
+function newDropEvent(color, piece, to) {
+    const e = {
+        type: EventType.MOVE,
+        color,
+        srcSquare: null,
+        srcPiece: piece,
+        dstSquare: to,
+        dstPiece: piece,
+    };
+    return e;
+}
+exports.newDropEvent = newDropEvent;
 //# sourceMappingURL=definitions.js.map

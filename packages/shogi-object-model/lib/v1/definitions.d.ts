@@ -170,3 +170,5 @@ export declare function cloneHands(hand: Hands): Hands;
 export declare function cloneState(state: State): State;
 export declare function cloneEvent(event: Event): Event;
 export declare function isCompleteMoveEvent(e: MoveEvent): e is CompleteMoveEvent;
+export declare function newMoveEvent(color: Color, from: Square, to: Square, promote?: boolean): MoveEvent;
+export declare function newDropEvent(color: Color, piece: Piece, to: Square): MoveEvent;

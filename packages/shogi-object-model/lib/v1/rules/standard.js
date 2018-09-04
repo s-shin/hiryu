@@ -18,7 +18,7 @@ var Violation;
     Violation[Violation["NO_PIECE_TO_BE_MOVED"] = 10] = "NO_PIECE_TO_BE_MOVED";
     Violation[Violation["NO_SPECIFIED_PIECE_ON_BOARD"] = 11] = "NO_SPECIFIED_PIECE_ON_BOARD";
 })(Violation = exports.Violation || (exports.Violation = {}));
-function newRootGameNode(state = definitions_1.HIRATE_STATE, moveNum = 1) {
+function newRootGameNode(state = definitions_1.HIRATE_STATE, moveNum = 0) {
     return {
         state,
         moveNum,
@@ -51,7 +51,8 @@ function applyEvent(node, event) {
     switch (event.type) {
         case definitions_1.EventType.MOVE: {
             // check turn
-            const prevMoveEventNode = findParent(node, n => Boolean(n.byEvent && n.byEvent.type === definitions_1.EventType.MOVE));
+            const isMoveEventNode = (n) => Boolean(n.byEvent && n.byEvent.type === definitions_1.EventType.MOVE);
+            const prevMoveEventNode = isMoveEventNode(node) ? node : findParent(node, isMoveEventNode);
             if (prevMoveEventNode) {
                 if (event.color !== prevMoveEventNode.state.nextTurn) {
                     ret.violations.push(Violation.BAD_TURN);

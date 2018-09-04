@@ -34,7 +34,7 @@ export interface GameNode {
   parent?: GameNode;
 }
 
-export function newRootGameNode(state = HIRATE_STATE, moveNum = 1): GameNode {
+export function newRootGameNode(state = HIRATE_STATE, moveNum = 0): GameNode {
   return {
     state,
     moveNum,
@@ -76,7 +76,8 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
   switch (event.type) {
     case EventType.MOVE: {
       // check turn
-      const prevMoveEventNode = findParent(node, n => Boolean(n.byEvent && n.byEvent.type === EventType.MOVE));
+      const isMoveEventNode = (n: GameNode) => Boolean(n.byEvent && n.byEvent.type === EventType.MOVE);
+      const prevMoveEventNode = isMoveEventNode(node) ? node : findParent(node, isMoveEventNode);
       if (prevMoveEventNode) {
         if (event.color !== prevMoveEventNode.state.nextTurn) {
           ret.violations.push(Violation.BAD_TURN);

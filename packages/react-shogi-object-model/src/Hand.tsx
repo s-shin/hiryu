@@ -2,6 +2,10 @@ import React from "react";
 import styled, { css } from "./styled-components";
 import * as som from "@hiryu/shogi-object-model";
 
+const HandContainer = styled.div`
+  user-select: none;
+`
+
 const HandHeader = styled.h4`
   margin: 0;
   font-size: 1em;
@@ -50,10 +54,10 @@ export function Hand(props: HandProps) {
     );
   }
   return (
-    <div>
+    <HandContainer>
       <HandHeader>{som.formats.general.stringifyColor(props.color)}</HandHeader>
       {els}
-    </div>
+    </HandContainer>
   )
 }
 

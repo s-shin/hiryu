@@ -59,6 +59,9 @@ export default function interactable(WrappedComponent: GameComponent) {
           case GameObjectType.BOARD_SQUARE: {
             switch (obj.type) {
               case GameObjectType.BOARD_SQUARE: {
+                if (som.squareEquals(prev.square, obj.square)) {
+                  return this.resetActivatedState();
+                }
                 const move = (promote: boolean) => {
                   this.props.onMoveEvent(som.newMoveEvent(gameNode.state.nextTurn, prev.square, obj.square, promote));
                   return this.resetActivatedState();
@@ -99,6 +102,9 @@ export default function interactable(WrappedComponent: GameComponent) {
                 return this.resetActivatedState();
               }
               case GameObjectType.HAND_PIECE: {
+                if (prev.piece === obj.piece) {
+                  return this.resetActivatedState();
+                }
                 break;
               }
             }

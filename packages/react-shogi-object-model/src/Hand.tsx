@@ -7,7 +7,7 @@ const HandContainer = styled.div`
 `
 
 const HandHeader = styled.h4`
-  margin: 0;
+  margin: 0 0.6em 0 0;
   font-size: 1em;
 `
 

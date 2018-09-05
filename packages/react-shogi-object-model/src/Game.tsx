@@ -1,5 +1,5 @@
 import React from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import * as som from "@hiryu/shogi-object-model";
 import Hand from "./Hand";
 import Board from "./Board";
@@ -16,7 +16,11 @@ const Container = styled.div`
   display: flex;
 `;
 
-const HandColumn = styled.div``;
+const HandColumn = styled<{ color?: som.Color }, "div">("div")`
+  ${props => props.color === som.Color.WHITE && css`
+    transform: rotate(180deg);
+  `}
+`;
 
 const BoardColumn = styled.div`
   margin: 0 0.5em;
@@ -29,7 +33,7 @@ export function Game(props: GameProps) {
 
   return (
     <Container>
-      <HandColumn>
+      <HandColumn color={som.Color.WHITE}>
         <Hand
           hand={som.getHand(state.hands, som.Color.WHITE)}
           color={som.Color.WHITE}

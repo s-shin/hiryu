@@ -1,5 +1,17 @@
 import { Color, Piece } from "../definitions";
 
+const kansujiStrs = ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
+
+export function toKansuji(n: number) {
+  const d2 = Math.floor(n * 0.1) % 10;
+  const d1 = n % 10;
+  return [
+    d2 > 1 ? kansujiStrs[d2] : "",
+    d2 > 0 ? kansujiStrs[10] : "",
+    d1 > 0 ? kansujiStrs[d1] : "",
+  ].join("");
+}
+
 export enum Style {
   JA,
   JA_ABBR,

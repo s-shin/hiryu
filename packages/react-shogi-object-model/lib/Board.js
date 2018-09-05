@@ -69,7 +69,7 @@ function Board(props) {
             const cp = som.getBoardSquare(props.board, [x, y]);
             const isActive = props.activeSquare !== undefined && som.squareEquals(props.activeSquare, [x, y]);
             cols.push(react_1.default.createElement(Cell, { key: `${x}${y}` },
-                react_1.default.createElement(BoardSquare, { isActive: isActive, color: cp && cp.color || undefined, onClick: e => { e.stopPropagation(); props.onClickSquare([x, y]); } }, cp ? som.formats.general.stringifyPiece(cp.piece) : ""),
+                react_1.default.createElement(BoardSquare, { isActive: isActive, color: cp && cp.color || undefined, onClick: e => { e.stopPropagation(); props.onClickSquare([x, y]); } }, cp ? som.formats.general.stringifyPiece(cp.piece).replace("王", "玉") : ""),
                 props.promotionSelector && som.squareEquals(props.promotionSelector.dstSquare, [x, y]) && (react_1.default.createElement(PromotionSelectorView, { square: [x, y] },
                     react_1.default.createElement(BasicSquare, { onClick: e => { e.stopPropagation(); props.promotionSelector.onSelect(true); } }, som.formats.general.stringifyPiece(som.promote(props.promotionSelector.piece))),
                     react_1.default.createElement(BasicSquare, { onClick: e => { e.stopPropagation(); props.promotionSelector.onSelect(false); } }, som.formats.general.stringifyPiece(props.promotionSelector.piece))))));

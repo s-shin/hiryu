@@ -11,8 +11,8 @@ engine.on("debug", msg => {
   console.log(`debug: ${msg}`);
 });
 
-engine.on("configure", c => {
-  console.log(c);
+engine.on("configure", availableOptions => {
+  console.log({ availableOptions });
   engine.newGame();
 });
 

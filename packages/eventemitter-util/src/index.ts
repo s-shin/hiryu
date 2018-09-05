@@ -1,28 +1,34 @@
-export interface SpecificEventEmitter<Event, Callback> {
+interface EventEmitter1<Event, Callback> {
   on(event: Event, cb: Callback): void;
-  off?(event: Event, cb: Callback): void;
-  removeEventListener?(event: Event, cb: Callback): void;
+  removeListener(event: Event, cb: Callback): void;
 }
+
+interface EventEmitter2<Event, Callback> {
+  on(event: Event, cb: Callback): void;
+  off(event: Event, cb: Callback): void;
+}
+
+export type EventEmitter<Event, Callback> = EventEmitter1<Event, Callback> | EventEmitter2<Event, Callback>;
 
 export interface DisposableEventListener {
   dispose(): void;
 }
 
 export function listenEvent<Event, Callback>(
-  emitter: SpecificEventEmitter<Event, Callback>,
+  emitter: EventEmitter<Event, Callback>,
   event: Event,
   cb: Callback,
 ): DisposableEventListener {
   emitter.on(event, cb);
   return {
     dispose() {
-      if (emitter.off) {
-        return emitter.off(event, cb);
+      if ((emitter as EventEmitter1<Event, Callback>).removeListener) {
+        return (emitter as EventEmitter1<Event, Callback>).removeListener(event, cb);
       }
-      if (emitter.removeEventListener) {
-        return emitter.removeEventListener(event, cb);
+      if ((emitter as EventEmitter2<Event, Callback>).off) {
+        return (emitter as EventEmitter2<Event, Callback>).off(event, cb);
       }
-      throw new Error("invalid eventemitter interface");
+      throw new Error("invalid EventEmitter instance");
     },
   };
 }
@@ -30,7 +36,7 @@ export function listenEvent<Event, Callback>(
 export class EventListenerPool {
   listeners: DisposableEventListener[] = [];
 
-  listen<Event, Callback>(emitter: SpecificEventEmitter<Event, Callback>, event: Event, cb: Callback) {
+  listen<Event, Callback>(emitter: EventEmitter<Event, Callback>, event: Event, cb: Callback) {
     this.listeners.push(listenEvent(emitter, event, cb));
   }
 

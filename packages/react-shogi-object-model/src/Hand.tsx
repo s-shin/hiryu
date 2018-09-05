@@ -7,24 +7,20 @@ const HandContainer = styled.div`
 `
 
 const HandHeader = styled.h4`
-  margin: 0 0.6em 0 0;
+  margin: 0 0 0.2em 0;
   font-size: 1em;
 `
 
 const HandPiece = styled<{ isActive: boolean }, "div">("div")`
-  line-height: 1.4;
+  line-height: 1;
+  writing-mode: vertical-rl;
+  margin-bottom: 0.1em;
   ${props => props.isActive && css`
     color: red;
   `}
 `
 
 const PieceCharacter = styled.span``
-
-const PieceCount = styled.span`
-  display: inline-block;
-  font-size: 0.6em;
-  margin-left: 0.1em;
-`
 
 export interface HandProps {
   hand: som.Hand,
@@ -48,8 +44,9 @@ export function Hand(props: HandProps) {
         isActive={isActive}
         onClick={e => { e.stopPropagation(); props.onClickPiece(p) }}
       >
-        <PieceCharacter>{som.formats.general.stringifyPiece(p)}</PieceCharacter>
-        <PieceCount>{n}</PieceCount>
+        <PieceCharacter>
+          {som.formats.general.stringifyPiece(p)}{n > 1 ? som.formats.general.toKansuji(n) : ""}
+        </PieceCharacter>
       </HandPiece>
     );
   }

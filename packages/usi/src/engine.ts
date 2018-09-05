@@ -64,28 +64,50 @@ const availableEngineStateTransitions: EngineStateTransitions = {
 
 //---
 
-export interface EngineOptionString {
+export type EngineOptionTypeToken = "string" | "check" | "spin" | "combo" | "button" | "filename";
+
+export interface EngineOptionBase {
+  name: string;
+  type: EngineOptionTypeToken;
+}
+
+export interface EngineOptionString extends EngineOptionBase {
   type: "string";
   default: string;
 }
 
-export interface EngineOptionBoolean {
+export interface EngineOptionCheck extends EngineOptionBase {
   type: "check";
   default: boolean;
 }
 
-export interface EngineOptionNumber {
+export interface EngineOptionSpin extends EngineOptionBase {
   type: "spin";
   min: number;
   max: number;
   default: number;
 }
 
-export type EngineOptionValue =
-  EngineOptionString | EngineOptionBoolean | EngineOptionNumber;
+export interface EngineOptionCombo extends EngineOptionBase {
+  type: "combo";
+  vars: string[];
+  default: string;
+}
+
+export interface EngineOptionButton extends EngineOptionBase {
+  type: "button";
+}
+
+export interface EngineOptionFilename extends EngineOptionBase {
+  type: "filename";
+  default: string;
+}
+
+export type EngineOptionDefinition = EngineOptionString | EngineOptionCheck
+    | EngineOptionSpin| EngineOptionCombo | EngineOptionButton | EngineOptionFilename;
 
 export interface EngineOptions {
-  [name: string]: EngineOptionValue;
+  [name: string]: EngineOptionDefinition;
 }
 
 //---
@@ -121,24 +143,6 @@ export interface Info {
   hashfull?: number;
   nps?: number;
   string?: string;
-}
-
-//---
-
-export class EngineConfigurator {
-  constructor(readonly availableOptions: EngineOptions) {}
-
-  setString(name: string, value: string) {
-    // TODO
-  }
-
-  setNumber(name: string, value: number) {
-    // TODO
-  }
-
-  setBoolean(name: string, value: boolean) {
-    // TODO
-  }
 }
 
 //---
@@ -194,6 +198,11 @@ export abstract class Engine {
   start() {
     this.assertState(EngineState.CHECK_USI);
     this._writeln("usi");
+  }
+
+  setOption(name: string, value: string) {
+    this.assertState(EngineState.SET_OPTIONS);
+    this._writeln(`setoption name ${name} value ${value}`);
   }
 
   newGame() {
@@ -261,7 +270,7 @@ export abstract class Engine {
   }
 
   on(name: "debug", cb: (msg: string, ...args: any[]) => void): void;
-  on(name: "configure", cb: (c: EngineConfigurator) => void): void;
+  on(name: "configure", cb: (availableOptions: EngineOptions) => void): void;
   on(name: "ready" | "exit", cb: () => void): void;
   on(name: "info", cb: (info: Info) => void): void;
   on(name: "bestmove", cb: (move: BestMove) => void): void;
@@ -270,8 +279,18 @@ export abstract class Engine {
     this.eventEmitter.on(name, cb);
   }
 
+  removeListener(name: "debug", cb: (msg: string, ...args: any[]) => void): void;
+  removeListener(name: "configure", cb: (availableOptions: EngineOptions) => void): void;
+  removeListener(name: "ready" | "exit", cb: () => void): void;
+  removeListener(name: "info", cb: (info: Info) => void): void;
+  removeListener(name: "bestmove", cb: (move: BestMove) => void): void;
+  removeListener(name: "error", cb: (err: Error) => void): void;
+  removeListener(name: string, cb: (...args: any[]) => void) {
+    this.eventEmitter.removeListener(name, cb);
+  }
+
   off(name: "debug", cb: (msg: string, ...args: any[]) => void): void;
-  off(name: "configure", cb: (c: EngineConfigurator) => void): void;
+  off(name: "configure", cb: (availableOptions: EngineOptions) => void): void;
   off(name: "ready" | "exit", cb: () => void): void;
   off(name: "info", cb: (info: Info) => void): void;
   off(name: "bestmove", cb: (move: BestMove) => void): void;
@@ -306,8 +325,8 @@ export abstract class Engine {
   private emitExit() {
     this.eventEmitter.emit("exit");
   }
-  private emitConfigure(c: EngineConfigurator) {
-    this.eventEmitter.emit("configure", c);
+  private emitConfigure(availableOptions: EngineOptions) {
+    this.eventEmitter.emit("configure", availableOptions);
   }
   private emitReady() {
     this.eventEmitter.emit("ready");
@@ -390,26 +409,72 @@ export abstract class Engine {
             return;
           }
           case "option": {
-            // NOTE: These are not good implementation.
-            const type = args[4];
-            const def = args[6];
-            const val: any = { type };
-            if (type === "string") {
-              val.default = def;
-            } else if (type === "spin") {
-              val.default = parseInt(def, 10);
-              val.min = parseInt(args[8], 10);
-              val.max = parseInt(args[10], 10);
-            } else if (val.type === "check") {
-              val.default = args[6] === "true";
+            if (args.length < 5 || args[1] !== "name" || args[3] !== "type") {
+              return this.error(new Error("bad option command"));
             }
-            this.info.options[args[2]] = val;
+            const name = args[2];
+            const type = args[4];
+            const definition: any = { name, type };
+
+            const longStringValue = (...v: string[]) => [v.join(" "), v.length];
+            const stringValue = (v: string) => [v, 1];
+            const numberValue = (v: string) => [parseInt(v, 10), 1];
+            const booleanValue = (v: string) => [v === "true", 1];
+            const stringArrayValue = (v: string) => [[stringValue(v)], 1];
+            const paramParsers: any = {
+              string: {
+                default: longStringValue,
+              },
+              spin: {
+                default: numberValue,
+                min: numberValue,
+                max: numberValue,
+              },
+              check: {
+                default: booleanValue,
+              },
+              combo: {
+                default: stringValue,
+                var: stringArrayValue,
+              },
+              button: {},
+              filename: {
+                default: longStringValue,
+              },
+            };
+
+            let params = args.slice(5);
+            const parseParam = paramParsers[type];
+            while (params.length > 0) {
+              if (params.length < 2) {
+                return this.error(new Error(`bad option command line: ${line}`));
+              }
+              const [key, ...values] = params;
+              if (!parseParam[key]) {
+                return this.error(new Error(`bad option parameter: ${key}`));
+              }
+              const [v, consumed] = parseParam[key](...values);
+              if (Array.isArray(v)) {
+                definition[key] = [
+                  ...(definition[key] || []),
+                  ...v,
+                ];
+              } else {
+                definition[key] = v;
+              }
+              params = params.slice(1 + consumed);
+            }
+            for (const key in parseParam) {
+              if (!(key in definition)) {
+                return this.error(new Error(`config parameter '${key}' was not found`));
+              }
+            }
+            this.info.options[name] = definition;
             return;
           }
           case "usiok": {
             this.changeState(EngineState.SET_OPTIONS);
-            const c = new EngineConfigurator(this.info.options);
-            this.emitConfigure(c);
+            this.emitConfigure(this.info.options);
             return;
           }
         }
@@ -463,9 +528,11 @@ export abstract class Engine {
         }
         break;
       }
+      case EngineState.EXITING: case EngineState.EXITED: {
+        return this.emitDebug("given line is discarded");
+      }
       default: {
-        this.error(new Error("no line is expected"));
-        return;
+        return this.error(new Error("no line is expected"));
       }
     }
     this.error(new Error(`unexpected line: ${line}`));

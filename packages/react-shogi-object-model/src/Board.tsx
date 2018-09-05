@@ -67,7 +67,7 @@ export function Board(props: BoardProps) {
             color={cp && cp.color || undefined}
             onClick={e => { e.stopPropagation(); props.onClickSquare([x, y]) }}
           >
-            {cp ? som.formats.general.stringifyPiece(cp.piece) : ""}
+            {cp ? som.formats.general.stringifyPiece(cp.piece).replace("王", "玉") : ""}
           </BoardSquare>
           {props.promotionSelector && som.squareEquals(props.promotionSelector.dstSquare, [x, y]) && (
             <PromotionSelectorView square={[x, y]}>

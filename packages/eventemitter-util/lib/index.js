@@ -4,13 +4,13 @@ function listenEvent(emitter, event, cb) {
     emitter.on(event, cb);
     return {
         dispose() {
+            if (emitter.removeListener) {
+                return emitter.removeListener(event, cb);
+            }
             if (emitter.off) {
                 return emitter.off(event, cb);
             }
-            if (emitter.removeEventListener) {
-                return emitter.removeEventListener(event, cb);
-            }
-            throw new Error("invalid eventemitter interface");
+            throw new Error("invalid EventEmitter instance");
         },
     };
 }

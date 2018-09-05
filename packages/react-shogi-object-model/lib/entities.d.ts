@@ -16,7 +16,7 @@ export interface HandPiece extends CommonGameObjectProps {
     piece: som.Piece;
 }
 export declare type GameObject = BoardSquare | HandPiece;
-export interface PromotionSelector {
+export interface PromotionSelectorProps {
     piece: som.Piece;
     dstSquare: som.Square;
     onSelect: (promote: boolean) => void;

@@ -1,4 +1,5 @@
 import { Color, Piece } from "../definitions";
+export declare function toKansuji(n: number): string;
 export declare enum Style {
     JA = 0,
     JA_ABBR = 1,

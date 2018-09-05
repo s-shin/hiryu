@@ -1,7 +1,7 @@
 "use strict";
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
-}
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const eventemitter3_1 = __importDefault(require("eventemitter3"));
 var EngineState;
@@ -64,22 +64,6 @@ class EngineInfo {
     }
 }
 exports.EngineInfo = EngineInfo;
-//---
-class EngineConfigurator {
-    constructor(availableOptions) {
-        this.availableOptions = availableOptions;
-    }
-    setString(name, value) {
-        // TODO
-    }
-    setNumber(name, value) {
-        // TODO
-    }
-    setBoolean(name, value) {
-        // TODO
-    }
-}
-exports.EngineConfigurator = EngineConfigurator;
 exports.DEFAULT_GO_OPTIONS = {
     ponder: false,
     btime: 0,
@@ -107,6 +91,10 @@ class Engine {
     start() {
         this.assertState(EngineState.CHECK_USI);
         this._writeln("usi");
+    }
+    setOption(name, value) {
+        this.assertState(EngineState.SET_OPTIONS);
+        this._writeln(`setoption name ${name} value ${value}`);
     }
     newGame() {
         this.assertState(EngineState.SET_OPTIONS, EngineState.GAME_OVER);
@@ -169,6 +157,9 @@ class Engine {
     on(name, cb) {
         this.eventEmitter.on(name, cb);
     }
+    removeListener(name, cb) {
+        this.eventEmitter.removeListener(name, cb);
+    }
     off(name, cb) {
         this.eventEmitter.off(name, cb);
     }
@@ -182,8 +173,8 @@ class Engine {
     emitExit() {
         this.eventEmitter.emit("exit");
     }
-    emitConfigure(c) {
-        this.eventEmitter.emit("configure", c);
+    emitConfigure(availableOptions) {
+        this.eventEmitter.emit("configure", availableOptions);
     }
     emitReady() {
         this.eventEmitter.emit("ready");
@@ -258,28 +249,71 @@ class Engine {
                         return;
                     }
                     case "option": {
-                        // NOTE: These are not good implementation.
+                        if (args.length < 5 || args[1] !== "name" || args[3] !== "type") {
+                            return this.error(new Error("bad option command"));
+                        }
+                        const name = args[2];
                         const type = args[4];
-                        const def = args[6];
-                        const val = { type };
-                        if (type === "string") {
-                            val.default = def;
+                        const definition = { name, type };
+                        const longStringValue = (...v) => [v.join(" "), v.length];
+                        const stringValue = (v) => [v, 1];
+                        const numberValue = (v) => [parseInt(v, 10), 1];
+                        const booleanValue = (v) => [v === "true", 1];
+                        const stringArrayValue = (v) => [[stringValue(v)], 1];
+                        const paramParsers = {
+                            string: {
+                                default: longStringValue,
+                            },
+                            spin: {
+                                default: numberValue,
+                                min: numberValue,
+                                max: numberValue,
+                            },
+                            check: {
+                                default: booleanValue,
+                            },
+                            combo: {
+                                default: stringValue,
+                                var: stringArrayValue,
+                            },
+                            button: {},
+                            filename: {
+                                default: longStringValue,
+                            },
+                        };
+                        let params = args.slice(5);
+                        const parseParam = paramParsers[type];
+                        while (params.length > 0) {
+                            if (params.length < 2) {
+                                return this.error(new Error(`bad option command line: ${line}`));
+                            }
+                            const [key, ...values] = params;
+                            if (!parseParam[key]) {
+                                return this.error(new Error(`bad option parameter: ${key}`));
+                            }
+                            const [v, consumed] = parseParam[key](...values);
+                            if (Array.isArray(v)) {
+                                definition[key] = [
+                                    ...(definition[key] || []),
+                                    ...v,
+                                ];
+                            }
+                            else {
+                                definition[key] = v;
+                            }
+                            params = params.slice(1 + consumed);
                         }
-                        else if (type === "spin") {
-                            val.default = parseInt(def, 10);
-                            val.min = parseInt(args[8], 10);
-                            val.max = parseInt(args[10], 10);
+                        for (const key in parseParam) {
+                            if (!(key in definition)) {
+                                return this.error(new Error(`config parameter '${key}' was not found`));
+                            }
                         }
-                        else if (val.type === "check") {
-                            val.default = args[6] === "true";
-                        }
-                        this.info.options[args[2]] = val;
+                        this.info.options[name] = definition;
                         return;
                     }
                     case "usiok": {
                         this.changeState(EngineState.SET_OPTIONS);
-                        const c = new EngineConfigurator(this.info.options);
-                        this.emitConfigure(c);
+                        this.emitConfigure(this.info.options);
                         return;
                     }
                 }
@@ -334,9 +368,12 @@ class Engine {
                 }
                 break;
             }
+            case EngineState.EXITING:
+            case EngineState.EXITED: {
+                return this.emitDebug("given line is discarded");
+            }
             default: {
-                this.error(new Error("no line is expected"));
-                return;
+                return this.error(new Error("no line is expected"));
             }
         }
         this.error(new Error(`unexpected line: ${line}`));

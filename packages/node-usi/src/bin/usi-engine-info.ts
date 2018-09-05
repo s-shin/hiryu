@@ -13,15 +13,25 @@ const argv = yargs
     describe: "output more human-readable",
     type: "boolean",
   })
+  .option("verbose", {
+    describe: "verbose output",
+    type: "boolean",
+  })
   .argv;
 
 const engine = new NodeEngineProcess(argv.binaryPath);
+
+if (argv.verbose) {
+  engine.on("debug", (msg, ...args) => {
+    console.log(`DEBUG: ${msg}`, ...args);
+  });
+}
 
 engine.on("error", err => {
   console.error(err);
 });
 
-engine.on("configure", c => {
+engine.on("configure", () => {
   console.log(JSON.stringify(engine.info, null, argv.pretty ? 2 : undefined));
   engine.quit();
 });

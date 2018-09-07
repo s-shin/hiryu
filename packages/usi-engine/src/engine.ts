@@ -1,8 +1,5 @@
 import EventEmitter from "eventemitter3";
 
-export type Move = string;
-export type BestMove = Move | "resign" | "win";
-
 export enum EngineState {
   NOT_STARTED,
   CHECK_USI,
@@ -21,44 +18,17 @@ interface EngineStateTransitions {
   [state: number]: EngineState[];
 }
 
-const incidentalEngineStates = [
-  EngineState.ERROR,
-  EngineState.EXITING,
-  EngineState.EXITED,
-];
+const incidentalEngineStates = [EngineState.ERROR, EngineState.EXITING, EngineState.EXITED];
 
 const availableEngineStateTransitions: EngineStateTransitions = {
-  [EngineState.NOT_STARTED]: [
-    EngineState.CHECK_USI,
-    ...incidentalEngineStates,
-  ],
-  [EngineState.CHECK_USI]: [
-    EngineState.SET_OPTIONS,
-    ...incidentalEngineStates,
-  ],
-  [EngineState.SET_OPTIONS]: [
-    EngineState.IS_READY,
-    ...incidentalEngineStates,
-  ],
-  [EngineState.IS_READY]: [
-    EngineState.IS_GOING,
-    EngineState.GAME_OVER,
-    ...incidentalEngineStates,
-  ],
-  [EngineState.IS_GOING]: [
-    EngineState.IS_READY,
-    ...incidentalEngineStates,
-  ],
-  [EngineState.GAME_OVER]: [
-    EngineState.IS_READY,
-    ...incidentalEngineStates,
-  ],
-  [EngineState.ERROR]: [
-    ...incidentalEngineStates,
-  ],
-  [EngineState.EXITING]: [
-    ...incidentalEngineStates,
-  ],
+  [EngineState.NOT_STARTED]: [EngineState.CHECK_USI, ...incidentalEngineStates],
+  [EngineState.CHECK_USI]: [EngineState.SET_OPTIONS, ...incidentalEngineStates],
+  [EngineState.SET_OPTIONS]: [EngineState.IS_READY, ...incidentalEngineStates],
+  [EngineState.IS_READY]: [EngineState.IS_GOING, EngineState.GAME_OVER, ...incidentalEngineStates],
+  [EngineState.IS_GOING]: [EngineState.IS_READY, ...incidentalEngineStates],
+  [EngineState.GAME_OVER]: [EngineState.IS_READY, ...incidentalEngineStates],
+  [EngineState.ERROR]: [...incidentalEngineStates],
+  [EngineState.EXITING]: [...incidentalEngineStates],
   [EngineState.EXITED]: [],
 };
 
@@ -103,8 +73,13 @@ export interface EngineOptionFilename extends EngineOptionBase {
   default: string;
 }
 
-export type EngineOptionDefinition = EngineOptionString | EngineOptionCheck
-    | EngineOptionSpin| EngineOptionCombo | EngineOptionButton | EngineOptionFilename;
+export type EngineOptionDefinition =
+  | EngineOptionString
+  | EngineOptionCheck
+  | EngineOptionSpin
+  | EngineOptionCombo
+  | EngineOptionButton
+  | EngineOptionFilename;
 
 export interface EngineOptions {
   [name: string]: EngineOptionDefinition;
@@ -119,6 +94,10 @@ export class EngineInfo {
 }
 
 //---
+
+export type Move = string;
+
+export type BestMove = Move | "resign" | "win";
 
 export interface ScoreInfo {
   value: number;
@@ -143,6 +122,59 @@ export interface Info {
   hashfull?: number;
   nps?: number;
   string?: string;
+}
+
+//---
+
+export abstract class EngineAdapter {
+  private engine?: Engine;
+
+  bindEngine(engine: Engine) {
+    this.engine = engine;
+  }
+
+  /**
+   * Run engine process.
+   * When it's ready, call `onReady()`.
+   */
+  abstract start(): void;
+
+  /**
+   * Output line to engine process.
+   *
+   * @param line Single line string WITHOUT linebreak.
+   */
+  abstract writeln(line: string): void;
+
+  /**
+   * In this method, `onBeforeExit()` and `onAfterExit()` should be called properly.
+   * `onAfterExit()` can be called asynchronously.
+   */
+  abstract exit(): void;
+
+  debug(msg: string, ...args: any[]) {
+    this.engine!._debug(msg, ...args);
+  }
+
+  onReady() {
+    this.engine!._onReady();
+  }
+
+  onError(err: Error) {
+    this.engine!._error(err);
+  }
+
+  onReadLine(line: string) {
+    this.engine!._onReadLine(line);
+  }
+
+  onBeforeExit() {
+    this.engine!._onBeforeExit();
+  }
+
+  onAfterExit() {
+    this.engine!._onAfterExit();
+  }
 }
 
 //---
@@ -180,34 +212,31 @@ export const DEFAULT_GO_OPTIONS: GoOptions = {
 
 export type EngineEvents = "debug" | "configure" | "ready" | "exit" | "info" | "bestmove" | "error";
 
-/**
- * Base class of engines.
- *
- * Child classes can't emit event directly but events will be emitted via
- * some protected methods (e.g. debug, error).
- */
-export abstract class Engine {
+export class Engine {
   state = EngineState.NOT_STARTED;
   info = new EngineInfo();
   private eventEmitter = new EventEmitter();
+
+  constructor(private adapter: EngineAdapter) {
+    adapter.bindEngine(this);
+  }
 
   //----------------------------------------------------------------------------
   // User Methods
   //----------------------------------------------------------------------------
 
   start() {
-    this.assertState(EngineState.CHECK_USI);
-    this._writeln("usi");
+    this.adapter.start();
   }
 
   setOption(name: string, value: string) {
     this.assertState(EngineState.SET_OPTIONS);
-    this._writeln(`setoption name ${name} value ${value}`);
+    this.writeln(`setoption name ${name} value ${value}`);
   }
 
   newGame() {
     this.assertState(EngineState.SET_OPTIONS, EngineState.GAME_OVER);
-    this._writeln("isready");
+    this.writeln("isready");
   }
 
   /**
@@ -216,7 +245,7 @@ export abstract class Engine {
    */
   setGameState(state = "startpos", moves = "") {
     this.assertState(EngineState.IS_READY);
-    this._writeln(`position ${state} moves ${moves}`);
+    this.writeln(`position ${state} moves ${moves}`);
   }
 
   go(opts: GoOptions = DEFAULT_GO_OPTIONS) {
@@ -243,7 +272,7 @@ export abstract class Engine {
     if (opts.infinite) {
       cmd.push("infinite");
     }
-    this._writeln(cmd.join(" "));
+    this.writeln(cmd.join(" "));
     this.changeState(EngineState.IS_GOING);
   }
 
@@ -252,20 +281,20 @@ export abstract class Engine {
       return;
     }
     this.assertState(EngineState.IS_GOING);
-    this._writeln("stop");
+    this.writeln("stop");
   }
 
   quit(force = false) {
-    this._writeln("quit");
+    this.writeln("quit");
     this.changeState(EngineState.EXITING);
     if (force) {
-      this.exit();
+      this.adapter.exit();
     }
   }
 
   gameOver(type: "win" | "lose" | "draw") {
     this.assertState(EngineState.IS_READY);
-    this._writeln(`gameover ${type}`);
+    this.writeln(`gameover ${type}`);
     this.changeState(EngineState.GAME_OVER);
   }
 
@@ -300,96 +329,41 @@ export abstract class Engine {
   }
 
   //----------------------------------------------------------------------------
-  // Abstract Methods
+  // Methods for EngineAdapter
   //----------------------------------------------------------------------------
 
-  /**
-   * @param line Single line string without linebreak.
-   */
-  protected abstract writeln(line: string): void;
-
-  /**
-   * In this method, beforeExit() and afterExit() should be called properly.
-   * afterExit() can be called asynchronously.
-   */
-  protected abstract exit(): void;
-
-  //----------------------------------------------------------------------------
-
-  private emitDebug(msg: string, ...args: any[]) {
-    this.eventEmitter.emit("debug", msg, ...args);
-  }
-  private emitError(err: Error) {
-    this.eventEmitter.emit("error", err);
-  }
-  private emitExit() {
-    this.eventEmitter.emit("exit");
-  }
-  private emitConfigure(availableOptions: EngineOptions) {
-    this.eventEmitter.emit("configure", availableOptions);
-  }
-  private emitReady() {
-    this.eventEmitter.emit("ready");
-  }
-  private emitInfo(info: Info) {
-    this.eventEmitter.emit("info", info);
-  }
-  private emitBestMove(move: BestMove) {
-    this.eventEmitter.emit("bestmove", move);
-  }
-
-  private changeState(state: EngineState) {
-    if (state === this.state) {
-      return;
-    }
-    if (availableEngineStateTransitions[this.state].indexOf(state) === -1) {
-      this.error(new Error(`invalid state transition: ${EngineState[this.state]} -> ${EngineState[state]}`));
-      return;
-    }
-    this.emitDebug(`change state: ${EngineState[this.state]} -> ${EngineState[state]}`);
-    this.state = state;
-  }
-
-  private assertState(...states: EngineState[]) {
-    if (states.indexOf(this.state) === -1) {
-      const statesStr = states.map(s => EngineState[s]).join("/");
-      this.error(new Error(`invalid state: expected ${statesStr}, but ${EngineState[this.state]}`));
-    }
-  }
-
-  //---
-
-  protected debug(msg: string, ...args: any[]) {
+  _debug(msg: string, ...args: any[]) {
     this.emitDebug(msg, ...args);
   }
 
-  protected error(err: Error) {
+  _error(err: Error) {
     if (this.state !== EngineState.EXITED) {
       this.changeState(EngineState.ERROR);
     }
     this.emitError(err);
     if (this.state !== EngineState.EXITED) {
-      this.exit();
+      this.adapter.exit();
     }
   }
 
   /**
    * This method should be called when child process is ready.
    */
-  protected processStarted() {
+  _onReady() {
     this.changeState(EngineState.CHECK_USI);
+    this.writeln("usi");
   }
 
-  protected beforeExit() {
+  _onBeforeExit() {
     this.changeState(EngineState.EXITING);
   }
 
-  protected afterExit() {
+  _onAfterExit() {
     this.changeState(EngineState.EXITED);
     this.emitExit();
   }
 
-  protected parseLine(line: string) {
+  _onReadLine(line: string) {
     this.emitDebug(`< ${line}`);
     line = line.trim();
     if (line.length === 0) {
@@ -410,7 +384,7 @@ export abstract class Engine {
           }
           case "option": {
             if (args.length < 5 || args[1] !== "name" || args[3] !== "type") {
-              return this.error(new Error("bad option command"));
+              return this._error(new Error("bad option command"));
             }
             const name = args[2];
             const type = args[4];
@@ -447,18 +421,15 @@ export abstract class Engine {
             const parseParam = paramParsers[type];
             while (params.length > 0) {
               if (params.length < 2) {
-                return this.error(new Error(`bad option command line: ${line}`));
+                return this._error(new Error(`bad option command line: ${line}`));
               }
               const [key, ...values] = params;
               if (!parseParam[key]) {
-                return this.error(new Error(`bad option parameter: ${key}`));
+                return this._error(new Error(`bad option parameter: ${key}`));
               }
               const [v, consumed] = parseParam[key](...values);
               if (Array.isArray(v)) {
-                definition[key] = [
-                  ...(definition[key] || []),
-                  ...v,
-                ];
+                definition[key] = [...(definition[key] || []), ...v];
               } else {
                 definition[key] = v;
               }
@@ -466,7 +437,7 @@ export abstract class Engine {
             }
             for (const key in parseParam) {
               if (!(key in definition)) {
-                return this.error(new Error(`config parameter '${key}' was not found`));
+                return this._error(new Error(`config parameter '${key}' was not found`));
               }
             }
             this.info.options[name] = definition;
@@ -492,7 +463,7 @@ export abstract class Engine {
           }
           case "readyok": {
             this.changeState(EngineState.IS_READY);
-            this._writeln("usinewgame");
+            this.writeln("usinewgame");
             this.emitReady();
             return;
           }
@@ -521,21 +492,22 @@ export abstract class Engine {
         switch (args[0]) {
           case "readyok": {
             this.changeState(EngineState.IS_READY);
-            this._writeln("usinewgame");
+            this.writeln("usinewgame");
             this.emitReady();
             return;
           }
         }
         break;
       }
-      case EngineState.EXITING: case EngineState.EXITED: {
+      case EngineState.EXITING:
+      case EngineState.EXITED: {
         return this.emitDebug("given line is discarded");
       }
       default: {
-        return this.error(new Error("no line is expected"));
+        return this._error(new Error("no line is expected"));
       }
     }
-    this.error(new Error(`unexpected line: ${line}`));
+    this._error(new Error(`unexpected line: ${line}`));
   }
 
   private parseInfoArgs(args: string[]) {
@@ -553,8 +525,14 @@ export abstract class Engine {
       }
       const value = args[i + 1];
       switch (key) {
-        case "depth": case "seldepth": case "time": case "nodes":
-        case "multipv": case "currmove": case "hashfull": case "nps": {
+        case "depth":
+        case "seldepth":
+        case "time":
+        case "nodes":
+        case "multipv":
+        case "currmove":
+        case "hashfull":
+        case "nps": {
           info[key] = parseInt(value, 10);
           i += 2;
           break;
@@ -597,8 +575,51 @@ export abstract class Engine {
     return info as Info;
   }
 
-  private _writeln(line: string) {
+  //---
+
+  private emitDebug(msg: string, ...args: any[]) {
+    this.eventEmitter.emit("debug", msg, ...args);
+  }
+  private emitError(err: Error) {
+    this.eventEmitter.emit("error", err);
+  }
+  private emitExit() {
+    this.eventEmitter.emit("exit");
+  }
+  private emitConfigure(availableOptions: EngineOptions) {
+    this.eventEmitter.emit("configure", availableOptions);
+  }
+  private emitReady() {
+    this.eventEmitter.emit("ready");
+  }
+  private emitInfo(info: Info) {
+    this.eventEmitter.emit("info", info);
+  }
+  private emitBestMove(move: BestMove) {
+    this.eventEmitter.emit("bestmove", move);
+  }
+
+  private changeState(state: EngineState) {
+    if (state === this.state) {
+      return;
+    }
+    if (availableEngineStateTransitions[this.state].indexOf(state) === -1) {
+      this._error(new Error(`invalid state transition: ${EngineState[this.state]} -> ${EngineState[state]}`));
+      return;
+    }
+    this.emitDebug(`change state: ${EngineState[this.state]} -> ${EngineState[state]}`);
+    this.state = state;
+  }
+
+  private assertState(...states: EngineState[]) {
+    if (states.indexOf(this.state) === -1) {
+      const statesStr = states.map(s => EngineState[s]).join("/");
+      this._error(new Error(`invalid state: expected ${statesStr}, but ${EngineState[this.state]}`));
+    }
+  }
+
+  private writeln(line: string) {
     this.emitDebug(`> ${line}`);
-    this.writeln(line);
+    this.adapter.writeln(line);
   }
 }

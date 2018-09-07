@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import { NodeEngineProcess } from "../index";
+import NodeEngineAdapter from "../index";
+import { Engine } from "@hiryu/usi-engine";
 import yargs from "yargs";
 
 const argv = yargs
@@ -16,10 +17,10 @@ const argv = yargs
   .option("verbose", {
     describe: "verbose output",
     type: "boolean",
-  })
-  .argv;
+  }).argv;
 
-const engine = new NodeEngineProcess(argv.binaryPath);
+const adapter = new NodeEngineAdapter(argv.binaryPath);
+const engine = new Engine(adapter);
 
 if (argv.verbose) {
   engine.on("debug", (msg, ...args) => {

@@ -9,25 +9,42 @@ export declare enum EngineState {
     GAME_OVER = 5,
     ERROR = 6,
     EXITING = 7,
-    EXITED = 8,
+    EXITED = 8
 }
-export interface EngineOptionString {
+export declare type EngineOptionTypeToken = "string" | "check" | "spin" | "combo" | "button" | "filename";
+export interface EngineOptionBase {
+    name: string;
+    type: EngineOptionTypeToken;
+}
+export interface EngineOptionString extends EngineOptionBase {
     type: "string";
     default: string;
 }
-export interface EngineOptionBoolean {
+export interface EngineOptionCheck extends EngineOptionBase {
     type: "check";
     default: boolean;
 }
-export interface EngineOptionNumber {
+export interface EngineOptionSpin extends EngineOptionBase {
     type: "spin";
     min: number;
     max: number;
     default: number;
 }
-export declare type EngineOptionValue = EngineOptionString | EngineOptionBoolean | EngineOptionNumber;
+export interface EngineOptionCombo extends EngineOptionBase {
+    type: "combo";
+    vars: string[];
+    default: string;
+}
+export interface EngineOptionButton extends EngineOptionBase {
+    type: "button";
+}
+export interface EngineOptionFilename extends EngineOptionBase {
+    type: "filename";
+    default: string;
+}
+export declare type EngineOptionDefinition = EngineOptionString | EngineOptionCheck | EngineOptionSpin | EngineOptionCombo | EngineOptionButton | EngineOptionFilename;
 export interface EngineOptions {
-    [name: string]: EngineOptionValue;
+    [name: string]: EngineOptionDefinition;
 }
 export declare class EngineInfo {
     name: string;
@@ -56,13 +73,6 @@ export interface Info {
     nps?: number;
     string?: string;
 }
-export declare class EngineConfigurator {
-    readonly availableOptions: EngineOptions;
-    constructor(availableOptions: EngineOptions);
-    setString(name: string, value: string): void;
-    setNumber(name: string, value: number): void;
-    setBoolean(name: string, value: boolean): void;
-}
 export interface GoOptions {
     /**
      * \~japanese
@@ -90,6 +100,7 @@ export declare abstract class Engine {
     info: EngineInfo;
     private eventEmitter;
     start(): void;
+    setOption(name: string, value: string): void;
     newGame(): void;
     /**
      * @param state SFEN or startpos
@@ -101,13 +112,19 @@ export declare abstract class Engine {
     quit(force?: boolean): void;
     gameOver(type: "win" | "lose" | "draw"): void;
     on(name: "debug", cb: (msg: string, ...args: any[]) => void): void;
-    on(name: "configure", cb: (c: EngineConfigurator) => void): void;
+    on(name: "configure", cb: (availableOptions: EngineOptions) => void): void;
     on(name: "ready" | "exit", cb: () => void): void;
     on(name: "info", cb: (info: Info) => void): void;
     on(name: "bestmove", cb: (move: BestMove) => void): void;
     on(name: "error", cb: (err: Error) => void): void;
+    removeListener(name: "debug", cb: (msg: string, ...args: any[]) => void): void;
+    removeListener(name: "configure", cb: (availableOptions: EngineOptions) => void): void;
+    removeListener(name: "ready" | "exit", cb: () => void): void;
+    removeListener(name: "info", cb: (info: Info) => void): void;
+    removeListener(name: "bestmove", cb: (move: BestMove) => void): void;
+    removeListener(name: "error", cb: (err: Error) => void): void;
     off(name: "debug", cb: (msg: string, ...args: any[]) => void): void;
-    off(name: "configure", cb: (c: EngineConfigurator) => void): void;
+    off(name: "configure", cb: (availableOptions: EngineOptions) => void): void;
     off(name: "ready" | "exit", cb: () => void): void;
     off(name: "info", cb: (info: Info) => void): void;
     off(name: "bestmove", cb: (move: BestMove) => void): void;
@@ -121,15 +138,15 @@ export declare abstract class Engine {
      * afterExit() can be called asynchronously.
      */
     protected abstract exit(): void;
-    private emitDebug(msg, ...args);
-    private emitError(err);
-    private emitExit();
-    private emitConfigure(c);
-    private emitReady();
-    private emitInfo(info);
-    private emitBestMove(move);
-    private changeState(state);
-    private assertState(...states);
+    private emitDebug;
+    private emitError;
+    private emitExit;
+    private emitConfigure;
+    private emitReady;
+    private emitInfo;
+    private emitBestMove;
+    private changeState;
+    private assertState;
     protected debug(msg: string, ...args: any[]): void;
     protected error(err: Error): void;
     /**
@@ -139,6 +156,6 @@ export declare abstract class Engine {
     protected beforeExit(): void;
     protected afterExit(): void;
     protected parseLine(line: string): void;
-    private parseInfoArgs(args);
-    private _writeln(line);
+    private parseInfoArgs;
+    private _writeln;
 }

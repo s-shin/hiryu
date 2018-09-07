@@ -1,11 +1,12 @@
 const process = require("process");
-const { NodeEngineProcess } = require("./lib/node_engine_process");
+const NodeEngineAdapter = require("./lib").default;
+const Engine = require("@hiryu/usi-engine").Engine;
 
 if (process.argv.length !== 3) {
   process.exit(1);
 }
 
-let engine = new NodeEngineProcess(process.argv[2]);
+let engine = new Engine(new NodeEngineAdapter(process.argv[2]));
 
 engine.on("debug", msg => {
   console.log(`debug: ${msg}`);
@@ -25,13 +26,13 @@ engine.on("info", info => {
 });
 
 engine.on("ready", () => {
-  console.log("game is ready");
+  console.log("!!! game is ready");
   engine.setGameState();
   engine.go();
 });
 
 engine.on("bestmove", move => {
-  console.log(`bestmove: ${move}`);
+  console.log(`!!! bestmove: ${move}`);
   engine.quit();
 });
 
@@ -40,7 +41,7 @@ engine.on("error", err => {
 });
 
 engine.on("exit", () => {
-  console.log("exit");
+  console.log("!!! exit");
   engine = null;
 });
 

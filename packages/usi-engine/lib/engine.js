@@ -16,43 +16,16 @@ var EngineState;
     EngineState[EngineState["EXITING"] = 7] = "EXITING";
     EngineState[EngineState["EXITED"] = 8] = "EXITED";
 })(EngineState = exports.EngineState || (exports.EngineState = {}));
-const incidentalEngineStates = [
-    EngineState.ERROR,
-    EngineState.EXITING,
-    EngineState.EXITED,
-];
+const incidentalEngineStates = [EngineState.ERROR, EngineState.EXITING, EngineState.EXITED];
 const availableEngineStateTransitions = {
-    [EngineState.NOT_STARTED]: [
-        EngineState.CHECK_USI,
-        ...incidentalEngineStates,
-    ],
-    [EngineState.CHECK_USI]: [
-        EngineState.SET_OPTIONS,
-        ...incidentalEngineStates,
-    ],
-    [EngineState.SET_OPTIONS]: [
-        EngineState.IS_READY,
-        ...incidentalEngineStates,
-    ],
-    [EngineState.IS_READY]: [
-        EngineState.IS_GOING,
-        EngineState.GAME_OVER,
-        ...incidentalEngineStates,
-    ],
-    [EngineState.IS_GOING]: [
-        EngineState.IS_READY,
-        ...incidentalEngineStates,
-    ],
-    [EngineState.GAME_OVER]: [
-        EngineState.IS_READY,
-        ...incidentalEngineStates,
-    ],
-    [EngineState.ERROR]: [
-        ...incidentalEngineStates,
-    ],
-    [EngineState.EXITING]: [
-        ...incidentalEngineStates,
-    ],
+    [EngineState.NOT_STARTED]: [EngineState.CHECK_USI, ...incidentalEngineStates],
+    [EngineState.CHECK_USI]: [EngineState.SET_OPTIONS, ...incidentalEngineStates],
+    [EngineState.SET_OPTIONS]: [EngineState.IS_READY, ...incidentalEngineStates],
+    [EngineState.IS_READY]: [EngineState.IS_GOING, EngineState.GAME_OVER, ...incidentalEngineStates],
+    [EngineState.IS_GOING]: [EngineState.IS_READY, ...incidentalEngineStates],
+    [EngineState.GAME_OVER]: [EngineState.IS_READY, ...incidentalEngineStates],
+    [EngineState.ERROR]: [...incidentalEngineStates],
+    [EngineState.EXITING]: [...incidentalEngineStates],
     [EngineState.EXITED]: [],
 };
 //---
@@ -64,6 +37,31 @@ class EngineInfo {
     }
 }
 exports.EngineInfo = EngineInfo;
+//---
+class EngineAdapter {
+    bindEngine(engine) {
+        this.engine = engine;
+    }
+    debug(msg, ...args) {
+        this.engine._debug(msg, ...args);
+    }
+    onReady() {
+        this.engine._onReady();
+    }
+    onError(err) {
+        this.engine._error(err);
+    }
+    onReadLine(line) {
+        this.engine._onReadLine(line);
+    }
+    onBeforeExit() {
+        this.engine._onBeforeExit();
+    }
+    onAfterExit() {
+        this.engine._onAfterExit();
+    }
+}
+exports.EngineAdapter = EngineAdapter;
 exports.DEFAULT_GO_OPTIONS = {
     ponder: false,
     btime: 0,
@@ -80,25 +78,26 @@ exports.DEFAULT_GO_OPTIONS = {
  * some protected methods (e.g. debug, error).
  */
 class Engine {
-    constructor() {
+    constructor(adapter) {
+        this.adapter = adapter;
         this.state = EngineState.NOT_STARTED;
         this.info = new EngineInfo();
         this.eventEmitter = new eventemitter3_1.default();
+        adapter.bindEngine(this);
     }
     //----------------------------------------------------------------------------
     // User Methods
     //----------------------------------------------------------------------------
     start() {
-        this.assertState(EngineState.CHECK_USI);
-        this._writeln("usi");
+        this.adapter.start();
     }
     setOption(name, value) {
         this.assertState(EngineState.SET_OPTIONS);
-        this._writeln(`setoption name ${name} value ${value}`);
+        this.writeln(`setoption name ${name} value ${value}`);
     }
     newGame() {
         this.assertState(EngineState.SET_OPTIONS, EngineState.GAME_OVER);
-        this._writeln("isready");
+        this.writeln("isready");
     }
     /**
      * @param state SFEN or startpos
@@ -106,7 +105,7 @@ class Engine {
      */
     setGameState(state = "startpos", moves = "") {
         this.assertState(EngineState.IS_READY);
-        this._writeln(`position ${state} moves ${moves}`);
+        this.writeln(`position ${state} moves ${moves}`);
     }
     go(opts = exports.DEFAULT_GO_OPTIONS) {
         this.assertState(EngineState.IS_READY);
@@ -132,7 +131,7 @@ class Engine {
         if (opts.infinite) {
             cmd.push("infinite");
         }
-        this._writeln(cmd.join(" "));
+        this.writeln(cmd.join(" "));
         this.changeState(EngineState.IS_GOING);
     }
     stop() {
@@ -140,18 +139,18 @@ class Engine {
             return;
         }
         this.assertState(EngineState.IS_GOING);
-        this._writeln("stop");
+        this.writeln("stop");
     }
     quit(force = false) {
-        this._writeln("quit");
+        this.writeln("quit");
         this.changeState(EngineState.EXITING);
         if (force) {
-            this.exit();
+            this.adapter.exit();
         }
     }
     gameOver(type) {
         this.assertState(EngineState.IS_READY);
-        this._writeln(`gameover ${type}`);
+        this.writeln(`gameover ${type}`);
         this.changeState(EngineState.GAME_OVER);
     }
     on(name, cb) {
@@ -164,71 +163,35 @@ class Engine {
         this.eventEmitter.off(name, cb);
     }
     //----------------------------------------------------------------------------
-    emitDebug(msg, ...args) {
-        this.eventEmitter.emit("debug", msg, ...args);
-    }
-    emitError(err) {
-        this.eventEmitter.emit("error", err);
-    }
-    emitExit() {
-        this.eventEmitter.emit("exit");
-    }
-    emitConfigure(availableOptions) {
-        this.eventEmitter.emit("configure", availableOptions);
-    }
-    emitReady() {
-        this.eventEmitter.emit("ready");
-    }
-    emitInfo(info) {
-        this.eventEmitter.emit("info", info);
-    }
-    emitBestMove(move) {
-        this.eventEmitter.emit("bestmove", move);
-    }
-    changeState(state) {
-        if (state === this.state) {
-            return;
-        }
-        if (availableEngineStateTransitions[this.state].indexOf(state) === -1) {
-            this.error(new Error(`invalid state transition: ${EngineState[this.state]} -> ${EngineState[state]}`));
-            return;
-        }
-        this.emitDebug(`change state: ${EngineState[this.state]} -> ${EngineState[state]}`);
-        this.state = state;
-    }
-    assertState(...states) {
-        if (states.indexOf(this.state) === -1) {
-            const statesStr = states.map(s => EngineState[s]).join("/");
-            this.error(new Error(`invalid state: expected ${statesStr}, but ${EngineState[this.state]}`));
-        }
-    }
-    //---
-    debug(msg, ...args) {
+    // Methods for EngineAdapter
+    //----------------------------------------------------------------------------
+    _debug(msg, ...args) {
         this.emitDebug(msg, ...args);
     }
-    error(err) {
+    _error(err) {
         if (this.state !== EngineState.EXITED) {
             this.changeState(EngineState.ERROR);
         }
         this.emitError(err);
         if (this.state !== EngineState.EXITED) {
-            this.exit();
+            this.adapter.exit();
         }
     }
     /**
      * This method should be called when child process is ready.
      */
-    processStarted() {
+    _onReady() {
         this.changeState(EngineState.CHECK_USI);
+        this.writeln("usi");
     }
-    beforeExit() {
+    _onBeforeExit() {
         this.changeState(EngineState.EXITING);
     }
-    afterExit() {
+    _onAfterExit() {
         this.changeState(EngineState.EXITED);
         this.emitExit();
     }
-    parseLine(line) {
+    _onReadLine(line) {
         this.emitDebug(`< ${line}`);
         line = line.trim();
         if (line.length === 0) {
@@ -250,7 +213,7 @@ class Engine {
                     }
                     case "option": {
                         if (args.length < 5 || args[1] !== "name" || args[3] !== "type") {
-                            return this.error(new Error("bad option command"));
+                            return this._error(new Error("bad option command"));
                         }
                         const name = args[2];
                         const type = args[4];
@@ -285,18 +248,15 @@ class Engine {
                         const parseParam = paramParsers[type];
                         while (params.length > 0) {
                             if (params.length < 2) {
-                                return this.error(new Error(`bad option command line: ${line}`));
+                                return this._error(new Error(`bad option command line: ${line}`));
                             }
                             const [key, ...values] = params;
                             if (!parseParam[key]) {
-                                return this.error(new Error(`bad option parameter: ${key}`));
+                                return this._error(new Error(`bad option parameter: ${key}`));
                             }
                             const [v, consumed] = parseParam[key](...values);
                             if (Array.isArray(v)) {
-                                definition[key] = [
-                                    ...(definition[key] || []),
-                                    ...v,
-                                ];
+                                definition[key] = [...(definition[key] || []), ...v];
                             }
                             else {
                                 definition[key] = v;
@@ -305,7 +265,7 @@ class Engine {
                         }
                         for (const key in parseParam) {
                             if (!(key in definition)) {
-                                return this.error(new Error(`config parameter '${key}' was not found`));
+                                return this._error(new Error(`config parameter '${key}' was not found`));
                             }
                         }
                         this.info.options[name] = definition;
@@ -332,7 +292,7 @@ class Engine {
                     }
                     case "readyok": {
                         this.changeState(EngineState.IS_READY);
-                        this._writeln("usinewgame");
+                        this.writeln("usinewgame");
                         this.emitReady();
                         return;
                     }
@@ -361,7 +321,7 @@ class Engine {
                 switch (args[0]) {
                     case "readyok": {
                         this.changeState(EngineState.IS_READY);
-                        this._writeln("usinewgame");
+                        this.writeln("usinewgame");
                         this.emitReady();
                         return;
                     }
@@ -373,10 +333,10 @@ class Engine {
                 return this.emitDebug("given line is discarded");
             }
             default: {
-                return this.error(new Error("no line is expected"));
+                return this._error(new Error("no line is expected"));
             }
         }
-        this.error(new Error(`unexpected line: ${line}`));
+        this._error(new Error(`unexpected line: ${line}`));
     }
     parseInfoArgs(args) {
         const info = {};
@@ -443,9 +403,48 @@ class Engine {
         }
         return info;
     }
-    _writeln(line) {
+    //---
+    emitDebug(msg, ...args) {
+        this.eventEmitter.emit("debug", msg, ...args);
+    }
+    emitError(err) {
+        this.eventEmitter.emit("error", err);
+    }
+    emitExit() {
+        this.eventEmitter.emit("exit");
+    }
+    emitConfigure(availableOptions) {
+        this.eventEmitter.emit("configure", availableOptions);
+    }
+    emitReady() {
+        this.eventEmitter.emit("ready");
+    }
+    emitInfo(info) {
+        this.eventEmitter.emit("info", info);
+    }
+    emitBestMove(move) {
+        this.eventEmitter.emit("bestmove", move);
+    }
+    changeState(state) {
+        if (state === this.state) {
+            return;
+        }
+        if (availableEngineStateTransitions[this.state].indexOf(state) === -1) {
+            this._error(new Error(`invalid state transition: ${EngineState[this.state]} -> ${EngineState[state]}`));
+            return;
+        }
+        this.emitDebug(`change state: ${EngineState[this.state]} -> ${EngineState[state]}`);
+        this.state = state;
+    }
+    assertState(...states) {
+        if (states.indexOf(this.state) === -1) {
+            const statesStr = states.map(s => EngineState[s]).join("/");
+            this._error(new Error(`invalid state: expected ${statesStr}, but ${EngineState[this.state]}`));
+        }
+    }
+    writeln(line) {
         this.emitDebug(`> ${line}`);
-        this.writeln(line);
+        this.adapter.writeln(line);
     }
 }
 exports.Engine = Engine;

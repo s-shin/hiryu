@@ -1,5 +1,3 @@
-export declare type Move = string;
-export declare type BestMove = Move | "resign" | "win";
 export declare enum EngineState {
     NOT_STARTED = 0,
     CHECK_USI = 1,
@@ -51,6 +49,8 @@ export declare class EngineInfo {
     author: string;
     options: EngineOptions;
 }
+export declare type Move = string;
+export declare type BestMove = Move | "resign" | "win";
 export interface ScoreInfo {
     value: number;
     bound?: "lower" | "upper";
@@ -72,6 +72,32 @@ export interface Info {
     hashfull?: number;
     nps?: number;
     string?: string;
+}
+export declare abstract class EngineAdapter {
+    private engine?;
+    bindEngine(engine: Engine): void;
+    /**
+     * Run engine process.
+     * When it's ready, call `onReady()`.
+     */
+    abstract start(): void;
+    /**
+     * Output line to engine process.
+     *
+     * @param line Single line string WITHOUT linebreak.
+     */
+    abstract writeln(line: string): void;
+    /**
+     * In this method, `onBeforeExit()` and `onAfterExit()` should be called properly.
+     * `onAfterExit()` can be called asynchronously.
+     */
+    abstract exit(): void;
+    debug(msg: string, ...args: any[]): void;
+    onReady(): void;
+    onError(err: Error): void;
+    onReadLine(line: string): void;
+    onBeforeExit(): void;
+    onAfterExit(): void;
 }
 export interface GoOptions {
     /**
@@ -95,10 +121,12 @@ export declare type EngineEvents = "debug" | "configure" | "ready" | "exit" | "i
  * Child classes can't emit event directly but events will be emitted via
  * some protected methods (e.g. debug, error).
  */
-export declare abstract class Engine {
+export declare class Engine {
+    private adapter;
     state: EngineState;
     info: EngineInfo;
     private eventEmitter;
+    constructor(adapter: EngineAdapter);
     start(): void;
     setOption(name: string, value: string): void;
     newGame(): void;
@@ -129,15 +157,16 @@ export declare abstract class Engine {
     off(name: "info", cb: (info: Info) => void): void;
     off(name: "bestmove", cb: (move: BestMove) => void): void;
     off(name: "error", cb: (err: Error) => void): void;
+    _debug(msg: string, ...args: any[]): void;
+    _error(err: Error): void;
     /**
-     * @param line Single line string without linebreak.
+     * This method should be called when child process is ready.
      */
-    protected abstract writeln(line: string): void;
-    /**
-     * In this method, beforeExit() and afterExit() should be called properly.
-     * afterExit() can be called asynchronously.
-     */
-    protected abstract exit(): void;
+    _onReady(): void;
+    _onBeforeExit(): void;
+    _onAfterExit(): void;
+    _onReadLine(line: string): void;
+    private parseInfoArgs;
     private emitDebug;
     private emitError;
     private emitExit;
@@ -147,15 +176,5 @@ export declare abstract class Engine {
     private emitBestMove;
     private changeState;
     private assertState;
-    protected debug(msg: string, ...args: any[]): void;
-    protected error(err: Error): void;
-    /**
-     * This method should be called when child process is ready.
-     */
-    protected processStarted(): void;
-    protected beforeExit(): void;
-    protected afterExit(): void;
-    protected parseLine(line: string): void;
-    private parseInfoArgs;
-    private _writeln;
+    private writeln;
 }

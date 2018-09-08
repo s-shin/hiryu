@@ -1,6 +1,6 @@
 {
   "name": "@hiryu/usi-engine",
-  "version": "0.2.0",
+  "version": "0.1.0",
   "private": true,
   "license": "MIT",
   "main": "./lib/index.js",
@@ -8,7 +8,7 @@
   "scripts": {
     "build": "rimraf lib && tsc",
     "lint": "tslint src/**/*",
-    "test": "jest"
+    "test": "echo none"
   },
   "dependencies": {
     "@types/jest": "^23.3.1",

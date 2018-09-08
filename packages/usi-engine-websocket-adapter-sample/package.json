@@ -1,26 +1,20 @@
 {
-  "name": "@hiryu/shogi-object-model-boardgame-io-sample",
+  "name": "@hiryu/usi-engine-websocket-adapter-sample",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
-    "build": "rimraf out && tsc",
+    "build": "rimraf lib && tsc",
     "lint": "tslint src/**/*",
     "test": "echo none",
     "dev": "parcel index.html"
   },
   "dependencies": {
-    "@hiryu/react-shogi-object-model": "^0.1.0",
-    "@hiryu/shogi-object-model": "^0.1.0",
-    "@types/jest": "^23.3.1",
-    "@types/react": "^16.4.12",
-    "@types/react-dom": "^16.0.7",
-    "boardgame.io": "^0.25.5",
-    "react": "^16.4.2",
-    "react-dom": "^16.4.2",
-    "styled-components": "^3.4.5"
+    "@hiryu/usi-engine": "^0.1.0",
+    "@hiryu/usi-engine-websocket-adapter": "^0.1.0",
+    "@types/jest": "^23.3.1"
   },
   "devDependencies": {
     "jest": "^23.5.0",
@@ -32,8 +26,7 @@
   "files": [
     "package.json",
     "README.md",
-    "lib",
-    "schema"
+    "lib"
   ],
   "jest": {
     "transform": {

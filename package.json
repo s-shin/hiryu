@@ -7,6 +7,9 @@
     "lerna": "^2.9.0"
   },
   "private": true,
+  "scripts": {
+    "test": "lerna run test"
+  },
   "workspaces": [
     "packages/*"
   ]

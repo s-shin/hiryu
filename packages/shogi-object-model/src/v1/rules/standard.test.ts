@@ -13,7 +13,7 @@ describe("standard rule", () => {
     });
     game.children.push(next);
     expect(next.state.nextTurn).toEqual(som.Color.WHITE);
-    expect(next.moveNum).toEqual(2);
+    expect(next.moveNum).toEqual(1);
   });
 
   test("isNeverMovable", () => {

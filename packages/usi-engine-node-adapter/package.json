@@ -11,7 +11,7 @@
   "scripts": {
     "build": "rimraf lib && tsc",
     "lint": "tslint src/**/*",
-    "test": "jest"
+    "test": "echo none"
   },
   "dependencies": {
     "@hiryu/usi-engine": "^0.1.0",

@@ -1,4 +1,4 @@
-import { newDefaultReadLine } from "./ReadLine";
+import { newDefaultReadLine } from "./readline";
 
 describe("ReadLine", () => {
   test("basic", () => {

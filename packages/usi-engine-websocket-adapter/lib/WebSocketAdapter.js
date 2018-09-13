@@ -21,8 +21,9 @@ class WebSocketAdapter extends usi_engine_1.EngineAdapter {
         this.ws.onopen = () => {
             this.onReady();
         };
-        this.ws.onerror = (e) => {
-            this.onError(new Error(e.error.message));
+        let wasError = false;
+        this.ws.onerror = () => {
+            wasError = true;
         };
         this.ws.onmessage = e => {
             const onMessage = this.opts.hooks && this.opts.hooks.onMessage || identity;
@@ -31,7 +32,10 @@ class WebSocketAdapter extends usi_engine_1.EngineAdapter {
                 this.onReadLine(onReadLine(line));
             }
         };
-        this.ws.onclose = () => {
+        this.ws.onclose = e => {
+            if (wasError) {
+                this.onError(new Error(`WebSocket error: ${e.code} ${e.reason}`));
+            }
             this.onAfterExit();
             this.ws = undefined;
         };

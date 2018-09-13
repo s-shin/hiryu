@@ -36,8 +36,9 @@ export default class WebSocketAdapter extends EngineAdapter {
       this.onReady();
     };
 
-    this.ws.onerror = (e: any) => {
-      this.onError(new Error(e.error.message));
+    let wasError = false;
+    this.ws.onerror = () => {
+      wasError = true;
     };
 
     this.ws.onmessage = e => {
@@ -48,7 +49,10 @@ export default class WebSocketAdapter extends EngineAdapter {
       }
     };
 
-    this.ws.onclose = () => {
+    this.ws.onclose = e => {
+      if (wasError) {
+        this.onError(new Error(`WebSocket error: ${e.code} ${e.reason}`));
+      }
       this.onAfterExit();
       this.ws = undefined;
     };

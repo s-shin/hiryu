@@ -1,0 +1,33 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+const paco_1 = require("./paco");
+const ws = paco_1.desc(paco_1.many(paco_1.charIn(" \t\r\n")), "ws");
+const sign = paco_1.charIn("+-");
+const onenine = paco_1.charRange("1", "9");
+const digit = paco_1.charRange("0", "9");
+const digits = paco_1.join(paco_1.many(digit));
+const int = paco_1.joinSeq(paco_1.optional(sign, ""), paco_1.oneOf(paco_1.char("0"), paco_1.joinSeq(onenine, digits)));
+const flac = paco_1.joinSeq(paco_1.char("."), digits);
+const exp = paco_1.joinSeq(paco_1.charIn("Ee"), sign, digits);
+const number = paco_1.desc(paco_1.transform(paco_1.joinSeq(int, paco_1.optional(flac, ""), paco_1.optional(exp, "")), s => Number(s)), "number");
+const hex = paco_1.oneOf(digit, paco_1.charRange("a", "f"), paco_1.charRange("A", "F"));
+const escape = paco_1.oneOf(paco_1.charIn(`"\\/bnrt`), paco_1.joinSeq(paco_1.char("u"), hex, hex, hex, hex));
+const character = paco_1.oneOf(paco_1.joinSeq(paco_1.char("\\"), escape), paco_1.charIf(c => {
+    const cc = c.charCodeAt(0);
+    return ("\u0020".charCodeAt(0) <= cc && cc <= "\u10ffff".charCodeAt(0) && c !== "\\" && c !== `"`);
+}));
+const str = paco_1.desc(paco_1.transform(paco_1.seq(paco_1.char(`"`), paco_1.join(paco_1.many(character)), paco_1.char(`"`)), v => v[1]), "string");
+const value = paco_1.desc(paco_1.lazy(), "value");
+const element = paco_1.transform(paco_1.seq(ws, value, ws), v => v[1]);
+const elements = paco_1.desc(paco_1.lazy(), "elements");
+elements.parser = paco_1.oneOf(paco_1.transform(paco_1.seq(element, paco_1.char(","), elements), v => [v[0], ...v[2]]), paco_1.transform(element, v => [v]));
+const array = paco_1.desc(paco_1.transform(paco_1.seq(paco_1.char("["), paco_1.oneOf(elements, paco_1.constant(ws, Array())), paco_1.char("]")), v => v[1]), "array");
+const member = paco_1.transform(paco_1.seq(ws, str, ws, paco_1.char(":"), element), v => ({ [v[1]]: v[4] }));
+const members = paco_1.desc(paco_1.lazy(), "members");
+members.parser = paco_1.oneOf(paco_1.transform(paco_1.seq(member, paco_1.char(","), members), v => (Object.assign({}, v[0], v[2]))), member);
+const object = paco_1.desc(paco_1.transform(paco_1.seq(paco_1.char("{"), paco_1.oneOf(members, paco_1.constant(ws, {})), paco_1.char("}")), v => v[1]), "object");
+const boolean = paco_1.desc(paco_1.transform(paco_1.oneOf(paco_1.string("true"), paco_1.string("false")), v => Boolean(v)), "boolean");
+const nil = paco_1.desc(paco_1.transform(paco_1.string("null"), () => null), "null");
+value.parser = paco_1.oneOf(str, number, boolean, nil, object, array);
+exports.json = element;
+//# sourceMappingURL=json.js.map

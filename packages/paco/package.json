@@ -1,5 +1,5 @@
 {
-  "name": "@hiryu/skeleton",
+  "name": "@hiryu/paco",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
@@ -8,24 +8,9 @@
   "scripts": {
     "build": "rimraf out && tsc",
     "lint": "tslint src/**/*",
-    "test": "echo no tests",
-    "dev": "parcel index.html"
+    "test": "jest"
   },
-  "dependencies": {
-    "@hiryu/react-shogi-object-model": "^0.1.0",
-    "@hiryu/shogi-object-model": "^0.1.0",
-    "@hiryu/usi-engine": "^0.1.0",
-    "@hiryu/usi-engine-websocket-adapter": "^0.1.0",
-    "@material-ui/core": "^3.0.3",
-    "@types/react-redux": "^6.0.7",
-    "react": "^16.4.2",
-    "react-dom": "^16.4.2",
-    "react-redux": "^5.0.7",
-    "redux": "^4.0.0",
-    "redux-devtools-extension": "^2.13.5",
-    "redux-thunk": "^2.3.0",
-    "styled-components": "^3.4.5"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@types/jest": "^23.3.1",
     "jest": "^23.5.0",

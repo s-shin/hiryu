@@ -8,7 +8,7 @@
   "scripts": {
     "build": "rimraf out && tsc",
     "lint": "tslint src/**/*",
-    "test": "echo none",
+    "test": "echo no tests",
     "dev": "parcel example/index.html"
   },
   "dependencies": {

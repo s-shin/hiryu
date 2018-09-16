@@ -153,6 +153,11 @@ export interface Record {
   events: EventList;
 }
 
+export interface RecordFile {
+  version: "v1";
+  record: Record;
+}
+
 //------------------------------------------------------------------------------
 // Constants
 //------------------------------------------------------------------------------

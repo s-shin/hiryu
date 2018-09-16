@@ -238,6 +238,7 @@ export interface OneOf {
   <V1, V2, V3, V4, V5, V6, V7, V8>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>, p6: Parser<V6>, p7: Parser<V7>, p8: Parser<V8>): Parser<V1 | V2 | V3 | V4 | V5 | V6 | V7 | V8>
   <V1, V2, V3, V4, V5, V6, V7, V8, V9>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>, p6: Parser<V6>, p7: Parser<V7>, p8: Parser<V8>, p9: Parser<V9>): Parser<V1 | V2 | V3 | V4 | V5 | V6 | V7 | V8 | V9>
   <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>, p6: Parser<V6>, p7: Parser<V7>, p8: Parser<V8>, p9: Parser<V9>, p10: Parser<V10>): Parser<V1 | V2 | V3 | V4 | V5 | V6 | V7 | V8 | V9 | V10>
+  <V>(...ps: Parser<V>[]): Parser<V>;
 }
 
 const _oneOf = (...ps: Parser<any>[]) => new OneOfParser(ps);
@@ -290,7 +291,6 @@ done
 // prettier-ignore
 export interface Seq {
   <V1, V2>(p1: Parser<V1>, p2: Parser<V2>): Parser<[V1, V2]>
-  <V1, V2>(p1: Parser<V1>, p2: Parser<V2>): Parser<[V1, V2]>
   <V1, V2, V3>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>): Parser<[V1, V2, V3]>
   <V1, V2, V3, V4>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>): Parser<[V1, V2, V3, V4]>
   <V1, V2, V3, V4, V5>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>): Parser<[V1, V2, V3, V4, V5]>
@@ -299,11 +299,39 @@ export interface Seq {
   <V1, V2, V3, V4, V5, V6, V7, V8>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>, p6: Parser<V6>, p7: Parser<V7>, p8: Parser<V8>): Parser<[V1, V2, V3, V4, V5, V6, V7, V8]>
   <V1, V2, V3, V4, V5, V6, V7, V8, V9>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>, p6: Parser<V6>, p7: Parser<V7>, p8: Parser<V8>, p9: Parser<V9>): Parser<[V1, V2, V3, V4, V5, V6, V7, V8, V9]>
   <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>, p6: Parser<V6>, p7: Parser<V7>, p8: Parser<V8>, p9: Parser<V9>, p10: Parser<V10>): Parser<[V1, V2, V3, V4, V5, V6, V7, V8, V9, V10]>
+  <V>(...ps: Parser<V>[]): Parser<V[]>;
 }
 
 const _seq = (...ps: Parser<any>[]) => new SeqParser(ps);
 
 export const seq: Seq = _seq;
+
+//---
+
+//! Read one character from the reader if specified parser failed to parse it.
+export class NotParser<V> implements Parser<string> {
+  name = "not";
+
+  constructor(public parser: Parser<V>) {}
+
+  parse(reader: Reader, tracer: ParserTracer): ParseResult<any> {
+    const rd = reader.clone();
+    const r = tracer.execute(this.parser, rd);
+    if (r.error) {
+      const c = rd.readChar();
+      if (c !== null) {
+        return { reader: rd, value: c };
+      }
+    }
+    return { reader, error: new Error("no character comsumed") };
+  }
+
+  toString(opts?: ParserToStringOptions) {
+    return `${this.name}: [^<${digToString(this.parser, opts)}>]`;
+  }
+}
+
+export const not = <V>(p: Parser<V>) => new NotParser(p);
 
 //---
 
@@ -357,6 +385,28 @@ export const charRange = (start: string, end: string, opts = { invert: false }) 
     `[${opts.invert ? "^" : ""}${escape(start)}-${escape(end)}]`,
   );
 
+export const anyChar = charIf(() => true);
+
+//---
+
+export class EofParser implements Parser<null> {
+  name = "eof";
+
+  parse(reader: Reader, tracer: ParserTracer): ParseResult<any> {
+    const rd = reader.clone();
+    if (rd.readChar() === null) {
+      return { reader, value: null };
+    }
+    return { reader, error: new Error("not eof") };
+  }
+
+  toString(opts?: ParserToStringOptions) {
+    return this.name;
+  }
+}
+
+export const eof = new EofParser();
+
 //---
 
 export const DEFAULT_MANY_OPTIONS: {
@@ -408,6 +458,9 @@ export class Many<V> implements Parser<V[]> {
 
 export const many = <Value>(p: Parser<Value>, opts = DEFAULT_MANY_OPTIONS) => new Many(p, opts);
 
+export const many1 = <V>(p: Parser<V>, max = DEFAULT_MANY_OPTIONS.max) =>
+  new Many(p, { min: 1, max });
+
 //---
 
 export class TransformParser<V1, V2> implements Parser<V2> {
@@ -429,6 +482,29 @@ export class TransformParser<V1, V2> implements Parser<V2> {
 }
 
 export const transform = <V1, V2>(p: Parser<V1>, fn: (v: V1) => V2) => new TransformParser(p, fn);
+
+//---
+
+export class ValidateParser<V> implements Parser<V> {
+  name = "validate";
+
+  constructor(public parser: Parser<V>, public cond: (v: V) => Error | undefined) {}
+
+  parse(reader: Reader, tracer: ParserTracer): ParseResult<V> {
+    const r = tracer.execute(this.parser, reader);
+    if (r.error) {
+      return { reader, error: r.error };
+    }
+    const err = this.cond(r.value!);
+    if (err) {
+      return { reader, error: err };
+    }
+    return r;
+  }
+}
+
+export const validate = <V>(p: Parser<V>, cond: (v: V) => Error | undefined) =>
+  new ValidateParser<V>(p, cond);
 
 //---
 
@@ -463,3 +539,12 @@ export const join = (p: Parser<string[]>) => transform(p, ss => ss.join(""));
 export const joinSeq = (...ps: Parser<string>[]) => join(_seq(...ps));
 
 export const string = (s: string) => joinSeq(...s.split("").map(c => char(c)));
+
+export const filter = <V1, V2 extends V1>(p: Parser<V1[]>, cond: (v: V1) => v is V2) =>
+  transform(p, vs => vs.filter(cond));
+
+function isNotNull<V>(v: V | null): v is V {
+  return v !== null;
+}
+
+export const filterNull = <V>(p: Parser<(V | null)[]>) => filter(p, isNotNull);

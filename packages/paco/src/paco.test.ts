@@ -3,6 +3,7 @@ import {
   char,
   StringReader,
   string,
+  not,
   seq,
   join,
   charRange,
@@ -14,7 +15,7 @@ import {
   execute,
 } from "./index";
 import { json } from "./json";
-import { BasicParserTracer } from "@hiryu/paco/src/paco";
+import { BasicParserTracer, many1 } from "@hiryu/paco/src/paco";
 
 describe("paco", () => {
   const reader = new StringReader("foo\nbar");
@@ -113,6 +114,11 @@ describe("paco", () => {
       expect(r.value).toBeUndefined();
       expect(r.error).not.toBeUndefined();
     }
+  });
+
+  test("not", () => {
+    const r = execute(join(many1(not(string("bar")))), reader);
+    expect(r.value).toBe("foo\n");
   });
 
   test("join", () => {

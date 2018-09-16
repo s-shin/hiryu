@@ -12,6 +12,7 @@
     "build_sample": "cd sample && tsc"
   },
   "dependencies": {
+    "@hiryu/paco": "^0.1.0",
     "@types/jest": "^23.3.1"
   },
   "devDependencies": {

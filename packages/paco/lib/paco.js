@@ -162,6 +162,30 @@ exports.SeqParser = SeqParser;
 const _seq = (...ps) => new SeqParser(ps);
 exports.seq = _seq;
 //---
+//! Read one character from the reader if specified parser failed to parse it.
+class NotParser {
+    constructor(parser) {
+        this.parser = parser;
+        this.name = "not";
+    }
+    parse(reader, tracer) {
+        const rd = reader.clone();
+        const r = tracer.execute(this.parser, rd);
+        if (r.error) {
+            const c = rd.readChar();
+            if (c !== null) {
+                return { reader: rd, value: c };
+            }
+        }
+        return { reader, error: new Error("no character comsumed") };
+    }
+    toString(opts) {
+        return `${this.name}: [^<${digToString(this.parser, opts)}>]`;
+    }
+}
+exports.NotParser = NotParser;
+exports.not = (p) => new NotParser(p);
+//---
 //! Parse single UTF-16 character.
 class CharParser {
     constructor(cond, opts = { invert: false }) {
@@ -199,6 +223,25 @@ exports.charRange = (start, end, opts = { invert: false }) => exports.desc(expor
     const cc = c.charCodeAt(0);
     return start.charCodeAt(0) <= cc && cc <= end.charCodeAt(0);
 }), "charRange", `[${opts.invert ? "^" : ""}${escape(start)}-${escape(end)}]`);
+exports.anyChar = exports.charIf(() => true);
+//---
+class EofParser {
+    constructor() {
+        this.name = "eof";
+    }
+    parse(reader, tracer) {
+        const rd = reader.clone();
+        if (rd.readChar() === null) {
+            return { reader, value: null };
+        }
+        return { reader, error: new Error("not eof") };
+    }
+    toString(opts) {
+        return this.name;
+    }
+}
+exports.EofParser = EofParser;
+exports.eof = new EofParser();
 //---
 exports.DEFAULT_MANY_OPTIONS = { min: 0, max: 1024 * 1024 };
 class Many {
@@ -245,6 +288,7 @@ class Many {
 }
 exports.Many = Many;
 exports.many = (p, opts = exports.DEFAULT_MANY_OPTIONS) => new Many(p, opts);
+exports.many1 = (p, max = exports.DEFAULT_MANY_OPTIONS.max) => new Many(p, { min: 1, max });
 //---
 class TransformParser {
     constructor(parser, transform) {
@@ -265,6 +309,27 @@ class TransformParser {
 }
 exports.TransformParser = TransformParser;
 exports.transform = (p, fn) => new TransformParser(p, fn);
+//---
+class ValidateParser {
+    constructor(parser, cond) {
+        this.parser = parser;
+        this.cond = cond;
+        this.name = "validate";
+    }
+    parse(reader, tracer) {
+        const r = tracer.execute(this.parser, reader);
+        if (r.error) {
+            return { reader, error: r.error };
+        }
+        const err = this.cond(r.value);
+        if (err) {
+            return { reader, error: err };
+        }
+        return r;
+    }
+}
+exports.ValidateParser = ValidateParser;
+exports.validate = (p, cond) => new ValidateParser(p, cond);
 //---
 class LazyParser {
     constructor() {
@@ -288,4 +353,9 @@ exports.optional = (p, defVal) => exports.desc(exports.transform(exports.many(p,
 exports.join = (p) => exports.transform(p, ss => ss.join(""));
 exports.joinSeq = (...ps) => exports.join(_seq(...ps));
 exports.string = (s) => exports.joinSeq(...s.split("").map(c => exports.char(c)));
+exports.filter = (p, cond) => exports.transform(p, vs => vs.filter(cond));
+function isNotNull(v) {
+    return v !== null;
+}
+exports.filterNull = (p) => exports.filter(p, isNotNull);
 //# sourceMappingURL=paco.js.map

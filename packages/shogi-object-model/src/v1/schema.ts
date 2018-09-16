@@ -209,7 +209,14 @@ export default
           "$ref": "#/definitions/Color"
         },
         "srcSquare": {
-          "$ref": "#/definitions/Square"
+          "oneOf": [
+            {
+              "$ref": "#/definitions/Square"
+            },
+            {
+              "type": "null"
+            }
+          ]
         },
         "srcPiece": {
           "$ref": "#/definitions/Piece"
@@ -393,16 +400,16 @@ export default
     "RecordFile": {
       "type": "object",
       "properties": {
-        "schema": {
+        "version": {
           "type": "string",
-          "const": "http://s-shin.github.com/hiryu/packages/shogi-object-model/schema/v1"
+          "const": "v1"
         },
         "record": {
           "$ref": "#/definitions/Record"
         }
       },
       "required": [
-        "schema",
+        "version",
         "record"
       ]
     }

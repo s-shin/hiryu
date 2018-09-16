@@ -1,4 +1,5 @@
-import { Color, Piece } from "../definitions";
+import { Color, Piece, Movement } from "../definitions";
+import { isArray } from "util";
 
 const kansujiStrs = ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
 
@@ -35,8 +36,8 @@ export function stringifyColor(c: Color, opts = { style: Style.JA_ABBR }): strin
 }
 
 const pieceStrs: {
-  [key: number]: {
-    [key: string]: string,
+  [style: number]: {
+    [piece: string]: string | { [variant: string]: string },
   },
 } = {
   [Style.JA]: {
@@ -63,7 +64,7 @@ const pieceStrs: {
     [Piece.KI]: "金",
     [Piece.KA]: "角",
     [Piece.HI]: "飛",
-    [Piece.OU]: "王",
+    [Piece.OU]: { default: "王", gyoku: "玉" },
     [Piece.TO]: "と",
     [Piece.NY]: "杏",
     [Piece.NK]: "圭",
@@ -105,6 +106,58 @@ const pieceStrs: {
   },
 };
 
-export function stringifyPiece(p: Piece, opts = { style: Style.JA_ABBR }): string {
-  return pieceStrs[opts.style][p];
+export function stringifyPiece(p: Piece, opts = { style: Style.JA_ABBR, variants: [] }): string {
+  const t = pieceStrs[opts.style][p];
+  if (typeof t === "string") {
+    return t;
+  }
+  for (const variant of [...opts.variants]) {
+    const tt = t[variant];
+    if (tt) {
+      return tt;
+    }
+  }
+  return t.default;
+}
+
+export function parsePiece(s: string, opts = { style: Style.JA_ABBR }): Piece | null {
+  const strs = pieceStrs[opts.style];
+  for (const p of Object.keys(strs)) {
+    const t = strs[p];
+    if (typeof t === "string") {
+      return t === s ? p as Piece : null;
+    }
+    for (const variant of Object.keys(t)) {
+      const tt = t[variant];
+      if (tt === s) {
+        return p as Piece;
+      }
+    }
+  }
+  return null;
+}
+
+const movementStrs: {
+  [movement: string]: string,
+} = {
+  [Movement.DROPPED]: "打",
+  [Movement.UPWARD]: "上",
+  [Movement.DOWNWARD]: "引",
+  [Movement.HORIZONTALLY]: "寄",
+  [Movement.FROM_RIGHT]: "右",
+  [Movement.FROM_LEFT]: "左",
+  [Movement.VERTICALLY]: "直",
+}
+
+export function stringifyMovement(m: Movement) {
+  return movementStrs[m];
+}
+
+export function parseMovement(s: string): Movement | null {
+  for (const m of Object.keys(movementStrs)) {
+    if (s === movementStrs[m]) {
+      return m as Movement;
+    }
+  }
+  return null;
 }

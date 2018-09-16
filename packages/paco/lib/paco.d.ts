@@ -91,6 +91,7 @@ export interface OneOf {
     <V1, V2, V3, V4, V5, V6, V7, V8>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>, p6: Parser<V6>, p7: Parser<V7>, p8: Parser<V8>): Parser<V1 | V2 | V3 | V4 | V5 | V6 | V7 | V8>;
     <V1, V2, V3, V4, V5, V6, V7, V8, V9>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>, p6: Parser<V6>, p7: Parser<V7>, p8: Parser<V8>, p9: Parser<V9>): Parser<V1 | V2 | V3 | V4 | V5 | V6 | V7 | V8 | V9>;
     <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>, p6: Parser<V6>, p7: Parser<V7>, p8: Parser<V8>, p9: Parser<V9>, p10: Parser<V10>): Parser<V1 | V2 | V3 | V4 | V5 | V6 | V7 | V8 | V9 | V10>;
+    <V>(...ps: Parser<V>[]): Parser<V>;
 }
 export declare const oneOf: OneOf;
 export declare class SeqParser implements Parser<any> {
@@ -102,7 +103,6 @@ export declare class SeqParser implements Parser<any> {
 }
 export interface Seq {
     <V1, V2>(p1: Parser<V1>, p2: Parser<V2>): Parser<[V1, V2]>;
-    <V1, V2>(p1: Parser<V1>, p2: Parser<V2>): Parser<[V1, V2]>;
     <V1, V2, V3>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>): Parser<[V1, V2, V3]>;
     <V1, V2, V3, V4>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>): Parser<[V1, V2, V3, V4]>;
     <V1, V2, V3, V4, V5>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>): Parser<[V1, V2, V3, V4, V5]>;
@@ -111,8 +111,17 @@ export interface Seq {
     <V1, V2, V3, V4, V5, V6, V7, V8>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>, p6: Parser<V6>, p7: Parser<V7>, p8: Parser<V8>): Parser<[V1, V2, V3, V4, V5, V6, V7, V8]>;
     <V1, V2, V3, V4, V5, V6, V7, V8, V9>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>, p6: Parser<V6>, p7: Parser<V7>, p8: Parser<V8>, p9: Parser<V9>): Parser<[V1, V2, V3, V4, V5, V6, V7, V8, V9]>;
     <V1, V2, V3, V4, V5, V6, V7, V8, V9, V10>(p1: Parser<V1>, p2: Parser<V2>, p3: Parser<V3>, p4: Parser<V4>, p5: Parser<V5>, p6: Parser<V6>, p7: Parser<V7>, p8: Parser<V8>, p9: Parser<V9>, p10: Parser<V10>): Parser<[V1, V2, V3, V4, V5, V6, V7, V8, V9, V10]>;
+    <V>(...ps: Parser<V>[]): Parser<V[]>;
 }
 export declare const seq: Seq;
+export declare class NotParser<V> implements Parser<string> {
+    parser: Parser<V>;
+    name: string;
+    constructor(parser: Parser<V>);
+    parse(reader: Reader, tracer: ParserTracer): ParseResult<any>;
+    toString(opts?: ParserToStringOptions): string;
+}
+export declare const not: <V>(p: Parser<V>) => NotParser<V>;
 export declare class CharParser implements Parser<string> {
     cond: (c: string) => boolean;
     opts: {
@@ -137,6 +146,13 @@ export declare const charIn: (cs: string, opts?: {
 export declare const charRange: (start: string, end: string, opts?: {
     invert: boolean;
 }) => DescParser<string>;
+export declare const anyChar: CharParser;
+export declare class EofParser implements Parser<null> {
+    name: string;
+    parse(reader: Reader, tracer: ParserTracer): ParseResult<any>;
+    toString(opts?: ParserToStringOptions): string;
+}
+export declare const eof: EofParser;
 export declare const DEFAULT_MANY_OPTIONS: {
     min?: number;
     max?: number;
@@ -159,6 +175,7 @@ export declare const many: <Value>(p: Parser<Value>, opts?: {
     min?: number | undefined;
     max?: number | undefined;
 }) => Many<Value>;
+export declare const many1: <V>(p: Parser<V>, max?: number | undefined) => Many<V>;
 export declare class TransformParser<V1, V2> implements Parser<V2> {
     parser: Parser<V1>;
     transform: (v: V1) => V2;
@@ -168,6 +185,14 @@ export declare class TransformParser<V1, V2> implements Parser<V2> {
     toString(opts?: ParserToStringOptions): string;
 }
 export declare const transform: <V1, V2>(p: Parser<V1>, fn: (v: V1) => V2) => TransformParser<V1, V2>;
+export declare class ValidateParser<V> implements Parser<V> {
+    parser: Parser<V>;
+    cond: (v: V) => Error | undefined;
+    name: string;
+    constructor(parser: Parser<V>, cond: (v: V) => Error | undefined);
+    parse(reader: Reader, tracer: ParserTracer): ParseResult<V>;
+}
+export declare const validate: <V>(p: Parser<V>, cond: (v: V) => Error | undefined) => ValidateParser<V>;
 export declare class LazyParser<V> implements Parser<V> {
     name: string;
     parser?: Parser<V>;
@@ -180,3 +205,5 @@ export declare const optional: <Value>(p: Parser<Value>, defVal: Value) => DescP
 export declare const join: (p: Parser<string[]>) => TransformParser<string[], string>;
 export declare const joinSeq: (...ps: Parser<string>[]) => TransformParser<string[], string>;
 export declare const string: (s: string) => TransformParser<string[], string>;
+export declare const filter: <V1, V2 extends V1>(p: Parser<V1[]>, cond: (v: V1) => v is V2) => TransformParser<V1[], V2[]>;
+export declare const filterNull: <V>(p: Parser<(V | null)[]>) => TransformParser<(V | null)[], V[]>;

@@ -61,13 +61,12 @@ export interface ParseResult<Value> {
 
 export interface ParserTracer {
   execute<V>(parser: Parser<V>, reader: Reader): ParseResult<V>;
-  fallback<V>(waste: ParseResult<V>): void;
 }
 
-interface BasicParserTracerOptions {
+export interface BasicParserTracerOptions {
   level: "none" | "verbose";
   indent: string;
-  stringify: ParserStringifyOptions;
+  stringify: ParserToStringOptions;
   log: (...vs: any[]) => void;
 }
 
@@ -111,26 +110,29 @@ export class BasicParserTracer implements ParserTracer {
     this.depth--;
     return r;
   }
-
-  fallback<V>(waste: ParseResult<V>) {
-    if (this.opts.level === "none") {
-      return;
-    }
-    const indent = this.opts.indent.repeat(this.depth);
-    this.opts.log(`${indent}# fallback (error: ${waste.error && waste.error.message})`);
-  }
 }
 
-export interface ParserStringifyOptions {
+export interface ParserToStringOptions {
+  /**
+   * * `diggable < 0`: infinite
+   * * `diggable === 0`: no more diggable
+   * * `diggable > 0`: can dig `diggable` times
+   */
   diggable: number;
 }
 
 export interface Parser<Value> {
+  //! Parser name.
   name: string;
+  //! Parse with reader and tracer.
   parse(reader: Reader, tracer: ParserTracer): ParseResult<Value>;
-  toString(opts?: ParserStringifyOptions): string;
+  //! String representation of parser.
+  toString(opts?: ParserToStringOptions): string;
 }
 
+/**
+ * Execute parsing with reader and tracer.
+ */
 export function execute<V>(
   parser: Parser<V>,
   reader: Reader,
@@ -139,7 +141,10 @@ export function execute<V>(
   return tracer.execute(parser, reader);
 }
 
-export function digToString<V>(p: Parser<V>, opts?: ParserStringifyOptions) {
+/**
+ * Helper function for calling toString of child parsers.
+ */
+export function digToString<V>(p: Parser<V>, opts?: ParserToStringOptions) {
   const o = { diggable: 0, ...opts };
   if (o.diggable > 0) {
     o.diggable--;
@@ -150,7 +155,7 @@ export function digToString<V>(p: Parser<V>, opts?: ParserStringifyOptions) {
 //---
 
 export interface DescDetailsGenerator<V> {
-  (p: Parser<V>, opts?: ParserStringifyOptions): string;
+  (p: Parser<V>, opts?: ParserToStringOptions): string;
 }
 
 export class DescParser<V> implements Parser<V> {
@@ -164,7 +169,7 @@ export class DescParser<V> implements Parser<V> {
     return tracer.execute(this.parser, reader);
   }
 
-  toString(opts?: ParserStringifyOptions) {
+  toString(opts?: ParserToStringOptions) {
     const desc =
       typeof this.details === "function" ? this.details(this.parser, opts) : this.details;
     return [this.name, ...(desc.length === 0 ? [] : [": ", desc])].join("");
@@ -189,7 +194,6 @@ export class OneOfParser implements Parser<any> {
     for (const p of ps) {
       const r = tracer.execute(p, reader);
       if (r.error) {
-        tracer.fallback(r);
         continue;
       }
       return r;
@@ -197,7 +201,7 @@ export class OneOfParser implements Parser<any> {
     return { reader, error: new Error("not matched") };
   }
 
-  toString(opts?: ParserStringifyOptions) {
+  toString(opts?: ParserToStringOptions) {
     return `${this.name}: (${this.ps.map(p => `<${digToString(p, opts)}>`).join("|")})`;
   }
 }
@@ -262,7 +266,7 @@ export class SeqParser implements Parser<any> {
     return { reader: rd, value: values };
   }
 
-  toString(opts?: ParserStringifyOptions) {
+  toString(opts?: ParserToStringOptions) {
     return `${this.name}: ${this.ps.map(p => `<${digToString(p, opts)}>`).join("")}`;
   }
 }
@@ -388,7 +392,7 @@ export class Many<V> implements Parser<V[]> {
     return { reader: rd, value: values };
   }
 
-  toString(opts?: ParserStringifyOptions) {
+  toString(opts?: ParserToStringOptions) {
     const inf = this.opts.max === DEFAULT_MANY_OPTIONS.max;
     let rep;
     if (this.opts.min === 0) {
@@ -419,7 +423,7 @@ export class TransformParser<V1, V2> implements Parser<V2> {
     return { reader: r.reader, value: this.transform(r.value!) };
   }
 
-  toString(opts?: ParserStringifyOptions) {
+  toString(opts?: ParserToStringOptions) {
     return `${this.name}: (${this.transform.toString()})(${digToString(this.parser, opts)})`;
   }
 }
@@ -440,7 +444,7 @@ export class LazyParser<V> implements Parser<V> {
     return tracer.execute(this.parser, reader);
   }
 
-  toString(opts?: ParserStringifyOptions) {
+  toString(opts?: ParserToStringOptions) {
     return `${this.name}: <${this.parser && digToString(this.parser, opts)}>`;
   }
 }

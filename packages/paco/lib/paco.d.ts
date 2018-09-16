@@ -25,12 +25,11 @@ export interface ParseResult<Value> {
 }
 export interface ParserTracer {
     execute<V>(parser: Parser<V>, reader: Reader): ParseResult<V>;
-    fallback<V>(waste: ParseResult<V>): void;
 }
-interface BasicParserTracerOptions {
+export interface BasicParserTracerOptions {
     level: "none" | "verbose";
     indent: string;
-    stringify: ParserStringifyOptions;
+    stringify: ParserToStringOptions;
     log: (...vs: any[]) => void;
 }
 export declare class BasicParserTracer implements ParserTracer {
@@ -41,20 +40,30 @@ export declare class BasicParserTracer implements ParserTracer {
         [key in keyof BasicParserTracerOptions]?: BasicParserTracerOptions[key];
     });
     execute<V>(parser: Parser<V>, reader: Reader): ParseResult<V>;
-    fallback<V>(waste: ParseResult<V>): void;
 }
-export interface ParserStringifyOptions {
+export interface ParserToStringOptions {
+    /**
+     * * `diggable < 0`: infinite
+     * * `diggable === 0`: no more diggable
+     * * `diggable > 0`: can dig `diggable` times
+     */
     diggable: number;
 }
 export interface Parser<Value> {
     name: string;
     parse(reader: Reader, tracer: ParserTracer): ParseResult<Value>;
-    toString(opts?: ParserStringifyOptions): string;
+    toString(opts?: ParserToStringOptions): string;
 }
+/**
+ * Execute parsing with reader and tracer.
+ */
 export declare function execute<V>(parser: Parser<V>, reader: Reader, tracer?: ParserTracer): ParseResult<V>;
-export declare function digToString<V>(p: Parser<V>, opts?: ParserStringifyOptions): string;
+/**
+ * Helper function for calling toString of child parsers.
+ */
+export declare function digToString<V>(p: Parser<V>, opts?: ParserToStringOptions): string;
 export interface DescDetailsGenerator<V> {
-    (p: Parser<V>, opts?: ParserStringifyOptions): string;
+    (p: Parser<V>, opts?: ParserToStringOptions): string;
 }
 export declare class DescParser<V> implements Parser<V> {
     parser: Parser<V>;
@@ -62,7 +71,7 @@ export declare class DescParser<V> implements Parser<V> {
     details: DescDetailsGenerator<V> | string;
     constructor(parser: Parser<V>, name: string, details?: DescDetailsGenerator<V> | string);
     parse(reader: Reader, tracer: ParserTracer): ParseResult<V>;
-    toString(opts?: ParserStringifyOptions): string;
+    toString(opts?: ParserToStringOptions): string;
 }
 export declare const desc: <V>(parser: Parser<V>, name: string, details?: string | DescDetailsGenerator<V>) => DescParser<V>;
 export declare class OneOfParser implements Parser<any> {
@@ -70,7 +79,7 @@ export declare class OneOfParser implements Parser<any> {
     name: string;
     constructor(ps: Parser<any>[]);
     parse(reader: Reader, tracer: ParserTracer): ParseResult<any>;
-    toString(opts?: ParserStringifyOptions): string;
+    toString(opts?: ParserToStringOptions): string;
 }
 export interface OneOf {
     <V1, V2>(p1: Parser<V1>, p2: Parser<V2>): Parser<V1 | V2>;
@@ -89,7 +98,7 @@ export declare class SeqParser implements Parser<any> {
     name: string;
     constructor(ps: Parser<any>[]);
     parse(reader: Reader, tracer: ParserTracer): ParseResult<any>;
-    toString(opts?: ParserStringifyOptions): string;
+    toString(opts?: ParserToStringOptions): string;
 }
 export interface Seq {
     <V1, V2>(p1: Parser<V1>, p2: Parser<V2>): Parser<[V1, V2]>;
@@ -144,7 +153,7 @@ export declare class Many<V> implements Parser<V[]> {
         max?: number | undefined;
     });
     parse(reader: Reader, tracer: ParserTracer): ParseResult<V[]>;
-    toString(opts?: ParserStringifyOptions): string;
+    toString(opts?: ParserToStringOptions): string;
 }
 export declare const many: <Value>(p: Parser<Value>, opts?: {
     min?: number | undefined;
@@ -156,14 +165,14 @@ export declare class TransformParser<V1, V2> implements Parser<V2> {
     name: string;
     constructor(parser: Parser<V1>, transform: (v: V1) => V2);
     parse(reader: Reader, tracer: ParserTracer): ParseResult<V2>;
-    toString(opts?: ParserStringifyOptions): string;
+    toString(opts?: ParserToStringOptions): string;
 }
 export declare const transform: <V1, V2>(p: Parser<V1>, fn: (v: V1) => V2) => TransformParser<V1, V2>;
 export declare class LazyParser<V> implements Parser<V> {
     name: string;
     parser?: Parser<V>;
     parse(reader: Reader, tracer: ParserTracer): ParseResult<V>;
-    toString(opts?: ParserStringifyOptions): string;
+    toString(opts?: ParserToStringOptions): string;
 }
 export declare const lazy: <V>() => LazyParser<V>;
 export declare const constant: <V1, V2>(p: Parser<V1>, value: V2) => TransformParser<V1, V2>;
@@ -171,4 +180,3 @@ export declare const optional: <Value>(p: Parser<Value>, defVal: Value) => DescP
 export declare const join: (p: Parser<string[]>) => TransformParser<string[], string>;
 export declare const joinSeq: (...ps: Parser<string>[]) => TransformParser<string[], string>;
 export declare const string: (s: string) => TransformParser<string[], string>;
-export {};

@@ -68,13 +68,6 @@ class BasicParserTracer {
         this.depth--;
         return r;
     }
-    fallback(waste) {
-        if (this.opts.level === "none") {
-            return;
-        }
-        const indent = this.opts.indent.repeat(this.depth);
-        this.opts.log(`${indent}# fallback (error: ${waste.error && waste.error.message})`);
-    }
 }
 BasicParserTracer.DEFUALT_OPTIONS = {
     level: "none",
@@ -83,10 +76,16 @@ BasicParserTracer.DEFUALT_OPTIONS = {
     log: (...vs) => console.log(...vs),
 };
 exports.BasicParserTracer = BasicParserTracer;
+/**
+ * Execute parsing with reader and tracer.
+ */
 function execute(parser, reader, tracer = new BasicParserTracer()) {
     return tracer.execute(parser, reader);
 }
 exports.execute = execute;
+/**
+ * Helper function for calling toString of child parsers.
+ */
 function digToString(p, opts) {
     const o = Object.assign({ diggable: 0 }, opts);
     if (o.diggable > 0) {
@@ -122,7 +121,6 @@ class OneOfParser {
         for (const p of ps) {
             const r = tracer.execute(p, reader);
             if (r.error) {
-                tracer.fallback(r);
                 continue;
             }
             return r;

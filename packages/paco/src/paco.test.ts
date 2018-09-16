@@ -82,7 +82,7 @@ describe("paco", () => {
       expect(r.error).not.toBeUndefined();
     }
     {
-      // Unicode characters constructed multiple code points should be parsed by string parser.
+      // Unicode characters constructed by multiple code points should be parsed by string parser.
       const rd = new StringReader("🍣👨‍👩‍👧‍👦");
       const r1 = execute(string("🍣"), rd);
       expect(r1.value).toBe("🍣");

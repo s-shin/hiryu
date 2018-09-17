@@ -125,6 +125,10 @@ export interface Record {
     startingSetup: StartingSetup;
     events: EventList;
 }
+export interface RecordFile {
+    version: "v1";
+    record: Record;
+}
 export declare const MIN_SQUARE_NUMBER: SquareNumber;
 export declare const MAX_SQUARE_NUMBER: SquareNumber;
 export declare function getSquareNumbers(): SquareNumber[];

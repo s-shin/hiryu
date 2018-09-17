@@ -12,130 +12,194 @@ import {
   constant,
   optional,
   oneOf,
-  filterNull,
   charRange,
   execute,
   StringReader,
+  sepBy,
   eof,
+  filterNull,
+  BasicParserTracer,
 } from "@hiryu/paco";
-import { EventType, SquareNumber, Square } from "../definitions";
+import {
+  EventType,
+  SquareNumber,
+  Square,
+  Color,
+  Event,
+  Handicap,
+  Record,
+  flipColor,
+} from "../definitions";
 import * as general from "./general";
 
-export function detectEncoding(
-  data: Uint8Array,
-  opts = { TextDecoder: TextDecoder },
-): "utf-8" | "sjis" {
+// 棋譜ファイル KIF 形式: http://kakinoki.o.oo7.jp/kif_format.html
+
+export function detectEncoding(data: Uint8Array): "utf-8" | "sjis" {
   // check BOM of UTF-8.
   if (data.length >= 3 && data[0] === 0xef && data[1] === 0xbb && data[2] === 0xbf) {
     return "utf-8";
   }
-  const decoder = new opts.TextDecoder("utf-8");
-  let head = decoder.decode(data.subarray(0, 64));
-  const end = head.indexOf("\n");
-  head = end > 0 ? head.slice(0, end) : head;
-  const m = head.match(/^#KIF version=([^ ]+) encoding=([^ ]+)/);
-  if (!m) {
+  const utf8checker = "#KIF version=2.0 encoding=UTF-8".split("").map(s => s.charCodeAt(0));
+  const len = utf8checker.length;
+  if (data.length < len) {
     return "sjis";
   }
-  if (m[2] === "UTF-8") {
-    return "utf-8";
+  for (let i = 0; i < len; i++) {
+    if (data[i] !== utf8checker[i]) {
+      return "sjis";
+    }
   }
   return "sjis";
 }
 
-export function decode(data: Uint8Array, opts = { TextDecoder: TextDecoder }) {
-  const encoding = detectEncoding(data, opts);
-  const decoder = new opts.TextDecoder(encoding);
-  return decoder.decode(data);
-}
-
 export const recordParser = (() => {
-  const ws = charIn(" \t　");
-  const newline = oneOf(charIn("\r\n"), char("\n"));
-  const notNewline = not(newline);
-  const blankLine = seq(many(ws), newline);
+  const ws = desc(charIn(" \t　"), "ws");
+  const newline = desc(oneOf(string("\r\n"), char("\n")), "newline");
+  const notNewline = desc(not(newline), "notNewline");
+  const blank = desc(constant(many(ws), null), "blank");
+  const comment = desc(constant(seq(char("#"), many(notNewline)), null), "comment");
+  const ignore = desc(oneOf(blank, comment), "ignore");
+  const ignoreLine = desc(constant(seq(ignore, newline), null), "ignoreLine");
 
-  const metaEntryKeyValueSep = string("：");
-  const metaEntryKey = join(many1(not(metaEntryKeyValueSep)));
-  const metaEntryValue = join(many1(notNewline));
-  const metaEntry = desc(
+  const metaEntryKeyValueSep = char("：");
+  const metaEntryKey = desc(join(many1(not(oneOf(metaEntryKeyValueSep, newline)))), "metaEntryKey");
+  const metaEntryValue = desc(join(many1(notNewline)), "metaEntryValue");
+  const metaEntryLine = desc(
     transform(seq(metaEntryKey, metaEntryKeyValueSep, metaEntryValue, newline), v => ({
       key: v[0],
       value: v[2],
     })),
-    "metaEntry",
+    "metaEntryLine",
   );
-  const meta = filterNull(many(oneOf(metaEntry, constant(blankLine, null))));
+  const meta = transform(many(oneOf(metaEntryLine, ignoreLine)), vs => {
+    const r = {
+      competition: "",
+      location: "",
+      startingSetup: { handicap: Handicap.NONE as Handicap | undefined },
+      players: { black: { name: "" }, white: { name: "" } },
+    };
+    // TODO
+    const setters: { [key: string]: (s: string) => void } = {
+      棋戦: s => (r.competition = s),
+      手合割: s => (r.startingSetup.handicap = general.parseHandicap(s) || undefined),
+      先手: s => (r.players.black.name = s),
+      後手: s => (r.players.white.name = s),
+    };
+    for (const v of vs) {
+      if (v === null) {
+        continue;
+      }
+      if (v.key in setters) {
+        setters[v.key](v.value);
+      }
+    }
+    return r;
+  });
 
-  const metaEnd = seq(
-    string("手数"),
-    many1(char("-")),
-    string("指手"),
-    many1(char("-")),
-    string("消費時間"),
-    many(char("-")),
-    newline,
+  const metaEnd = desc(
+    seq(
+      string("手数"),
+      many1(char("-")),
+      string("指手"),
+      many1(char("-")),
+      string("消費時間"),
+      many(char("-")),
+      newline,
+    ),
+    "metaEnd",
   );
 
-  const moveNum = transform(join(many1(charRange("0", "9"))), s => Number(s));
+  const moveNum = desc(transform(join(many1(charRange("0", "9"))), s => Number(s)), "moveNum");
   const hanNumParsers = "123456789"
     .split("")
     .map((s, i) => transform(string(s), () => (i + 1) as SquareNumber));
-  const hanNum = oneOf(...hanNumParsers);
+  const hanNum = desc(oneOf(...hanNumParsers), "hanNum");
   const zenNumParsers = "１２３４５６７８９"
     .split("")
     .map((s, i) => transform(string(s), () => (i + 1) as SquareNumber));
-  const zenNum = oneOf(...zenNumParsers);
+  const zenNum = desc(oneOf(...zenNumParsers), "zenNum");
   const kanNumParsers = "一二三四五六七八九"
     .split("")
     .map((s, i) => transform(string(s), () => (i + 1) as SquareNumber));
-  const kanNum = oneOf(...kanNumParsers);
-  const sameDst = constant<any, "same">(seq(string("同"), optional(string("　"), "")), "same");
-  const square = seq(zenNum, kanNum);
-  const dst = oneOf(square, sameDst);
+  const kanNum = desc(oneOf(...kanNumParsers), "kanNum");
+  const sameDst = desc(
+    constant<any, "same">(seq(string("同"), optional(string("　"), "")), "same"),
+    "sameDst",
+  );
+  const square = desc(seq(zenNum, kanNum), "square");
+  const dst = desc(oneOf(square, sameDst), "dst");
   const pieceParsers = "歩香桂銀金角飛玉と杏圭全馬龍"
     .split("")
     .map(s => transform(string(s), v => general.parsePiece(v)!));
-  const piece = oneOf(...pieceParsers);
+  const piece = desc(oneOf(...pieceParsers), "piece");
   const movementParsers = "打"
     .split("")
     .map(s => transform(string(s), v => general.parseMovement(v)!));
-  const movement = oneOf(...movementParsers);
-  const src = transform(seq(char("("), seq(hanNum, hanNum), char(")")), vs => vs[1]);
-  const eventBody = oneOf(
-    transform(
-      seq(
-        dst,
-        piece,
-        many(movement),
-        optional(string("成"), ""),
-        optional(src, null),
-        desc(many(notNewline), "TODO"),
+  const movement = desc(oneOf(...movementParsers), "movements");
+  const src = desc(transform(seq(char("("), seq(hanNum, hanNum), char(")")), vs => vs[1]), "src");
+  const eventBody = desc(
+    oneOf<Event>(
+      transform(
+        seq(
+          dst,
+          piece,
+          many(movement),
+          optional(string("成"), ""),
+          optional(src, null),
+          desc(many(notNewline), "TODO"),
+        ),
+        vs => ({
+          type: EventType.MOVE as EventType.MOVE,
+          color: Color.BLACK, // tmp
+          dstSquare: (vs[0] !== "same" ? vs[0] : undefined) as Square | undefined,
+          sameDst: vs[0] === "same",
+          srcPiece: vs[1],
+          movements: vs[2],
+          promote: vs[3].length > 0,
+          srcSquare: vs[4],
+        }),
       ),
-      vs => ({
-        type: EventType.MOVE,
-        dstSquare: (vs[0] !== "same" ? vs[0] : undefined) as Square | undefined,
-        sameDst: vs[0] === "same",
-        srcPiece: vs[1],
-        movements: vs[2],
-        promote: vs[3].length > 0,
-        srcSquare: vs[4],
+      constant(string("投了"), {
+        type: EventType.RESIGN as EventType.RESIGN,
+        color: Color.BLACK, // tmp
       }),
     ),
-    constant(string("投了"), { type: EventType.RESIGN }),
+    "eventBody",
   );
-  const event = transform(seq(moveNum, many1(charIn(" \t")), eventBody), vs => vs[2]);
-  const events = transform(seq(event, many(transform(seq(newline, event), vs => vs[1]))), vs => [
-    vs[0],
-    ...vs[1],
-  ]);
+  const event = desc(
+    transform(seq(moveNum, many1(charIn(" \t")), eventBody), vs => vs[2]),
+    "event",
+  );
+  const eventLines = desc(filterNull(sepBy(oneOf(event, ignore), newline)), "eventLine");
 
-  const record = seq(meta, metaEnd, events, many(blankLine), eof);
+  const record = desc(
+    transform(
+      seq(meta, optional(metaEnd, ""), eventLines, many(ignoreLine), eof),
+      vs => ({ ...vs[0], events: vs[2] } as Record),
+    ),
+    "record",
+  );
 
   return record;
 })();
 
-export function parseRecord(data: string) {
-  const r = execute(recordParser, new StringReader(data));
-  return r;
+export function parseRecord(data: string, log?: (msg: string) => void) {
+  let t: BasicParserTracer | undefined;
+  if (log) {
+    t = new BasicParserTracer({
+      level: "verbose",
+      log,
+    });
+  }
+  const r = execute(recordParser, new StringReader(data), t);
+  if (r.error) {
+    return r.error;
+  }
+  const record = r.value!;
+  let c = Color.BLACK;
+  for (const e of record.events) {
+    e.color = c;
+    c = flipColor(c);
+  }
+  return r.value!;
 }

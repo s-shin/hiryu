@@ -1,4 +1,8 @@
 import * as kif from "./kif";
+import * as fs from "fs";
+import * as path from "path";
+import * as util from "util";
+import Encoding from "encoding-japanese";
 
 const sample = `開始日時：2018/05/02 17:59:49
 棋戦：将棋ウォーズ(10切)
@@ -116,8 +120,35 @@ const sample = `開始日時：2018/05/02 17:59:49
 107 投了`;
 
 describe("kif", () => {
-  test("recordParser", () => {
+  test("parseRecord", () => {
     const r = kif.parseRecord(sample);
-    expect(r.error).toBeUndefined();
+    expect(r).not.toBeInstanceOf(Error);
+    // fs.writeFileSync("a.json", JSON.stringify(r, undefined, 2));
+  });
+
+  test("detectEncoding and parse", () => {
+    const data = fs.readFileSync(
+      path.resolve(__dirname, "__test__/sample_swks_sakura_ne_jp_wars_kifsearch.kif"),
+    );
+    const encoding = kif.detectEncoding(data);
+    let text: string;
+    try {
+      // Exception will be thrown if node isn't built with --with-intl=full-icu.
+      // cf. https://nodejs.org/api/intl.html
+      const decoder = new util.TextDecoder(encoding);
+      text = decoder.decode(data);
+    } catch (e) {
+      text = Encoding.convert(data, {
+        from: encoding.toUpperCase(),
+        to: "UNICODE",
+        type: "string",
+      });
+    }
+    // fs.writeFileSync("a.kif", text);
+    // const fd = fs.openSync("a.log", "w");
+    // const r = kif.parseRecord(text, msg => fs.writeSync(fd, `${msg}\n`));
+    const r = kif.parseRecord(text);
+    expect(r).not.toBeInstanceOf(Error);
+    // fs.writeFileSync("a.json", JSON.stringify(r, undefined, 2));
   });
 });

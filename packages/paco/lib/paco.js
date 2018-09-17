@@ -358,4 +358,5 @@ function isNotNull(v) {
     return v !== null;
 }
 exports.filterNull = (p) => exports.filter(p, isNotNull);
+exports.sepBy = (p, sep, opts = { max: exports.DEFAULT_MANY_OPTIONS.max }) => exports.desc(exports.transform(exports.seq(p, exports.many(exports.seq(sep, p), opts)), vs => [vs[0], ...vs[1].map(xs => xs[1])]), "sepBy");
 //# sourceMappingURL=paco.js.map

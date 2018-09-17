@@ -531,7 +531,7 @@ export const lazy = <V>() => new LazyParser<V>();
 
 export const constant = <V1, V2>(p: Parser<V1>, value: V2) => transform(p, () => value);
 
-export const optional = <Value>(p: Parser<Value>, defVal: Value) =>
+export const optional = <V1, V2 = V1>(p: Parser<V1>, defVal: V2) =>
   desc(transform(many(p, { max: 1 }), v => (v.length > 0 ? v[0] : defVal)), "optional");
 
 export const join = (p: Parser<string[]>) => transform(p, ss => ss.join(""));
@@ -548,3 +548,13 @@ function isNotNull<V>(v: V | null): v is V {
 }
 
 export const filterNull = <V>(p: Parser<(V | null)[]>) => filter(p, isNotNull);
+
+export const sepBy = <V1, V2>(
+  p: Parser<V1>,
+  sep: Parser<V2>,
+  opts = { max: DEFAULT_MANY_OPTIONS.max },
+) =>
+  desc(
+    transform(seq(p, many(seq(sep, p), opts)), vs => [vs[0], ...vs[1].map(xs => xs[1])]),
+    "sepBy",
+  );

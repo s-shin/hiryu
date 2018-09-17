@@ -201,9 +201,12 @@ export declare class LazyParser<V> implements Parser<V> {
 }
 export declare const lazy: <V>() => LazyParser<V>;
 export declare const constant: <V1, V2>(p: Parser<V1>, value: V2) => TransformParser<V1, V2>;
-export declare const optional: <Value>(p: Parser<Value>, defVal: Value) => DescParser<Value>;
+export declare const optional: <V1, V2 = V1>(p: Parser<V1>, defVal: V2) => DescParser<V1 | V2>;
 export declare const join: (p: Parser<string[]>) => TransformParser<string[], string>;
 export declare const joinSeq: (...ps: Parser<string>[]) => TransformParser<string[], string>;
 export declare const string: (s: string) => TransformParser<string[], string>;
 export declare const filter: <V1, V2 extends V1>(p: Parser<V1[]>, cond: (v: V1) => v is V2) => TransformParser<V1[], V2[]>;
 export declare const filterNull: <V>(p: Parser<(V | null)[]>) => TransformParser<(V | null)[], V[]>;
+export declare const sepBy: <V1, V2>(p: Parser<V1>, sep: Parser<V2>, opts?: {
+    max: number | undefined;
+}) => DescParser<V1[]>;

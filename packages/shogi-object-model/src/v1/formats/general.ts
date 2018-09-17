@@ -1,5 +1,4 @@
-import { Color, Piece, Movement } from "../definitions";
-import { isArray } from "util";
+import { Color, Piece, Movement, Handicap } from "../definitions";
 
 const kansujiStrs = ["〇", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"];
 
@@ -29,7 +28,7 @@ const colorStrs: {
     [Color.BLACK]: "☗",
     [Color.WHITE]: "☖",
   },
-}
+};
 
 export function stringifyColor(c: Color, opts = { style: Style.JA_ABBR }): string {
   return colorStrs[opts.style][c];
@@ -37,8 +36,8 @@ export function stringifyColor(c: Color, opts = { style: Style.JA_ABBR }): strin
 
 const pieceStrs: {
   [style: number]: {
-    [piece: string]: string | { [variant: string]: string },
-  },
+    [piece: string]: string | { [variant: string]: string };
+  };
 } = {
   [Style.JA]: {
     [Piece.FU]: "歩兵",
@@ -125,7 +124,7 @@ export function parsePiece(s: string, opts = { style: Style.JA_ABBR }): Piece | 
   for (const p of Object.keys(strs)) {
     const t = strs[p];
     if (typeof t === "string") {
-      return t === s ? p as Piece : null;
+      return t === s ? (p as Piece) : null;
     }
     for (const variant of Object.keys(t)) {
       const tt = t[variant];
@@ -138,7 +137,7 @@ export function parsePiece(s: string, opts = { style: Style.JA_ABBR }): Piece | 
 }
 
 const movementStrs: {
-  [movement: string]: string,
+  [movement: string]: string;
 } = {
   [Movement.DROPPED]: "打",
   [Movement.UPWARD]: "上",
@@ -147,7 +146,7 @@ const movementStrs: {
   [Movement.FROM_RIGHT]: "右",
   [Movement.FROM_LEFT]: "左",
   [Movement.VERTICALLY]: "直",
-}
+};
 
 export function stringifyMovement(m: Movement) {
   return movementStrs[m];
@@ -160,4 +159,37 @@ export function parseMovement(s: string): Movement | null {
     }
   }
   return null;
+}
+
+const handicapStrs: {
+  [handicap: string]: string;
+} = {
+  [Handicap.NONE]: "平手",
+  [Handicap.KY]: "香落ち",
+  [Handicap.RIGHT_KY]: "右香落ち",
+  [Handicap.KA]: "角落ち",
+  [Handicap.HI]: "飛車落ち",
+  [Handicap.HI_KY]: "飛香落ち",
+  [Handicap.TWO]: "二枚落ち",
+  [Handicap.THREE]: "三枚落ち",
+  [Handicap.FOUR]: "四枚落ち",
+  [Handicap.FIVE]: "五枚落ち",
+  [Handicap.SIX]: "六枚落ち",
+  [Handicap.SEVEN]: "七枚落ち",
+  [Handicap.EIGHT]: "八枚落ち",
+  [Handicap.NINE]: "九枚落ち",
+  [Handicap.TEN]: "十枚落ち",
+};
+
+export function stringifyHandicap(h: Handicap) {
+  return handicapStrs[h];
+}
+
+export function parseHandicap(s: string) {
+  for (const h of Object.keys(handicapStrs)) {
+    if (s === handicapStrs[h]) {
+      return h as Handicap;
+    }
+  }
+  return null
 }

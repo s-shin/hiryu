@@ -12,7 +12,7 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
   switch (action.type) {
     case EngineManagerActionType.NEW_ENGINE_REQUEST: {
       return {
-        ...initialState,
+        ...state,
         phase: EnginePhase.SETTING_UP_ENGINE,
         engineId: action.engineId,
       };
@@ -77,6 +77,7 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
     case EngineManagerActionType.FATAL_ERROR: {
       return {
         ...state,
+        phase: EnginePhase.NONE,
         error: action.reason,
         log: [...state.log, { level: LogLevel.ERROR, date: new Date(), message: action.reason.message }],
       };

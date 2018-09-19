@@ -98,7 +98,7 @@ exports.recordParser = (() => {
         type: definitions_1.EventType.MOVE,
         color: definitions_1.Color.BLACK,
         dstSquare: (vs[0] !== "same" ? vs[0] : undefined),
-        sameDst: vs[0] === "same",
+        sameDstSquare: vs[0] === "same",
         srcPiece: vs[1],
         movements: vs[2],
         promote: vs[3].length > 0,

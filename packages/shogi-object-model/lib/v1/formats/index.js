@@ -7,8 +7,10 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const usi = __importStar(require("./usi"));
-exports.usi = usi;
 const general = __importStar(require("./general"));
 exports.general = general;
+const usi = __importStar(require("./usi"));
+exports.usi = usi;
+const kif = __importStar(require("./kif"));
+exports.kif = kif;
 //# sourceMappingURL=index.js.map

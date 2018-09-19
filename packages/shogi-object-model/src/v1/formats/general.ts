@@ -120,11 +120,15 @@ export function stringifyPiece(p: Piece, opts = { style: Style.JA_ABBR, variants
 }
 
 export function parsePiece(s: string, opts = { style: Style.JA_ABBR }): Piece | null {
+  // TODO: performance
   const strs = pieceStrs[opts.style];
   for (const p of Object.keys(strs)) {
     const t = strs[p];
     if (typeof t === "string") {
-      return t === s ? (p as Piece) : null;
+      if (t === s) {
+        return p as Piece;
+      }
+      continue;
     }
     for (const variant of Object.keys(t)) {
       const tt = t[variant];
@@ -153,6 +157,7 @@ export function stringifyMovement(m: Movement) {
 }
 
 export function parseMovement(s: string): Movement | null {
+  // TODO: performance
   for (const m of Object.keys(movementStrs)) {
     if (s === movementStrs[m]) {
       return m as Movement;
@@ -186,6 +191,7 @@ export function stringifyHandicap(h: Handicap) {
 }
 
 export function parseHandicap(s: string) {
+  // TODO: performance
   for (const h of Object.keys(handicapStrs)) {
     if (s === handicapStrs[h]) {
       return h as Handicap;

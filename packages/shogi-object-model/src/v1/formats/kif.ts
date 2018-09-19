@@ -152,7 +152,7 @@ export const recordParser = (() => {
           type: EventType.MOVE as EventType.MOVE,
           color: Color.BLACK, // tmp
           dstSquare: (vs[0] !== "same" ? vs[0] : undefined) as Square | undefined,
-          sameDst: vs[0] === "same",
+          sameDstSquare: vs[0] === "same",
           srcPiece: vs[1],
           movements: vs[2],
           promote: vs[3].length > 0,

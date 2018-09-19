@@ -552,7 +552,7 @@ export const filterNull = <V>(p: Parser<(V | null)[]>) => filter(p, isNotNull);
 export const sepBy = <V1, V2>(
   p: Parser<V1>,
   sep: Parser<V2>,
-  opts = { max: DEFAULT_MANY_OPTIONS.max },
+  opts = DEFAULT_MANY_OPTIONS,
 ) =>
   desc(
     transform(seq(p, many(seq(sep, p), opts)), vs => [vs[0], ...vs[1].map(xs => xs[1])]),

@@ -208,5 +208,6 @@ export declare const string: (s: string) => TransformParser<string[], string>;
 export declare const filter: <V1, V2 extends V1>(p: Parser<V1[]>, cond: (v: V1) => v is V2) => TransformParser<V1[], V2[]>;
 export declare const filterNull: <V>(p: Parser<(V | null)[]>) => TransformParser<(V | null)[], V[]>;
 export declare const sepBy: <V1, V2>(p: Parser<V1>, sep: Parser<V2>, opts?: {
-    max: number | undefined;
+    min?: number | undefined;
+    max?: number | undefined;
 }) => DescParser<V1[]>;

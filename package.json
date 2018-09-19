@@ -10,7 +10,7 @@
   "private": true,
   "scripts": {
     "test": "lerna run test",
-    "test-with-cov": "lerna run test -- --coverage"
+    "test-with-cov": "lerna run test -- --coverage && node merge-covs.js $(find ./packages -name coverage-final.json)"
   },
   "workspaces": [
     "packages/*"

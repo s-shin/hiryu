@@ -9,7 +9,8 @@
   },
   "private": true,
   "scripts": {
-    "test": "lerna run test"
+    "test": "lerna run test",
+    "test-with-cov": "lerna run test -- --coverage"
   },
   "workspaces": [
     "packages/*"

@@ -40,11 +40,11 @@ function Hand(props) {
         const isActive = props.activePiece === p;
         els.push(react_1.default.createElement(HandPiece, { key: `${p}-${n}`, isActive: isActive, onClick: e => { e.stopPropagation(); props.onClickPiece(p); } },
             react_1.default.createElement(PieceCharacter, null,
-                som.formats.general.stringifyPiece(p),
-                n > 1 ? som.formats.general.toKansuji(n) : "")));
+                som.formats.ja.stringifyPiece(p),
+                n > 1 ? som.formats.ja.num2kan(n) : "")));
     }
     return (react_1.default.createElement(HandContainer, null,
-        react_1.default.createElement(HandHeader, null, som.formats.general.stringifyColor(props.color)),
+        react_1.default.createElement(HandHeader, null, som.formats.ja.stringifyColor(props.color)),
         els));
 }
 exports.Hand = Hand;

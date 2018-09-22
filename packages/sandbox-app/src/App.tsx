@@ -23,6 +23,9 @@ import EngineConfigurationForm from "./components/EngineConfigurationForm";
 import EngineGameForm from "./components/EngineGameForm";
 import { Panel, PanelHeader, PanelBody } from "./components/common";
 import LoadRecordDialog from "./components/LoadRecordDialog";
+import * as tree from "./utils/tree";
+import RecordEventList from "./components/RecordEventList";
+import GameControlPanel, { ControlType } from "./components/GameControlPanel";
 
 interface AppOwnProps {
   //
@@ -42,17 +45,18 @@ interface AppDispatchProps {
 type AppProps = AppOwnProps & AppStateProps & AppDispatchProps;
 
 interface AppState {
-  gameNode: som.rules.standard.GameNode;
+  currentGameNode: som.rules.standard.GameNode;
   isLoadRecordDialogOpened: boolean;
 }
 
 const GameWrapper = styled.div`
-  padding: 0.5em;
+  padding: 1em 0.75em;
 `;
 
-const EnginePane = styled.div`
+const Pane = styled.div`
   height: calc(100vh - 48px);
   border-left: 1px solid #ccc;
+  overflow: auto;
 `;
 
 const EnginePaneSection = styled.div`
@@ -71,8 +75,8 @@ const MainAppBar = withStyles({
 
 class App extends React.Component<AppProps, AppState> {
   state = {
-    gameNode: som.rules.standard.newRootGameNode(),
-    isLoadRecordDialogOpened: true,
+    currentGameNode: som.rules.standard.newRootGameNode(),
+    isLoadRecordDialogOpened: false,
   };
 
   render() {
@@ -123,7 +127,7 @@ class App extends React.Component<AppProps, AppState> {
                   "sfen " +
                     som.formats.usi.stringifySFEN({
                       nextMoveNum: 1,
-                      state: this.state.gameNode.state,
+                      state: this.state.currentGameNode.state,
                     }),
                   "",
                 );
@@ -170,13 +174,13 @@ class App extends React.Component<AppProps, AppState> {
               <LoadRecordDialog
                 open={this.state.isLoadRecordDialogOpened}
                 onClose={result => {
-                  this.setState({ ...this.state, isLoadRecordDialogOpened: false })
+                  this.setState({ ...this.state, isLoadRecordDialogOpened: false });
                   if (result) {
-                    let node = result.rootGameNode;
-                    while (node.children.length > 0) {
-                      node = node.children[0];
-                    }
-                    this.setState({ ...this.state, gameNode: node });
+                    // let node = result.rootGameNode;
+                    // while (node.children.length > 0) {
+                    //   node = node.children[0];
+                    // }
+                    this.setState({ ...this.state, currentGameNode: result.rootGameNode });
                   }
                 }}
               />
@@ -191,21 +195,77 @@ class App extends React.Component<AppProps, AppState> {
           alignContent="stretch"
         >
           <Grid item>
-            <GameWrapper>
-              <InteractableGame
-                gameNode={this.state.gameNode}
-                onMoveEvent={e => {
-                  const next = som.rules.standard.applyEvent(this.state.gameNode, e);
-                  if (next.violations.length > 0) {
-                    return;
-                  }
-                  this.setState({ ...this.state, gameNode: next });
+            <Grid container direction="column">
+              <Grid item>
+                <GameWrapper>
+                  <InteractableGame
+                    gameNode={this.state.currentGameNode}
+                    onMoveEvent={e => {
+                      const next = som.rules.standard.applyEvent(this.state.currentGameNode, e);
+                      if (next.violations.length > 0) {
+                        return;
+                      }
+                      tree.appendChild(this.state.currentGameNode, next);
+                      this.setState({ ...this.state, currentGameNode: next });
+                    }}
+                  />
+                </GameWrapper>
+              </Grid>
+              <Grid item xs>
+                <GameControlPanel
+                  onClick={type => {
+                    let node = this.state.currentGameNode;
+                    switch (type) {
+                      case ControlType.FIRST: {
+                        node = tree.getRootNode(node);
+                        break;
+                      }
+                      case ControlType.PREV2: {
+                        node = tree.findParent(node, (n, i) => !n.parent || i === 10)!;
+                        break;
+                      }
+                      case ControlType.PREV: {
+                        node = node.parent || node;
+                        break;
+                      }
+                      case ControlType.NEXT: {
+                        // TODO: child index
+                        node = node.children[0] || node;
+                        break;
+                      }
+                      case ControlType.NEXT2: {
+                        // TODO: route
+                        node = tree.findAlongRoute(node, [], (n, i) => n.children.length === 0 || i === 10)!;
+                        break;
+                      }
+                      case ControlType.LAST: {
+                        // TODO: route
+                        node = tree.getLeafNode(node, []);
+                        break;
+                      }
+                    }
+                    this.setState({ ...this.state, currentGameNode: node });
+                  }}
+                />
+              </Grid>
+            </Grid>
+          </Grid>
+          <Grid item>
+            <Pane>
+              <RecordEventList
+                current={this.state.currentGameNode}
+                route={undefined}
+                onSelect={node => {
+                  this.setState({
+                    ...this.state,
+                    currentGameNode: node,
+                  });
                 }}
               />
-            </GameWrapper>
+            </Pane>
           </Grid>
           <Grid item xs>
-            <EnginePane>
+            <Pane>
               <Grid container direction="column" style={{ height: "100%" }}>
                 <Grid item>
                   <Panel>
@@ -222,7 +282,7 @@ class App extends React.Component<AppProps, AppState> {
                   </Panel>
                 </Grid>
               </Grid>
-            </EnginePane>
+            </Pane>
           </Grid>
         </Grid>
       </Grid>

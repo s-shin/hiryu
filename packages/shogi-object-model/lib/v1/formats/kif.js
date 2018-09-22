@@ -9,7 +9,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const paco_1 = require("@hiryu/paco");
 const definitions_1 = require("../definitions");
-const general = __importStar(require("./general"));
+const jp = __importStar(require("./ja"));
 // 棋譜ファイル KIF 形式: http://kakinoki.o.oo7.jp/kif_format.html
 function detectEncoding(data) {
     // check BOM of UTF-8.
@@ -54,7 +54,7 @@ exports.recordParser = (() => {
         // TODO
         const setters = {
             棋戦: s => (r.competition = s),
-            手合割: s => (r.startingSetup.handicap = general.parseHandicap(s) || undefined),
+            手合割: s => (r.startingSetup.handicap = jp.parseHandicap(s) || undefined),
             先手: s => (r.players.black.name = s),
             後手: s => (r.players.white.name = s),
         };
@@ -87,11 +87,11 @@ exports.recordParser = (() => {
     const dst = paco_1.desc(paco_1.oneOf(square, sameDst), "dst");
     const pieceParsers = "歩香桂銀金角飛玉と杏圭全馬龍"
         .split("")
-        .map(s => paco_1.transform(paco_1.string(s), v => general.parsePiece(v)));
+        .map(s => paco_1.transform(paco_1.string(s), v => jp.parsePiece(v)));
     const piece = paco_1.desc(paco_1.oneOf(...pieceParsers), "piece");
     const movementParsers = "打"
         .split("")
-        .map(s => paco_1.transform(paco_1.string(s), v => general.parseMovement(v)));
+        .map(s => paco_1.transform(paco_1.string(s), v => jp.parseMovement(v)));
     const movement = paco_1.desc(paco_1.oneOf(...movementParsers), "movements");
     const src = paco_1.desc(paco_1.transform(paco_1.seq(paco_1.char("("), paco_1.seq(hanNum, hanNum), paco_1.char(")")), vs => vs[1]), "src");
     const eventBody = paco_1.desc(paco_1.oneOf(paco_1.transform(paco_1.seq(dst, piece, paco_1.many(movement), paco_1.optional(paco_1.string("成"), ""), paco_1.optional(src, null), paco_1.desc(paco_1.many(notNewline), "TODO")), vs => ({

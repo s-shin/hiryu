@@ -40,6 +40,7 @@ describe("ja", () => {
         type: EventType.MOVE,
         color: Color.BLACK,
         dstSquare: [2, 2],
+        sameDstSquare: false,
         srcPiece: Piece.KA,
         promote: true,
       }),

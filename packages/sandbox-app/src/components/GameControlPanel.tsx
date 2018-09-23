@@ -16,25 +16,42 @@ export enum ControlType {
 }
 
 export interface GameControlPanelProps {
+  isFirst: boolean;
+  isLast: boolean;
   onClick: (type: ControlType) => void;
 }
 
 const GameControlPanel: React.SFC<GameControlPanelProps> = props => {
   const icons = [
-    { type: ControlType.FIRST, el: <SkipPreviousIcon /> },
-    { type: ControlType.PREV2, el: <FastRewindIcon /> },
+    { type: ControlType.FIRST, disabled: props.isFirst, el: <SkipPreviousIcon /> },
+    { type: ControlType.PREV2, disabled: props.isFirst, el: <FastRewindIcon /> },
     {
       type: ControlType.PREV,
+      disabled: props.isFirst,
       el: <PlayArrowIcon fontSize="small" style={{ transform: "rotate(180deg)" }} />,
+      padding: 14,
     },
-    { type: ControlType.NEXT, el: <PlayArrowIcon fontSize="small" /> },
-    { type: ControlType.NEXT2, el: <FastForwardIcon /> },
-    { type: ControlType.LAST, el: <SkipNextIcon /> },
+    {
+      type: ControlType.NEXT,
+      disabled: props.isLast,
+      el: <PlayArrowIcon fontSize="small" />,
+      padding: 14,
+    },
+    { type: ControlType.NEXT2, disabled: props.isLast, el: <FastForwardIcon /> },
+    { type: ControlType.LAST, disabled: props.isLast, el: <SkipNextIcon /> },
   ];
   return (
     <div style={{ textAlign: "center" }}>
       {icons.map(icon => (
-        <IconButton onClick={() => props.onClick(icon.type)}>{icon.el}</IconButton>
+        <IconButton
+          onClick={() => props.onClick(icon.type)}
+          disabled={icon.disabled}
+          style={{
+            padding: icon.padding,
+          }}
+        >
+          {icon.el}
+        </IconButton>
       ))}
     </div>
   );

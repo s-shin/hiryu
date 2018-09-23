@@ -95,6 +95,14 @@ export function isDescendant<T extends NodeProps<T>>(node: T, descendant: T) {
   return Boolean(findParent(descendant, n => n === node));
 }
 
+export function isRoot<T extends NodeProps<T>>(node: T) {
+  return !node.parent;
+}
+
+export function isLeaf<T extends NodeProps<T>>(node: T) {
+  return node.children.length === 0;
+}
+
 export function appendChild<T extends NodeProps<T>>(parent: T, child: T) {
   parent.children.push(child);
   child.parent = parent;

@@ -65,8 +65,10 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
       };
     }
     case EngineManagerActionType.EXIT: {
-      return state;
-      // return initialState;
+      return {
+        ...state,
+        phase: EnginePhase.SETTING_UP_ENGINE,
+      };
     }
     case EngineManagerActionType.DEBUG: {
       return {
@@ -79,7 +81,10 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
         ...state,
         phase: EnginePhase.NONE,
         error: action.reason,
-        log: [...state.log, { level: LogLevel.ERROR, date: new Date(), message: action.reason.message }],
+        log: [
+          ...state.log,
+          { level: LogLevel.ERROR, date: new Date(), message: action.reason.message },
+        ],
       };
     }
   }

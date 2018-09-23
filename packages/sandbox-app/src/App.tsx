@@ -21,11 +21,12 @@ import LogView from "./components/LogView";
 import EngineSetupForm from "./components/EngineSetupForm";
 import EngineConfigurationForm from "./components/EngineConfigurationForm";
 import EngineGameForm from "./components/EngineGameForm";
-import { Panel, PanelHeader, PanelBody } from "./components/common";
+import { Pane, PaneHeader, PaneBody, colors } from "./components/common";
 import LoadRecordDialog from "./components/LoadRecordDialog";
 import * as tree from "./utils/tree";
 import RecordEventList from "./components/RecordEventList";
 import GameControlPanel, { ControlType } from "./components/GameControlPanel";
+import AnalysisResult from "./components/AnalysisResult";
 
 interface AppOwnProps {
   //
@@ -50,22 +51,18 @@ interface AppState {
 }
 
 const GameWrapper = styled.div`
-  padding: 1em 0.75em;
+  padding: 1em 0;
 `;
 
-const Pane = styled.div`
-  height: calc(100vh - 48px);
-  border-left: 1px solid #ccc;
-  overflow: auto;
-`;
-
-const EnginePaneSection = styled.div`
-  border-bottom: 1px solid #ddd;
-`;
-
-const EnginePaneLogViewSection = styled(EnginePaneSection)`
-  background-color: #eee;
-`;
+const styles = {
+  firstColumn: {
+    height: "calc(100vh - 48px)"
+  },
+  column: {
+    borderLeft: `1px solid ${colors.border}`;
+    height: "calc(100vh - 48px)"
+  },
+};
 
 const MainAppBar = withStyles({
   root: {
@@ -108,18 +105,6 @@ class App extends React.Component<AppProps, AppState> {
       case EnginePhase.SET_GAME_STATE: {
         enginePanel = (
           <div>
-            <EngineGameForm
-              onSubmit={p =>
-                this.props.setGameState(this.props.engineState.engineId!, p.state, p.moves)
-              }
-            />
-            <Button
-              onClick={() => {
-                this.props.go(this.props.engineState.engineId!);
-              }}
-            >
-              Go
-            </Button>
             <Button
               onClick={() => {
                 this.props.setGameState(
@@ -134,7 +119,7 @@ class App extends React.Component<AppProps, AppState> {
                 this.props.go(this.props.engineState.engineId!);
               }}
             >
-              Go with current state.
+              Go
             </Button>
           </div>
         );
@@ -176,10 +161,6 @@ class App extends React.Component<AppProps, AppState> {
                 onClose={result => {
                   this.setState({ ...this.state, isLoadRecordDialogOpened: false });
                   if (result) {
-                    // let node = result.rootGameNode;
-                    // while (node.children.length > 0) {
-                    //   node = node.children[0];
-                    // }
                     this.setState({ ...this.state, currentGameNode: result.rootGameNode });
                   }
                 }}
@@ -195,24 +176,28 @@ class App extends React.Component<AppProps, AppState> {
           alignContent="stretch"
         >
           <Grid item>
-            <Grid container direction="column">
+            <Grid container direction="column" style={{ ...styles.firstColumn, width: 320 }}>
               <Grid item>
-                <GameWrapper>
-                  <InteractableGame
-                    gameNode={this.state.currentGameNode}
-                    onMoveEvent={e => {
-                      const next = som.rules.standard.applyEvent(this.state.currentGameNode, e);
-                      if (next.violations.length > 0) {
-                        return;
-                      }
-                      tree.appendChild(this.state.currentGameNode, next);
-                      this.setState({ ...this.state, currentGameNode: next });
-                    }}
-                  />
-                </GameWrapper>
+                <Grid container justify="center">
+                  <Grid item style={{ padding: "20px 0" }}>
+                    <InteractableGame
+                      gameNode={this.state.currentGameNode}
+                      onMoveEvent={e => {
+                        const next = som.rules.standard.applyEvent(this.state.currentGameNode, e);
+                        if (next.violations.length > 0) {
+                          return;
+                        }
+                        tree.appendChild(this.state.currentGameNode, next);
+                        this.setState({ ...this.state, currentGameNode: next });
+                      }}
+                    />
+                  </Grid>
+                </Grid>
               </Grid>
-              <Grid item xs>
+              <Grid item style={{ borderTop: `solid ${colors.border} 1px` }}>
                 <GameControlPanel
+                  isFirst={tree.isRoot(this.state.currentGameNode)}
+                  isLast={tree.isLeaf(this.state.currentGameNode)}
                   onClick={type => {
                     let node = this.state.currentGameNode;
                     switch (type) {
@@ -235,7 +220,11 @@ class App extends React.Component<AppProps, AppState> {
                       }
                       case ControlType.NEXT2: {
                         // TODO: route
-                        node = tree.findAlongRoute(node, [], (n, i) => n.children.length === 0 || i === 10)!;
+                        node = tree.findAlongRoute(
+                          node,
+                          [],
+                          (n, i) => n.children.length === 0 || i === 10,
+                        )!;
                         break;
                       }
                       case ControlType.LAST: {
@@ -248,10 +237,13 @@ class App extends React.Component<AppProps, AppState> {
                   }}
                 />
               </Grid>
+              <Grid item xs style={{ borderTop: `solid ${colors.border} 1px`, overflow: "auto" }}>
+                <AnalysisResult />
+              </Grid>
             </Grid>
           </Grid>
           <Grid item>
-            <Pane>
+            <div style={{ ...styles.column, overflow: "auto" }}>
               <RecordEventList
                 current={this.state.currentGameNode}
                 route={undefined}
@@ -262,27 +254,25 @@ class App extends React.Component<AppProps, AppState> {
                   });
                 }}
               />
-            </Pane>
+            </div>
           </Grid>
           <Grid item xs>
-            <Pane>
-              <Grid container direction="column" style={{ height: "100%" }}>
-                <Grid item>
-                  <Panel>
-                    <PanelHeader>Engine</PanelHeader>
-                    <PanelBody>{enginePanel}</PanelBody>
-                  </Panel>
-                </Grid>
-                <Grid item xs>
-                  <Panel style={{ height: "100%" }}>
-                    <PanelHeader>Log</PanelHeader>
-                    <PanelBody style={{ overflow: "auto" }}>
-                      <LogView entries={this.props.engineState.log} />
-                    </PanelBody>
-                  </Panel>
-                </Grid>
+            <Grid container direction="column" style={{ ...styles.column }}>
+              <Grid item>
+                <Pane>
+                  <PaneHeader>Engine</PaneHeader>
+                  <PaneBody>{enginePanel}</PaneBody>
+                </Pane>
               </Grid>
-            </Pane>
+              <Grid item xs>
+                <Pane style={{ height: "100%" }}>
+                  <PaneHeader>Log</PaneHeader>
+                  <PaneBody style={{ overflow: "auto" }}>
+                    <LogView entries={this.props.engineState.log} />
+                  </PaneBody>
+                </Pane>
+              </Grid>
+            </Grid>
           </Grid>
         </Grid>
       </Grid>

@@ -3,47 +3,53 @@ import styled from "@hiryu/react-shogi-object-model/src/styled-components";
 import { Grid, Typography } from "@material-ui/core";
 import { GridProps } from "@material-ui/core/Grid";
 
-export const Panel: React.SFC<GridProps> = props => (
+export const colors = {
+  border: "#ccc",
+};
+
+//---
+
+export const Pane: React.SFC<GridProps> = props => (
   <Grid container direction="column" {...props}>
     {props.children}
   </Grid>
 );
 
-const PanelInnerBase = styled.div`
+const PaneInnerBase = styled.div`
   padding: 0.5rem;
 `;
 
 //---
 
-const PanelHeaderInner = styled(PanelInnerBase)`
-  border-bottom: 1px solid #ccc;
+const PaneHeaderInner = styled(PaneInnerBase)`
+  border-bottom: 1px solid ${colors.border};
   background-color: #f3f3f3;
 `;
 
-const PanelHeaderBody = styled(Typography).attrs({
+const PaneHeaderBody = styled(Typography).attrs({
   variant: "caption",
 })`
   text-transform: uppercase;
   margin: 0.5rem;
 `;
 
-export const PanelHeader: React.SFC<GridProps> = props => (
+export const PaneHeader: React.SFC<GridProps> = props => (
   <Grid item {...{ ...props, children: undefined }}>
-    <PanelHeaderInner>
-      <PanelHeaderBody>{props.children}</PanelHeaderBody>
-    </PanelHeaderInner>
+    <PaneHeaderInner>
+      <PaneHeaderBody>{props.children}</PaneHeaderBody>
+    </PaneHeaderInner>
   </Grid>
 );
 
 //---
 
-const PanelBodyInner = styled(PanelInnerBase)`
+const PaneBodyInner = styled(PaneInnerBase)`
   height: 100%;
   overflow: auto;
 `;
 
-export const PanelBody: React.SFC<GridProps> = props => (
+export const PaneBody: React.SFC<GridProps> = props => (
   <Grid item xs {...props}>
-    <PanelBodyInner>{props.children}</PanelBodyInner>
+    <PaneBodyInner>{props.children}</PaneBodyInner>
   </Grid>
 );

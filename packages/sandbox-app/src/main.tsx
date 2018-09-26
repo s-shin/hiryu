@@ -4,7 +4,7 @@ import { createStore, applyMiddleware } from "redux";
 import thunk from "redux-thunk";
 import { Provider } from "react-redux";
 import { composeWithDevTools } from "redux-devtools-extension/developmentOnly";
-import App from "./App";
+import App from "./containers/App";
 import reducers from "./reducers";
 import { CssBaseline } from "@material-ui/core";
 

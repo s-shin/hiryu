@@ -18,16 +18,24 @@ export function getLeafNode<T extends NodeProps<T>>(node: T, route: Route<T>): T
   return node;
 }
 
-export function getRouteFromRoot<T extends NodeProps<T>>(node: T): { root: T; route: Route<T> } {
+export interface NodeInfo<T extends NodeProps<T>> {
+  root: T;
+  route: Route<T>;
+  depth: number;
+}
+
+export function getNodeInfo<T extends NodeProps<T>>(node: T): NodeInfo<T> {
   const route: Route<T> = [];
+  let depth = 0;
   while (node.parent) {
     const idx = node.parent.children.indexOf(node);
     if (idx > 0) {
       route.unshift(node);
     }
     node = node.parent;
+    depth++;
   }
-  return { root: node, route };
+  return { root: node, route, depth };
 }
 
 export function traverse<T extends NodeProps<T>>(

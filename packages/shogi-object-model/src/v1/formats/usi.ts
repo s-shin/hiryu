@@ -269,7 +269,7 @@ export function getSFEN(h: Handicap): SFEN {
 }
 
 export interface Move {
-  srcSquare?: Square;
+  srcSquare?: Square | null;
   srcPiece?: Piece;
   dstSquare: Square;
   promote?: boolean;

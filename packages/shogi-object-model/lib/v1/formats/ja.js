@@ -228,10 +228,15 @@ function stringifyMoveEvent(e, opts = { withColor: false }) {
     if (opts.withColor) {
         ss.push(stringifyColor(e.color));
     }
-    if (!e.dstSquare || !e.srcPiece || e.promote === undefined) {
+    if (!e.dstSquare || !e.srcPiece || e.promote === undefined || e.sameDstSquare === undefined) {
         return null;
     }
-    ss.push(stringifySquare(e.dstSquare));
+    if (e.sameDstSquare) {
+        ss.push("同　");
+    }
+    else {
+        ss.push(stringifySquare(e.dstSquare));
+    }
     ss.push(stringifyPiece(e.srcPiece));
     // TODO: movements
     if (e.promote) {

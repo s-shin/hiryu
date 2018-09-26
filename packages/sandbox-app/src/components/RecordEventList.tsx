@@ -45,7 +45,7 @@ class RecordEventList extends React.Component<RecordEventListProps, RecordEventL
 
   render() {
     const items: JSX.Element[] = [];
-    const rr = tree.getRouteFromRoot(this.props.current);
+    const rr = tree.getNodeInfo(this.props.current);
     tree.traverseRoute(rr.root, this.props.route || rr.route, (node, depth) => {
       const parent = node.parent;
       const event = node.byEvent;

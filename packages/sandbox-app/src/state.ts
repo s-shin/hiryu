@@ -1,7 +1,8 @@
 import { EngineInfo } from "@hiryu/usi-engine";
+import { GameNode } from "./utils/game";
 
 export enum EnginePhase {
-  NONE,
+  INIT,
   SETTING_UP_ENGINE,
   CONFIGURATION,
   PREPARING_GAME,
@@ -33,6 +34,11 @@ export interface EngineState {
   log: LogEntry[];
 }
 
+export interface GameState {
+  currentGameNode: GameNode;
+}
+
 export interface RootState {
   engine: EngineState;
+  game: GameState;
 }

@@ -27,8 +27,16 @@ function newRootGameNode(state = definitions_1.HIRATE_STATE, moveNum = 0) {
     };
 }
 exports.newRootGameNode = newRootGameNode;
-function cloneGameNode(node, opts = { withoutParent: false }) {
-    return Object.assign({}, node, { byEvent: node.byEvent ? definitions_1.cloneEvent(node.byEvent) : undefined, violations: [...node.violations], children: [...node.children], parent: opts.withoutParent ? node.parent : (node.parent ? cloneGameNode(node.parent) : undefined) });
+function cloneGameNode(node, opts) {
+    const fixedOpts = {
+        withoutParent: opts.withoutParent !== undefined ? opts.withoutParent : false,
+        cloneData: opts.cloneData || (() => undefined),
+    };
+    return Object.assign({}, node, { byEvent: node.byEvent ? definitions_1.cloneEvent(node.byEvent) : undefined, violations: [...node.violations], children: [...node.children], parent: fixedOpts.withoutParent
+            ? node.parent
+            : node.parent
+                ? cloneGameNode(node.parent, opts)
+                : undefined, data: fixedOpts.cloneData(node.data) });
 }
 exports.cloneGameNode = cloneGameNode;
 function findParent(leaf, cond) {
@@ -128,9 +136,11 @@ function applyEvent(node, event) {
                 }
                 // # dstPiece!, promote!
             }
-            else if (e.srcPiece) { // in case of japanese notations style.
+            else if (e.srcPiece) {
+                // in case of japanese notations style.
                 // # srcPiece!
-                if (e.srcSquare === null || event.movements && event.movements.indexOf(definitions_1.Movement.DROPPED) !== -1) {
+                if (e.srcSquare === null ||
+                    (event.movements && event.movements.indexOf(definitions_1.Movement.DROPPED) !== -1)) {
                     isDrop = true;
                     if (e.promote || !definitions_1.canPromote(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
                         ret.violations.push(Violation.INVALID_MOVE_EVENT);
@@ -159,15 +169,16 @@ function applyEvent(node, event) {
                     else {
                         const candidates = [];
                         for (const m of matches) {
-                            const mcs = searchMoveCandidates(node.state.board, m[1])
-                                .filter(c => definitions_1.squareEquals(c.dst, e.dstSquare));
+                            const mcs = searchMoveCandidates(node.state.board, m[1]).filter(c => definitions_1.squareEquals(c.dst, e.dstSquare));
                             if (mcs.length > 0) {
                                 candidates.push({ srcCP: m[0], srcSq: m[1], mcs });
                             }
                         }
                         if (candidates.length === 0) {
                             isDrop = true;
-                            if (e.promote || !definitions_1.canPromote(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
+                            if (e.promote ||
+                                !definitions_1.canPromote(e.srcPiece) ||
+                                (e.dstPiece && e.dstPiece !== e.srcPiece)) {
                                 ret.violations.push(Violation.INVALID_MOVE_EVENT);
                                 return ret;
                             }
@@ -311,7 +322,8 @@ function isInPromortableArea(sq, color) {
 exports.isInPromortableArea = isInPromortableArea;
 function isNeverMovable(sq, color, piece) {
     const bsq = color === definitions_1.Color.BLACK ? sq : definitions_1.flipSquare(sq);
-    return ((piece === definitions_1.Piece.FU || piece === definitions_1.Piece.KY) && bsq[1] <= 1) || ((piece === definitions_1.Piece.KE) && bsq[1] <= 2);
+    return (((piece === definitions_1.Piece.FU || piece === definitions_1.Piece.KY) && bsq[1] <= 1) ||
+        (piece === definitions_1.Piece.KE && bsq[1] <= 2));
 }
 exports.isNeverMovable = isNeverMovable;
 function searchMoveCandidates(board, src) {
@@ -335,13 +347,14 @@ function searchMoveCandidates(board, src) {
             r.push({ dst, promote: false });
             canContinue = true;
         }
-        if (definitions_1.canPromote(cp.piece) && (isInPromortableArea(src, cp.color) || isInPromortableArea(dst, cp.color))) {
+        if (definitions_1.canPromote(cp.piece) &&
+            (isInPromortableArea(src, cp.color) || isInPromortableArea(dst, cp.color))) {
             r.push({ dst, promote: true });
             canContinue = true;
         }
         if (dstCP && dstCP.color === definitions_1.flipColor(cp.color)) {
             // Stop traverse when a piece captured.
-            return canContinue = false;
+            return (canContinue = false);
         }
         return canContinue;
     };

@@ -42,8 +42,9 @@ const GameControlPanel: React.SFC<GameControlPanelProps> = props => {
   ];
   return (
     <div style={{ textAlign: "center" }}>
-      {icons.map(icon => (
+      {icons.map((icon, i) => (
         <IconButton
+          key={i}
           onClick={() => props.onClick(icon.type)}
           disabled={icon.disabled}
           style={{

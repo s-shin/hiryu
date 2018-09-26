@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import { List, ListItem } from "@material-ui/core";
+import { AnalysisResult } from "../utils/game";
 
 const Item = styled.div`
   font-size: 0.8em;
@@ -12,6 +12,7 @@ const Score = styled.span`
   padding: 0.2em 0.5em;
   background-color: #333;
   color: #fff;
+  font-weight: bold;
 `;
 
 const Move = styled.span`
@@ -19,53 +20,24 @@ const Move = styled.span`
   margin: 0 0.2em;
 `;
 
-const AnalysisResult = props => {
-  return (
-    <div>
-      <Item>
-        <Score>+460</Score>
-        <Move><b>６五角</b></Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-      </Item>
-      <Item>
-        <Score>+460</Score>
-        <Move><b>６五角</b></Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-      </Item>
-      <Item>
-        <Score>+460</Score>
-        <Move><b>６五角</b></Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-        <Move>６五角</Move>
-      </Item>
-    </div>
-  );
+export interface AnalysisResultProps {
+  result: AnalysisResult;
+}
+
+const AnalysisResult: React.SFC<AnalysisResultProps> = props => {
+  const items = Object.keys(props.result)
+    .map(s => Number(s))
+    .sort()
+    .map(pvIdx => {
+      const info = props.result[pvIdx];
+      return (
+        <Item>
+          <Score>{info.cp ? info.cp.value : info.mate ? info.mate.num : "-"}</Score>
+          {info.pv && info.pv.map(mv => <Move>{mv}</Move>)}
+        </Item>
+      );
+    });
+  return <div>{items}</div>;
 };
 
 export default AnalysisResult;

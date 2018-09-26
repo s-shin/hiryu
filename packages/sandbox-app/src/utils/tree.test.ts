@@ -28,8 +28,11 @@ describe("tree", () => {
     expect(tree.getLeafNode(root, [inner1]).name).toBe(leaf1.name);
   });
 
-  test("getRouteFromRoot", () => {
-    expect(tree.getRouteFromRoot(leaf2).route.map(n => n.name)).toEqual([inner2.name]);
+  test("getNodeInfo", () => {
+    const info = tree.getNodeInfo(leaf2);
+    expect(info.root).toBe(root);
+    expect(info.route.map(n => n.name)).toEqual([inner2.name]);
+    expect(info.depth).toBe(2);
   });
 
   test("findParent", () => {

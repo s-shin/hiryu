@@ -1,10 +1,33 @@
 import {
-  Square, Color, Piece, ColorPiece, Board, State, Event, EventType, MoveEvent,
-  Hand, Movement,
-  promote, demote, canPromote, flipColor, getBoardSquare, setBoardSquare, isSquare, flipSquare, getHand,
-  getNumPieces, addNumPieces, cloneState, cloneEvent,
-  filterBoardSquare, squareEquals,
-  SQUARE_NUMBERS, HIRATE_STATE, isCompleteMoveEvent,
+  Square,
+  Color,
+  Piece,
+  ColorPiece,
+  Board,
+  State,
+  Event,
+  EventType,
+  MoveEvent,
+  Hand,
+  Movement,
+  promote,
+  demote,
+  canPromote,
+  flipColor,
+  getBoardSquare,
+  setBoardSquare,
+  isSquare,
+  flipSquare,
+  getHand,
+  getNumPieces,
+  addNumPieces,
+  cloneState,
+  cloneEvent,
+  filterBoardSquare,
+  squareEquals,
+  SQUARE_NUMBERS,
+  HIRATE_STATE,
+  isCompleteMoveEvent,
 } from "../definitions";
 import { DeepReadonly } from "../../util";
 
@@ -25,16 +48,17 @@ export enum Violation {
   NO_SPECIFIED_PIECE_ON_BOARD,
 }
 
-export interface GameNode {
+export interface GameNode<Data = any> {
   state: State;
   moveNum: number;
   byEvent?: Event;
   violations: Violation[];
-  children: GameNode[];
-  parent?: GameNode;
+  children: GameNode<Data>[];
+  parent?: GameNode<Data>;
+  data?: Data;
 }
 
-export function newRootGameNode(state = HIRATE_STATE, moveNum = 0): GameNode {
+export function newRootGameNode<Data>(state = HIRATE_STATE, moveNum = 0): GameNode<Data> {
   return {
     state,
     moveNum,
@@ -43,23 +67,44 @@ export function newRootGameNode(state = HIRATE_STATE, moveNum = 0): GameNode {
   };
 }
 
-export function cloneGameNode(node: GameNode, opts = { withoutParent: false }): GameNode {
+export function cloneGameNode<Data>(
+  node: GameNode<Data>,
+  opts: {
+    withoutParent?: boolean;
+    cloneData?: (data?: Data) => Data | undefined;
+  },
+): GameNode<Data> {
+  const fixedOpts = {
+    withoutParent: opts.withoutParent !== undefined ? opts.withoutParent : false,
+    cloneData: opts.cloneData || (() => undefined),
+  };
   return {
     ...node,
     byEvent: node.byEvent ? cloneEvent(node.byEvent) : undefined,
     violations: [...node.violations],
     children: [...node.children],
-    parent: opts.withoutParent ? node.parent : (node.parent ? cloneGameNode(node.parent) : undefined),
+    parent: fixedOpts.withoutParent
+      ? node.parent
+      : node.parent
+        ? cloneGameNode(node.parent, opts)
+        : undefined,
+    data: fixedOpts.cloneData(node.data),
   };
 }
 
-function findParent(leaf: GameNode, cond: (node: GameNode) => boolean): GameNode | null {
+function findParent<Data>(
+  leaf: GameNode<Data>,
+  cond: (node: GameNode<Data>) => boolean,
+): GameNode<Data> | null {
   const node = leaf.parent;
   return node ? (cond(node) ? node : findParent(node, cond)) : null;
 }
 
-export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Event>): GameNode {
-  const ret: GameNode = {
+export function applyEvent<Data>(
+  node: DeepReadonly<GameNode<Data>>,
+  event: DeepReadonly<Event>,
+): GameNode<Data> {
+  const ret: GameNode<Data> = {
     state: cloneState(node.state),
     moveNum: node.moveNum,
     byEvent: cloneEvent(event),
@@ -76,7 +121,8 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
   switch (event.type) {
     case EventType.MOVE: {
       // check turn
-      const isMoveEventNode = (n: GameNode) => Boolean(n.byEvent && n.byEvent.type === EventType.MOVE);
+      const isMoveEventNode = (n: GameNode<Data>) =>
+        Boolean(n.byEvent && n.byEvent.type === EventType.MOVE);
       const prevMoveEventNode = isMoveEventNode(node) ? node : findParent(node, isMoveEventNode);
       if (prevMoveEventNode) {
         if (event.color !== prevMoveEventNode.state.nextTurn) {
@@ -151,9 +197,13 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
           throw new Error("assert");
         }
         // # dstPiece!, promote!
-      } else if (e.srcPiece) { // in case of japanese notations style.
+      } else if (e.srcPiece) {
+        // in case of japanese notations style.
         // # srcPiece!
-        if (e.srcSquare === null || event.movements && event.movements.indexOf(Movement.DROPPED) !== -1) {
+        if (
+          e.srcSquare === null ||
+          (event.movements && event.movements.indexOf(Movement.DROPPED) !== -1)
+        ) {
           isDrop = true;
           if (e.promote || !canPromote(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
             ret.violations.push(Violation.INVALID_MOVE_EVENT);
@@ -179,20 +229,25 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
             // ### srcSquare!, dstPiece!, promote!
           } else {
             const candidates: Array<{
-              srcCP: ColorPiece,
-              srcSq: Square,
-              mcs: MoveCandidate[],
+              srcCP: ColorPiece;
+              srcSq: Square;
+              mcs: MoveCandidate[];
             }> = [];
             for (const m of matches) {
-              const mcs = searchMoveCandidates(node.state.board, m[1])
-                .filter(c => squareEquals(c.dst, e.dstSquare!));
+              const mcs = searchMoveCandidates(node.state.board, m[1]).filter(c =>
+                squareEquals(c.dst, e.dstSquare!),
+              );
               if (mcs.length > 0) {
                 candidates.push({ srcCP: m[0], srcSq: m[1], mcs });
               }
             }
             if (candidates.length === 0) {
               isDrop = true;
-              if (e.promote || !canPromote(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
+              if (
+                e.promote ||
+                !canPromote(e.srcPiece) ||
+                (e.dstPiece && e.dstPiece !== e.srcPiece)
+              ) {
                 ret.violations.push(Violation.INVALID_MOVE_EVENT);
                 return ret;
               }
@@ -233,7 +288,7 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
         ret.violations.push(Violation.INVALID_MOVE_EVENT);
         return ret;
       }
-      e.movements = [];  // to be fixed
+      e.movements = []; // to be fixed
       // props without movements were fixed!
       if (!isCompleteMoveEvent(e)) {
         throw new Error("assert error: isCompleteMoveEvent");
@@ -268,7 +323,7 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
             const cp = getBoardSquare(node.state.board, [e.dstSquare[0], y]);
             if (cp && cp.color === e.color && cp.piece === Piece.FU) {
               ret.violations.push(Violation.NIFU);
-              break;  // continue
+              break; // continue
             }
           }
         }
@@ -339,7 +394,10 @@ export function isInPromortableArea(sq: Square, color: Color) {
 
 export function isNeverMovable(sq: Square, color: Color, piece: Piece) {
   const bsq = color === Color.BLACK ? sq : flipSquare(sq);
-  return ((piece === Piece.FU || piece === Piece.KY) && bsq[1] <= 1) || ((piece === Piece.KE) && bsq[1] <= 2);
+  return (
+    ((piece === Piece.FU || piece === Piece.KY) && bsq[1] <= 1) ||
+    (piece === Piece.KE && bsq[1] <= 2)
+  );
 }
 
 export interface MoveCandidate {
@@ -373,13 +431,16 @@ export function searchMoveCandidates(board: Board, src: Square): MoveCandidate[]
       r.push({ dst, promote: false });
       canContinue = true;
     }
-    if (canPromote(cp.piece) && (isInPromortableArea(src, cp.color) || isInPromortableArea(dst, cp.color))) {
+    if (
+      canPromote(cp.piece) &&
+      (isInPromortableArea(src, cp.color) || isInPromortableArea(dst, cp.color))
+    ) {
       r.push({ dst, promote: true });
       canContinue = true;
     }
     if (dstCP && dstCP.color === flipColor(cp.color)) {
       // Stop traverse when a piece captured.
-      return canContinue = false;
+      return (canContinue = false);
     }
     return canContinue;
   };
@@ -409,13 +470,18 @@ export function searchMoveCandidates(board: Board, src: Square): MoveCandidate[]
       }
       break;
     }
-    case Piece.KI: case Piece.TO: case Piece.NY: case Piece.NK: case Piece.NG: {
+    case Piece.KI:
+    case Piece.TO:
+    case Piece.NY:
+    case Piece.NK:
+    case Piece.NG: {
       for (const dp of [[-1, 1], [0, 1], [1, 1], [-1, 0], [1, 0], [0, -1]]) {
         add(dp[0], dp[1]);
       }
       break;
     }
-    case Piece.KA: case Piece.UM: {
+    case Piece.KA:
+    case Piece.UM: {
       for (const dp of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) {
         for (const i of SQUARE_NUMBERS) {
           if (!add(dp[0] * i, dp[1] * i)) {
@@ -430,7 +496,8 @@ export function searchMoveCandidates(board: Board, src: Square): MoveCandidate[]
       }
       break;
     }
-    case Piece.HI: case Piece.RY: {
+    case Piece.HI:
+    case Piece.RY: {
       for (const dp of [[0, 1], [1, 0], [-1, 0], [0, -1]]) {
         for (const i of SQUARE_NUMBERS) {
           if (!add(dp[0] * i, dp[1] * i)) {

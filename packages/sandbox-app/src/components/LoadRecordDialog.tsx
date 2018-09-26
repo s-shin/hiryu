@@ -12,6 +12,7 @@ import InsertDriveFileIcon from "@material-ui/icons/InsertDriveFile";
 import Dropzone from "react-dropzone";
 import styled from "styled-components";
 import * as som from "@hiryu/shogi-object-model";
+import { newRootGameNode, applyEvent } from "../utils/game";
 
 const DropzoneOverlay = styled.div`
   position: absolute;
@@ -130,10 +131,10 @@ class LoadRecordDialog extends React.Component<LoadRecordDialogProps, LoadRecord
     if (r.events.length === 0) {
       return;
     }
-    const root = som.rules.standard.newRootGameNode();
+    const root = newRootGameNode();
     let leaf = root;
     for (const event of r.events) {
-      const next = som.rules.standard.applyEvent(leaf, event);
+      const next = applyEvent(leaf, event);
       leaf.children.push(next);
       leaf = next;
       if (next.violations.length > 0) {

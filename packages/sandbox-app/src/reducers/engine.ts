@@ -4,7 +4,7 @@ import EngineManagerActionType from "../constants/EngineManagerActionType";
 import { EnginePhase, EngineState, LogLevel } from "../state";
 
 const initialState: EngineState = {
-  phase: EnginePhase.NONE,
+  phase: EnginePhase.INIT,
   log: [],
 };
 
@@ -59,15 +59,24 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
       };
     }
     case EngineManagerActionType.INFO: {
-      return {
-        ...state,
-        // infoLog: [...state.infoLog, action.info],
-      };
+      return state;
+      // TODO: impl in game reducer
+      // const { info } = action;
+      // if (!info.multipv) {
+      //   return state;
+      // }
+      // return {
+      //   ...state,
+      //   analysisResult: {
+      //     ...state.analysisResult,
+      //     [info.multipv]: info,
+      //   }
+      // };
     }
     case EngineManagerActionType.EXIT: {
       return {
         ...state,
-        phase: EnginePhase.SETTING_UP_ENGINE,
+        phase: EnginePhase.INIT,
       };
     }
     case EngineManagerActionType.DEBUG: {
@@ -79,7 +88,7 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
     case EngineManagerActionType.FATAL_ERROR: {
       return {
         ...state,
-        phase: EnginePhase.NONE,
+        phase: EnginePhase.INIT,
         error: action.reason,
         log: [
           ...state.log,

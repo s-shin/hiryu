@@ -3,9 +3,15 @@ import styled, { css } from "styled-components";
 import { LogEntry, LogLevel } from "../state";
 
 const level2color = {
-  [LogLevel.TRACE]: css`color: inherit`,
-  [LogLevel.DEBUG]: css`color: inherit`,
-  [LogLevel.INFO]: css`color: #0f0`,
+  [LogLevel.TRACE]: css`
+    color: inherit;
+  `,
+  [LogLevel.DEBUG]: css`
+    color: inherit;
+  `,
+  [LogLevel.INFO]: css`
+    color: #0f0;
+  `,
   [LogLevel.WARN]: css`
     color: #aa0;
     font-weight: bold;
@@ -15,18 +21,18 @@ const level2color = {
     font-weight: bold;
   `,
   [LogLevel.FATAL]: css`
-    color: #f00
+    color: #f00;
     font-weight: bold;
   `,
 };
 
-const Line = styled<{ level: LogLevel }, "p">("p")`
+const Line = styled<{ level?: LogLevel }, "p">("p")`
   margin: 0px;
   padding: 0px;
   line-height: 1.5;
   font-size: 0.6em;
   font-family: Menlo, "Source Code Pro", monospace;
-  ${props => level2color[props.level]}
+  ${props => props.level && level2color[props.level]};
 `;
 
 interface LogViewProps {

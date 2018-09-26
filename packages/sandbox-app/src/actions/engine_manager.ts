@@ -1,7 +1,6 @@
-import { ActionCreator, Dispatch } from "redux";
+import { Dispatch } from "redux";
 import { Engine, EngineInfo, GoOptions, Info } from "@hiryu/usi-engine";
-import { ThunkDispatch } from "redux-thunk";
-import WebSocketAdapter, { WebSocketAdapterOptions } from "@hiryu/usi-engine-websocket-adapter";
+import WebSocketAdapter from "@hiryu/usi-engine-websocket-adapter";
 import EngineManagerActionType from "../constants/EngineManagerActionType";
 
 let lastEngineId = 0;

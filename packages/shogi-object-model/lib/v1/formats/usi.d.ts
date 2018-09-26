@@ -23,7 +23,7 @@ export declare function parseSFEN(s: string): SFEN;
 export declare function getSFENString(h: Handicap): string;
 export declare function getSFEN(h: Handicap): SFEN;
 export interface Move {
-    srcSquare?: Square;
+    srcSquare?: Square | null;
     srcPiece?: Piece;
     dstSquare: Square;
     promote?: boolean;

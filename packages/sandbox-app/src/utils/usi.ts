@@ -1,8 +1,8 @@
 import * as som from "@hiryu/shogi-object-model";
 import * as tree from "./tree";
 
-export function getGameState(node: som.rules.standard.GameNode) {
-  const { root, route } = tree.getNodeInfo(node);
+export function getGameState(gameNode: som.rules.standard.GameNode) {
+  const { root, route } = tree.getNodeInfo(gameNode);
   const sfen = som.formats.usi.stringifySFEN({
     nextMoveNum: root.moveNum + 1,
     state: root.state,
@@ -18,6 +18,9 @@ export function getGameState(node: som.rules.standard.GameNode) {
         promote: event.promote,
       });
       moves.push(move);
+    }
+    if (gameNode === node) {
+      return false;
     }
   });
   return { state: `sfen ${sfen}`, moves: moves.join(" ") };

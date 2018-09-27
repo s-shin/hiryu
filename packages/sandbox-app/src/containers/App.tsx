@@ -14,7 +14,7 @@ import {
 } from "@material-ui/core";
 import MenuIcon from "@material-ui/icons/Menu";
 import InsertDriveFileIcon from "@material-ui/icons/InsertDriveFile";
-import { RootState, EngineState, EnginePhase } from "../state";
+import { RootState, EngineState, EnginePhase, AnalysisResults } from "../state";
 import { newEngine, newGame, setGameState, go } from "../actions/engine_manager";
 import { setCurrentGameNode } from "../actions/game";
 import LogView from "../components/LogView";
@@ -36,6 +36,7 @@ interface AppOwnProps {
 interface AppStateProps {
   engineState: EngineState;
   currentGameNode: GameNode;
+  analysisResults: AnalysisResults;
 }
 
 interface AppDispatchProps {
@@ -106,7 +107,7 @@ class App extends React.Component<AppProps, AppState> {
   };
 
   render() {
-    const { engineState, currentGameNode } = this.props;
+    const { engineState, currentGameNode, analysisResults } = this.props;
 
     // TODO: devide into component or container
     let enginePanel;
@@ -249,7 +250,13 @@ class App extends React.Component<AppProps, AppState> {
           }}
         />
       ),
-      analysis: <AnalysisResult result={currentGameNode.data!.analysisResult} />,
+      analysis: (
+        <AnalysisResult
+          result={analysisResults[currentGameNode.id] || {}}
+          // TODO: invert logic
+          invertScore={currentGameNode.state.nextTurn === som.Color.WHITE}
+        />
+      ),
       record: (
         <RecordEventList
           current={currentGameNode}
@@ -303,6 +310,7 @@ export default connect<AppStateProps, AppDispatchProps, {}, RootState>(
   state => ({
     engineState: state.engine,
     currentGameNode: state.game.currentGameNode,
+    analysisResults: state.game.analysisResults,
   }),
   { newEngine, newGame, setGameState, go, setCurrentGameNode },
 )(App);

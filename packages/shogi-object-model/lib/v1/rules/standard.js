@@ -18,8 +18,14 @@ var Violation;
     Violation[Violation["NO_PIECE_TO_BE_MOVED"] = 10] = "NO_PIECE_TO_BE_MOVED";
     Violation[Violation["NO_SPECIFIED_PIECE_ON_BOARD"] = 11] = "NO_SPECIFIED_PIECE_ON_BOARD";
 })(Violation = exports.Violation || (exports.Violation = {}));
+let lastGameNodeId = 0;
+function generateGameNodeId(prefix = "som") {
+    return `${prefix}#${++lastGameNodeId}`;
+}
+exports.generateGameNodeId = generateGameNodeId;
 function newRootGameNode(state = definitions_1.HIRATE_STATE, moveNum = 0) {
     return {
+        id: generateGameNodeId(),
         state,
         moveNum,
         violations: [],
@@ -29,14 +35,13 @@ function newRootGameNode(state = definitions_1.HIRATE_STATE, moveNum = 0) {
 exports.newRootGameNode = newRootGameNode;
 function cloneGameNode(node, opts) {
     const fixedOpts = {
-        withoutParent: opts.withoutParent !== undefined ? opts.withoutParent : false,
-        cloneData: opts.cloneData || (() => undefined),
+        recursiveParent: opts.recursiveParent !== undefined ? opts.recursiveParent : false,
     };
-    return Object.assign({}, node, { byEvent: node.byEvent ? definitions_1.cloneEvent(node.byEvent) : undefined, violations: [...node.violations], children: [...node.children], parent: fixedOpts.withoutParent
+    return Object.assign({}, node, { byEvent: node.byEvent ? definitions_1.cloneEvent(node.byEvent) : undefined, violations: [...node.violations], children: [...node.children], parent: !fixedOpts.recursiveParent
             ? node.parent
             : node.parent
                 ? cloneGameNode(node.parent, opts)
-                : undefined, data: fixedOpts.cloneData(node.data) });
+                : undefined });
 }
 exports.cloneGameNode = cloneGameNode;
 function findParent(leaf, cond) {
@@ -45,6 +50,7 @@ function findParent(leaf, cond) {
 }
 function applyEvent(node, event) {
     const ret = {
+        id: generateGameNodeId(),
         state: definitions_1.cloneState(node.state),
         moveNum: node.moveNum,
         byEvent: definitions_1.cloneEvent(event),

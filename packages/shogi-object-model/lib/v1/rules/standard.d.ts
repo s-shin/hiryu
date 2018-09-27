@@ -14,21 +14,21 @@ export declare enum Violation {
     NO_PIECE_TO_BE_MOVED = 10,
     NO_SPECIFIED_PIECE_ON_BOARD = 11
 }
-export interface GameNode<Data = any> {
+export declare function generateGameNodeId(prefix?: string): string;
+export interface GameNode {
+    id: string;
     state: State;
     moveNum: number;
     byEvent?: Event;
     violations: Violation[];
-    children: GameNode<Data>[];
-    parent?: GameNode<Data>;
-    data?: Data;
+    children: GameNode[];
+    parent?: GameNode;
 }
-export declare function newRootGameNode<Data>(state?: State, moveNum?: number): GameNode<Data>;
-export declare function cloneGameNode<Data>(node: GameNode<Data>, opts: {
-    withoutParent?: boolean;
-    cloneData?: (data?: Data) => Data | undefined;
-}): GameNode<Data>;
-export declare function applyEvent<Data>(node: DeepReadonly<GameNode<Data>>, event: DeepReadonly<Event>): GameNode<Data>;
+export declare function newRootGameNode(state?: State, moveNum?: number): GameNode;
+export declare function cloneGameNode(node: GameNode, opts: {
+    recursiveParent?: boolean;
+}): GameNode;
+export declare function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Event>): GameNode;
 export declare function isDroppablePiece(piece: Piece): boolean;
 export declare function isInPromortableArea(sq: Square, color: Color): boolean;
 export declare function isNeverMovable(sq: Square, color: Color, piece: Piece): boolean;

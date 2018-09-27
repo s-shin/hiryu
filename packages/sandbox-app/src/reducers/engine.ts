@@ -60,18 +60,6 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
     }
     case EngineManagerActionType.INFO: {
       return state;
-      // TODO: impl in game reducer
-      // const { info } = action;
-      // if (!info.multipv) {
-      //   return state;
-      // }
-      // return {
-      //   ...state,
-      //   analysisResult: {
-      //     ...state.analysisResult,
-      //     [info.multipv]: info,
-      //   }
-      // };
     }
     case EngineManagerActionType.EXIT: {
       return {

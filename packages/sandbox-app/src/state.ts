@@ -1,5 +1,5 @@
 import { EngineInfo } from "@hiryu/usi-engine";
-import { GameNode } from "./utils/game";
+import { GameNode, AnalysisResult } from "./utils/game";
 
 export enum EnginePhase {
   INIT,
@@ -34,8 +34,13 @@ export interface EngineState {
   log: LogEntry[];
 }
 
+export interface AnalysisResults {
+  [gameNodeId: string]: AnalysisResult;
+}
+
 export interface GameState {
   currentGameNode: GameNode;
+  analysisResults: AnalysisResults;
 }
 
 export interface RootState {

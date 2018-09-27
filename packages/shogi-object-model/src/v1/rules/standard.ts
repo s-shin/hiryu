@@ -48,18 +48,25 @@ export enum Violation {
   NO_SPECIFIED_PIECE_ON_BOARD,
 }
 
-export interface GameNode<Data = any> {
+let lastGameNodeId = 0;
+
+export function generateGameNodeId(prefix = "som") {
+  return `${prefix}#${++lastGameNodeId}`;
+}
+
+export interface GameNode {
+  id: string;
   state: State;
   moveNum: number;
   byEvent?: Event;
   violations: Violation[];
-  children: GameNode<Data>[];
-  parent?: GameNode<Data>;
-  data?: Data;
+  children: GameNode[];
+  parent?: GameNode;
 }
 
-export function newRootGameNode<Data>(state = HIRATE_STATE, moveNum = 0): GameNode<Data> {
+export function newRootGameNode(state = HIRATE_STATE, moveNum = 0): GameNode {
   return {
+    id: generateGameNodeId(),
     state,
     moveNum,
     violations: [],
@@ -67,44 +74,36 @@ export function newRootGameNode<Data>(state = HIRATE_STATE, moveNum = 0): GameNo
   };
 }
 
-export function cloneGameNode<Data>(
-  node: GameNode<Data>,
+export function cloneGameNode(
+  node: GameNode,
   opts: {
-    withoutParent?: boolean;
-    cloneData?: (data?: Data) => Data | undefined;
+    recursiveParent?: boolean;
   },
-): GameNode<Data> {
+): GameNode {
   const fixedOpts = {
-    withoutParent: opts.withoutParent !== undefined ? opts.withoutParent : false,
-    cloneData: opts.cloneData || (() => undefined),
+    recursiveParent: opts.recursiveParent !== undefined ? opts.recursiveParent : false,
   };
   return {
     ...node,
     byEvent: node.byEvent ? cloneEvent(node.byEvent) : undefined,
     violations: [...node.violations],
     children: [...node.children],
-    parent: fixedOpts.withoutParent
+    parent: !fixedOpts.recursiveParent
       ? node.parent
       : node.parent
         ? cloneGameNode(node.parent, opts)
         : undefined,
-    data: fixedOpts.cloneData(node.data),
   };
 }
 
-function findParent<Data>(
-  leaf: GameNode<Data>,
-  cond: (node: GameNode<Data>) => boolean,
-): GameNode<Data> | null {
+function findParent(leaf: GameNode, cond: (node: GameNode) => boolean): GameNode | null {
   const node = leaf.parent;
   return node ? (cond(node) ? node : findParent(node, cond)) : null;
 }
 
-export function applyEvent<Data>(
-  node: DeepReadonly<GameNode<Data>>,
-  event: DeepReadonly<Event>,
-): GameNode<Data> {
-  const ret: GameNode<Data> = {
+export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Event>): GameNode {
+  const ret: GameNode = {
+    id: generateGameNodeId(),
     state: cloneState(node.state),
     moveNum: node.moveNum,
     byEvent: cloneEvent(event),
@@ -121,7 +120,7 @@ export function applyEvent<Data>(
   switch (event.type) {
     case EventType.MOVE: {
       // check turn
-      const isMoveEventNode = (n: GameNode<Data>) =>
+      const isMoveEventNode = (n: GameNode) =>
         Boolean(n.byEvent && n.byEvent.type === EventType.MOVE);
       const prevMoveEventNode = isMoveEventNode(node) ? node : findParent(node, isMoveEventNode);
       if (prevMoveEventNode) {

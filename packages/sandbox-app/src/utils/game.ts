@@ -1,17 +1,18 @@
 import * as som from "@hiryu/shogi-object-model";
 import { Info } from "@hiryu/usi-engine";
 
-export interface AnalysisResult {
-  [multipv: number]: Info;
+export interface Variation {
+  rawInfo: Info;
+  //! root node of subtree corresponding to pv
+  gameNode: som.rules.standard.GameNode;
 }
 
-export function getBestResult(result: AnalysisResult): Info | null {
-  for (const idx of Object.keys(result)
-    .map(i => Number(i))
-    .sort()) {
-    return result[idx];
-  }
-  return null;
+export interface AnalysisResult {
+  variations: Variation[];
+}
+
+export function newAnalysisResult(): AnalysisResult {
+  return { variations: [] };
 }
 
 // aliases

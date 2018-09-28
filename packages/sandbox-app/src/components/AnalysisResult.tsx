@@ -1,12 +1,14 @@
 import React from "react";
 import styled, { css } from "styled-components";
-import { Info } from "@hiryu/usi-engine";
 import * as som from "@hiryu/shogi-object-model";
+import { Score, ScoreType } from "@hiryu/usi-engine";
 import { AnalysisResult } from "../utils/game";
+import * as tree from "../utils/tree";
 
 const Item = styled.div`
   font-size: 0.8em;
   border-bottom: 1px solid #ccc;
+  background-color: #eef;
 `;
 
 const Score = styled.span`
@@ -30,47 +32,41 @@ const Move = styled<{ bold: boolean }, "span">("span")`
 
 export interface AnalysisResultProps {
   result: AnalysisResult;
-  invertScore: boolean;
 }
 
-function stringifyScore(info: Info, invert: boolean): number | string {
-  if (info.cp) {
-    const t = info.cp.value;
-    return invert ? -t : t;
+function stringifyScore(score?: Score, invert: boolean): number | string {
+  if (!score) {
+    return "-";
   }
-  if (info.mate) {
-    // TODO: is_engine_side_mated
-    const t = info.mate.num;
-    if (t) {
-      return invert ? t : -t;
+  switch (score.type) {
+    case ScoreType.CP: {
+      return score.value;
+    }
+    case ScoreType.MATE: {
+      return `Mate ${score.value}`;
     }
   }
   return "-";
 }
 
-function stringifyMove(usiMoveStr: string): string {
-  // TODO
-  return usiMoveStr;
-}
-
 const AnalysisResult: React.SFC<AnalysisResultProps> = props => {
-  const items = Object.keys(props.result)
-    .map(s => Number(s))
-    .sort()
-    .map(pvIdx => {
-      const info = props.result[pvIdx];
-      return (
-        <Item key={pvIdx}>
-          <Score key="score">{stringifyScore(info, props.invertScore)}</Score>
-          {info.pv &&
-            info.pv.map((mv, i) => (
-              <Move key={`move${i}`} bold={i === 0}>
-                {stringifyMove(mv)}
-              </Move>
-            ))}
-        </Item>
+  const items = props.result.variations.map((variation, i) => {
+    const moves: JSX.Element[] = [];
+    tree.traverse(variation.gameNode, (node, i) => {
+      moves.push(
+        <Move key={i} bold={i === 0}>
+          {som.formats.ja.stringifyEvent(node.byEvent!)}
+        </Move>
       );
+      return node.children[0];
     });
+    return (
+      <Item key={i}>
+        <Score key="score">{stringifyScore(variation.rawInfo.score, false)}</Score>
+        {moves}
+      </Item>
+    );
+  });
   return <div>{items}</div>;
 };
 

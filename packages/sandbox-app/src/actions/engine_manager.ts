@@ -1,7 +1,9 @@
 import { Dispatch } from "redux";
+import * as som from "@hiryu/shogi-object-model";
 import { Engine, EngineInfo, GoOptions, Info } from "@hiryu/usi-engine";
 import WebSocketAdapter from "@hiryu/usi-engine-websocket-adapter";
 import EngineManagerActionType from "../constants/EngineManagerActionType";
+import { getGameState } from "../utils/usi";
 
 let lastEngineId = 0;
 
@@ -51,6 +53,7 @@ export interface NewGameSuccessAction {
 export interface SetGameStateRequestAction {
   type: EngineManagerActionType.SET_GAME_STATE_REQUEST;
   engineId: number;
+  gameNode: som.rules.standard.GameNode;
 }
 
 export interface GoRequestAction {
@@ -203,7 +206,11 @@ export const newEngine = (url: string) => (
 
 //---
 
-export const setOption = (engineId: number, name: string, value: string): SetOptionRequestAction => {
+export const setOption = (
+  engineId: number,
+  name: string,
+  value: string,
+): SetOptionRequestAction => {
   mustGet(engineId).engine.setOption(name, value);
   return { type: EngineManagerActionType.SET_OPTION_REQUEST, engineId };
 };
@@ -217,9 +224,13 @@ export const newGame = (engineId: number): NewGameRequestAction => {
 
 //---
 
-export const setGameState = (engineId: number, state: string, moves = ""): SetGameStateRequestAction => {
-  mustGet(engineId).engine.setGameState(state, moves);
-  return { type: EngineManagerActionType.SET_GAME_STATE_REQUEST, engineId };
+export const setGameState = (
+  engineId: number,
+  gameNode: som.rules.standard.GameNode,
+): SetGameStateRequestAction => {
+  const gs = getGameState(gameNode);
+  mustGet(engineId).engine.setGameState(gs.state, gs.moves);
+  return { type: EngineManagerActionType.SET_GAME_STATE_REQUEST, engineId, gameNode };
 };
 
 //---

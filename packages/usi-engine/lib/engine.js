@@ -37,6 +37,11 @@ class EngineInfo {
     }
 }
 exports.EngineInfo = EngineInfo;
+var ScoreType;
+(function (ScoreType) {
+    ScoreType[ScoreType["CP"] = 0] = "CP";
+    ScoreType[ScoreType["MATE"] = 1] = "MATE";
+})(ScoreType = exports.ScoreType || (exports.ScoreType = {}));
 //---
 class EngineAdapter {
     bindEngine(engine) {
@@ -71,12 +76,6 @@ exports.DEFAULT_GO_OPTIONS = {
     binc: 0,
     infinite: false,
 };
-/**
- * Base class of engines.
- *
- * Child classes can't emit event directly but events will be emitted via
- * some protected methods (e.g. debug, error).
- */
 class Engine {
     constructor(adapter) {
         this.adapter = adapter;
@@ -371,27 +370,30 @@ class Engine {
                     break;
                 }
                 case "cp": {
-                    info[key] = {
+                    const score = {
+                        type: ScoreType.CP,
                         value: parseInt(value, 10),
                     };
                     i += 2;
                     if (i < args.length) {
                         if (args[i] === "lowerbound") {
-                            info[key].bound = "lower";
+                            score.bound = "lower";
                             i++;
                         }
                         else if (args[i] === "upperbound") {
-                            info[key].bound = "upper";
+                            score.bound = "upper";
                             i++;
                         }
                     }
+                    info.score = score;
                     break;
                 }
                 case "mate": {
-                    info[key] = {
-                        num: parseInt(value.slice(1), 10) || undefined,
-                        is_engine_side_mated: value[0] === "-",
+                    const score = {
+                        type: ScoreType.MATE,
+                        value: parseInt(value, 10) || value[0],
                     };
+                    info.score = score;
                     break;
                 }
                 case "string": {

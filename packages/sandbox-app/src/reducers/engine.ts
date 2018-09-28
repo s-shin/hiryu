@@ -1,11 +1,15 @@
 import { Reducer } from "redux";
+import produce from "immer";
+import * as som from "@hiryu/shogi-object-model";
 import { EngineManagerAction } from "../actions/engine_manager";
 import EngineManagerActionType from "../constants/EngineManagerActionType";
 import { EnginePhase, EngineState, LogLevel } from "../state";
+import { newAnalysisResult } from "../utils/game";
 
 const initialState: EngineState = {
   phase: EnginePhase.INIT,
   log: [],
+  analysisResults: {},
 };
 
 const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState, action) => {
@@ -40,7 +44,10 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
       };
     }
     case EngineManagerActionType.SET_GAME_STATE_REQUEST: {
-      return state;
+      return {
+        ...state,
+        analyzedGameNode: action.gameNode,
+      };
     }
     case EngineManagerActionType.GO_REQUEST: {
       return {
@@ -59,7 +66,37 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
       };
     }
     case EngineManagerActionType.INFO: {
-      return state;
+      const { info } = action;
+      if (!info.multipv || !info.pv) {
+        return state;
+      }
+      const gameNode = state.analyzedGameNode!;
+      const move = som.formats.usi.parseMove(info.pv[0]);
+      if (!move) {
+        // TODO: error handling
+        return state;
+      }
+      const subRoot = som.rules.standard.applyEvent(gameNode, {
+        type: som.EventType.MOVE,
+        color: gameNode.state.nextTurn,
+        ...move,
+      });
+      subRoot.parent = undefined;
+      // TODO: rest of moves
+      const newResult = {
+        rawInfo: info,
+        gameNode: subRoot,
+      };
+      return produce(state, s => {
+        const result = s.analysisResults[s.analyzedGameNode!.id] || newAnalysisResult();
+        const idx = result.variations.findIndex(v => v.rawInfo.multipv === info.multipv);
+        if (idx >= 0) {
+          result.variations[idx] = newResult;
+        } else {
+          result.variations.push(newResult);
+        }
+        s.analysisResults[s.analyzedGameNode!.id] = result;
+      });
     }
     case EngineManagerActionType.EXIT: {
       return {

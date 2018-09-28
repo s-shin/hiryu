@@ -99,15 +99,23 @@ export type Move = string;
 
 export type BestMove = Move | "resign" | "win";
 
-export interface ScoreInfo {
+export enum ScoreType {
+  CP,
+  MATE,
+}
+
+export interface CpScore {
+  type: ScoreType.CP;
   value: number;
   bound?: "lower" | "upper";
 }
 
-export interface MateInfo {
-  num?: number;
-  is_engine_side_mated: boolean;
+export interface MateScore {
+  type: ScoreType.MATE;
+  value: number | "+" | "-";
 }
+
+export type Score = CpScore | MateScore;
 
 export interface Info {
   depth?: number;
@@ -116,8 +124,7 @@ export interface Info {
   nodes?: number;
   pv?: Move[];
   multipv?: number;
-  cp?: ScoreInfo;
-  mate?: MateInfo;
+  score?: Score;
   currmove?: Move;
   hashfull?: number;
   nps?: number;
@@ -543,26 +550,29 @@ export class Engine {
           break;
         }
         case "cp": {
-          info[key] = {
+          const score: CpScore = {
+            type: ScoreType.CP,
             value: parseInt(value, 10),
           };
           i += 2;
           if (i < args.length) {
             if (args[i] === "lowerbound") {
-              info[key].bound = "lower";
+              score.bound = "lower";
               i++;
             } else if (args[i] === "upperbound") {
-              info[key].bound = "upper";
+              score.bound = "upper";
               i++;
             }
           }
+          info.score = score;
           break;
         }
         case "mate": {
-          info[key] = {
-            num: parseInt(value.slice(1), 10) || undefined,
-            is_engine_side_mated: value[0] === "-",
+          const score: MateScore = {
+            type: ScoreType.MATE,
+            value: parseInt(value, 10) || value[0] as ("+" | "-"),
           };
+          info.score = score;
           break;
         }
         case "string": {

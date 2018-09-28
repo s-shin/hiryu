@@ -51,14 +51,20 @@ export declare class EngineInfo {
 }
 export declare type Move = string;
 export declare type BestMove = Move | "resign" | "win";
-export interface ScoreInfo {
+export declare enum ScoreType {
+    CP = 0,
+    MATE = 1
+}
+export interface CpScore {
+    type: ScoreType.CP;
     value: number;
     bound?: "lower" | "upper";
 }
-export interface MateInfo {
-    num?: number;
-    is_engine_side_mated: boolean;
+export interface MateScore {
+    type: ScoreType.MATE;
+    value: number | "+" | "-";
 }
+export declare type Score = CpScore | MateScore;
 export interface Info {
     depth?: number;
     seldepth?: number;
@@ -66,8 +72,7 @@ export interface Info {
     nodes?: number;
     pv?: Move[];
     multipv?: number;
-    cp?: ScoreInfo;
-    mate?: MateInfo;
+    score?: Score;
     currmove?: Move;
     hashfull?: number;
     nps?: number;
@@ -115,12 +120,6 @@ export interface GoOptions {
 }
 export declare const DEFAULT_GO_OPTIONS: GoOptions;
 export declare type EngineEvents = "debug" | "configure" | "ready" | "exit" | "info" | "bestmove" | "error";
-/**
- * Base class of engines.
- *
- * Child classes can't emit event directly but events will be emitted via
- * some protected methods (e.g. debug, error).
- */
 export declare class Engine {
     private adapter;
     state: EngineState;

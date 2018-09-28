@@ -27,7 +27,7 @@ import GameControlPanel, { ControlType } from "../components/GameControlPanel";
 import AnalysisResult from "../components/AnalysisResult";
 import * as tree from "../utils/tree";
 import { getGameState } from "../utils/usi";
-import { GameNode, applyEvent } from "../utils/game";
+import { GameNode, applyEvent, newAnalysisResult } from "../utils/game";
 
 interface AppOwnProps {
   //
@@ -36,7 +36,6 @@ interface AppOwnProps {
 interface AppStateProps {
   engineState: EngineState;
   currentGameNode: GameNode;
-  analysisResults: AnalysisResults;
 }
 
 interface AppDispatchProps {
@@ -107,7 +106,7 @@ class App extends React.Component<AppProps, AppState> {
   };
 
   render() {
-    const { engineState, currentGameNode, analysisResults } = this.props;
+    const { engineState, currentGameNode } = this.props;
 
     // TODO: devide into component or container
     let enginePanel;
@@ -141,8 +140,7 @@ class App extends React.Component<AppProps, AppState> {
           <div>
             <Button
               onClick={() => {
-                const gs = getGameState(currentGameNode);
-                this.props.setGameState(engineState.engineId!, gs.state, gs.moves);
+                this.props.setGameState(engineState.engineId!, currentGameNode);
                 this.props.go(engineState.engineId!);
               }}
             >
@@ -252,9 +250,7 @@ class App extends React.Component<AppProps, AppState> {
       ),
       analysis: (
         <AnalysisResult
-          result={analysisResults[currentGameNode.id] || {}}
-          // TODO: invert logic
-          invertScore={currentGameNode.state.nextTurn === som.Color.WHITE}
+          result={engineState.analysisResults[currentGameNode.id] || newAnalysisResult()}
         />
       ),
       record: (
@@ -310,7 +306,6 @@ export default connect<AppStateProps, AppDispatchProps, {}, RootState>(
   state => ({
     engineState: state.engine,
     currentGameNode: state.game.currentGameNode,
-    analysisResults: state.game.analysisResults,
   }),
   { newEngine, newGame, setGameState, go, setCurrentGameNode },
 )(App);

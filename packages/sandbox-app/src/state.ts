@@ -1,5 +1,6 @@
+import * as som from "@hiryu/shogi-object-model";
 import { EngineInfo } from "@hiryu/usi-engine";
-import { GameNode, AnalysisResult } from "./utils/game";
+import { AnalysisResult } from "./utils/game";
 
 export enum EnginePhase {
   INIT,
@@ -25,22 +26,23 @@ export interface LogEntry {
   message: string;
 }
 
-export interface EngineState {
-  phase: EnginePhase;
-  engineId?: number;
-  engineInfo?: EngineInfo;
-  bestmove?: string;
-  error?: Error;
-  log: LogEntry[];
-}
-
 export interface AnalysisResults {
   [gameNodeId: string]: AnalysisResult;
 }
 
-export interface GameState {
-  currentGameNode: GameNode;
+export interface EngineState {
+  phase: EnginePhase;
+  engineId?: number;
+  engineInfo?: EngineInfo;
+  analyzedGameNode?: som.rules.standard.GameNode;
+  bestmove?: string;
+  error?: Error;
+  log: LogEntry[];
   analysisResults: AnalysisResults;
+}
+
+export interface GameState {
+  currentGameNode: som.rules.standard.GameNode;
 }
 
 export interface RootState {

@@ -21,7 +21,10 @@ function interactable(WrappedComponent) {
         }
         render() {
             return (react_1.default.createElement("div", { onClick: () => !this.state.promotionSelector && this.setActiveGameObject() },
-                react_1.default.createElement(WrappedComponent, { state: this.props.gameNode.state, activeGameObject: this.state.activeGameObject, promotionSelector: this.state.promotionSelector, onClickGameObject: obj => this.updateActiveGameObject(obj) })));
+                react_1.default.createElement(WrappedComponent, { state: this.props.gameNode.state, activeGameObject: this.state.activeGameObject, promotionSelector: this.state.promotionSelector, onClickGameObject: obj => this.updateActiveGameObject(obj), lastMovedTo: (this.props.gameNode.byEvent &&
+                        this.props.gameNode.byEvent.type === som.EventType.MOVE &&
+                        this.props.gameNode.byEvent.dstSquare) ||
+                        undefined })));
         }
         setActiveGameObject(obj) {
             this.setState(Object.assign({}, this.state, { activeGameObject: obj }));
@@ -48,7 +51,8 @@ function interactable(WrappedComponent) {
                                     this.props.onMoveEvent(som.newMoveEvent(gameNode.state.nextTurn, prev.square, obj.square, promote));
                                     return this.resetActivatedState();
                                 };
-                                const mcs = som.rules.standard.searchMoveCandidates(gameNode.state.board, prev.square)
+                                const mcs = som.rules.standard
+                                    .searchMoveCandidates(gameNode.state.board, prev.square)
                                     .filter(mc => som.squareEquals(mc.dst, obj.square));
                                 const isPromotionSelectable = mcs.length === 2;
                                 if (isPromotionSelectable) {

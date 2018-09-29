@@ -6,6 +6,7 @@ export interface GameProps {
     activeGameObject?: GameObject;
     onClickGameObject: (obj: GameObject) => void;
     promotionSelector?: PromotionSelectorProps;
+    lastMovedTo?: som.Square;
 }
 export declare function Game(props: GameProps): JSX.Element;
 export default Game;

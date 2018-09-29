@@ -1,13 +1,4 @@
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
-            t[p[i]] = s[p[i]];
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -37,16 +28,19 @@ const BasicSquare = styled_components_1.default.div `
   text-align: center;
   user-select: none;
 `;
-const BoardSquare = styled_components_1.default((_a) => {
-    var { isActive, color } = _a, rest = __rest(_a, ["isActive", "color"]);
-    return react_1.default.createElement(BasicSquare, Object.assign({}, rest));
-}) `
-  ${props => props.color === som.Color.WHITE && styled_components_1.css `
-    transform: rotate(180deg);
-  `}
-  ${props => props.isActive && styled_components_1.css `
+const squareStyles = {
+    selected: styled_components_1.css `
     color: red;
-  `}
+  `,
+    lastMovedTo: styled_components_1.css `
+    font-weight: bold;
+  `,
+};
+const BoardSquare = styled_components_1.default(props => react_1.default.createElement(BasicSquare, Object.assign({}, props))) `
+  ${props => props.rotate &&
+    styled_components_1.css `
+      transform: rotate(180deg);
+    `} ${props => props.css};
 `;
 const PromotionSelectorView = styled_components_1.default("div") `
   position: absolute;
@@ -62,17 +56,35 @@ const PromotionSelectorView = styled_components_1.default("div") `
   }
 `;
 function Board(props) {
+    const { highlight } = props;
     const rows = [];
     for (const y of som.SQUARE_NUMBERS) {
         const cols = [];
         for (const x of som.SQUARE_NUMBERS_DESC) {
             const cp = som.getBoardSquare(props.board, [x, y]);
-            const isActive = props.activeSquare !== undefined && som.squareEquals(props.activeSquare, [x, y]);
+            const squareStyle = (() => {
+                if (highlight.selected && som.squareEquals(highlight.selected, [x, y])) {
+                    return squareStyles.selected;
+                }
+                if (highlight.lastMovedTo && som.squareEquals(highlight.lastMovedTo, [x, y])) {
+                    return squareStyles.lastMovedTo;
+                }
+            })();
             cols.push(react_1.default.createElement(Cell, { key: `${x}${y}` },
-                react_1.default.createElement(BoardSquare, { isActive: isActive, color: cp && cp.color || undefined, onClick: e => { e.stopPropagation(); props.onClickSquare([x, y]); } }, cp ? som.formats.ja.stringifyPiece(cp.piece).replace("王", "玉") : ""),
-                props.promotionSelector && som.squareEquals(props.promotionSelector.dstSquare, [x, y]) && (react_1.default.createElement(PromotionSelectorView, { square: [x, y] },
-                    react_1.default.createElement(BasicSquare, { onClick: e => { e.stopPropagation(); props.promotionSelector.onSelect(true); } }, som.formats.ja.stringifyPiece(som.promote(props.promotionSelector.piece))),
-                    react_1.default.createElement(BasicSquare, { onClick: e => { e.stopPropagation(); props.promotionSelector.onSelect(false); } }, som.formats.ja.stringifyPiece(props.promotionSelector.piece))))));
+                react_1.default.createElement(BoardSquare, { css: squareStyle, rotate: !!cp && cp.color === som.Color.WHITE, onClick: e => {
+                        e.stopPropagation();
+                        props.onClickSquare([x, y]);
+                    } }, cp ? som.formats.ja.stringifyPiece(cp.piece).replace("王", "玉") : ""),
+                props.promotionSelector &&
+                    som.squareEquals(props.promotionSelector.dstSquare, [x, y]) && (react_1.default.createElement(PromotionSelectorView, { square: [x, y] },
+                    react_1.default.createElement(BasicSquare, { onClick: e => {
+                            e.stopPropagation();
+                            props.promotionSelector.onSelect(true);
+                        } }, som.formats.ja.stringifyPiece(som.promote(props.promotionSelector.piece))),
+                    react_1.default.createElement(BasicSquare, { onClick: e => {
+                            e.stopPropagation();
+                            props.promotionSelector.onSelect(false);
+                        } }, som.formats.ja.stringifyPiece(props.promotionSelector.piece))))));
         }
         rows.push(react_1.default.createElement("tr", { key: `${y}` }, cols));
     }

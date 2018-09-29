@@ -340,7 +340,11 @@ class Engine {
     parseInfoArgs(args) {
         const info = {};
         let i = 0;
+        let stopper = 0;
         while (i < args.length) {
+            if (stopper++ === 10000) {
+                throw new Error("parseInfoArgs: busy loop may occur");
+            }
             if (i + 1 >= args.length) {
                 // engine error
                 break;
@@ -360,21 +364,21 @@ class Engine {
                 case "currmove":
                 case "hashfull":
                 case "nps": {
-                    info[key] = parseInt(value, 10);
                     i += 2;
+                    info[key] = parseInt(value, 10);
                     break;
                 }
                 case "pv": {
-                    info[key] = args.slice(i + 1);
+                    info[key] = args[i + 1] === "None" ? [] : args.slice(i + 1);
                     i = args.length;
                     break;
                 }
                 case "cp": {
+                    i += 2;
                     const score = {
                         type: ScoreType.CP,
                         value: parseInt(value, 10),
                     };
-                    i += 2;
                     if (i < args.length) {
                         if (args[i] === "lowerbound") {
                             score.bound = "lower";
@@ -389,11 +393,18 @@ class Engine {
                     break;
                 }
                 case "mate": {
+                    i += 2;
                     const score = {
                         type: ScoreType.MATE,
                         value: parseInt(value, 10) || value[0],
                     };
                     info.score = score;
+                    if (i < args.length) {
+                        if (args[i] === "lowerbound" || args[i] === "upperbound") {
+                            // ignore
+                            i++;
+                        }
+                    }
                     break;
                 }
                 case "string": {

@@ -70,18 +70,42 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
       if (!info.multipv || !info.pv) {
         return state;
       }
-      const gameNode = state.analyzedGameNode!;
-      const move = som.formats.usi.parseMove(info.pv[0]);
-      if (!move) {
-        // TODO: error handling
+      const subRoot = (() => {
+        const gameNode = state.analyzedGameNode!;
+        const move = som.formats.usi.parseMove(info.pv[0]);
+        if (!move) {
+          console.error(`failed to parse ${move}`);
+          return null;
+        }
+        const next = som.rules.standard.applyEvent(gameNode, {
+          type: som.EventType.MOVE,
+          color: gameNode.state.nextTurn,
+          ...move,
+        });
+        next.parent = undefined;
+        return next;
+      })();
+      if (!subRoot) {
         return state;
       }
-      const subRoot = som.rules.standard.applyEvent(gameNode, {
-        type: som.EventType.MOVE,
-        color: gameNode.state.nextTurn,
-        ...move,
-      });
-      subRoot.parent = undefined;
+      // TODO: think circular reference problem
+      // {
+      //   let node = subRoot;
+      //   for (const usiMove of info.pv.slice(1)) {
+      //     const move = som.formats.usi.parseMove(usiMove);
+      //     if (!move) {
+      //       console.error(`failed to parse ${move}`);
+      //       return state;
+      //     }
+      //     const next = som.rules.standard.applyEvent(node, {
+      //       type: som.EventType.MOVE,
+      //       color: node.state.nextTurn,
+      //       ...move,
+      //     });
+      //     node.children.push(next);
+      //     node = next;
+      //   }
+      // }
       // TODO: rest of moves
       const newResult = {
         rawInfo: info,

@@ -1,3 +1,4 @@
+const path = require("path");
 const createReporter = require("istanbul-api").createReporter;
 const istanbulCoverage = require("istanbul-lib-coverage");
 
@@ -11,7 +12,7 @@ if (cov_final_json_paths.length === 0) {
 }
 
 for (const p of cov_final_json_paths) {
-  const coverage = require(p);
+  const coverage = require(path.join(__dirname, "..", p));
   for (const filename of Object.keys(coverage)) {
     map.addFileCoverage(coverage[filename]);
   }

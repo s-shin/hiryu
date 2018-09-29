@@ -34,35 +34,50 @@ export interface AnalysisResultProps {
   result: AnalysisResult;
 }
 
-function stringifyScore(score?: Score, invert: boolean): number | string {
+function stringifyScore(score?: Score, invert: boolean = false): number | string {
   if (!score) {
-    return "-";
+    return "?";
   }
   switch (score.type) {
     case ScoreType.CP: {
-      return score.value;
+      return score.value * (invert ? -1 : 1);
     }
     case ScoreType.MATE: {
-      return `Mate ${score.value}`;
+      const valueStr = (() => {
+        if (score.value === "+") {
+          return invert ? "-?" : "+?";
+        }
+        if (score.value === "-") {
+          return invert ? "+?" : "-?";
+        }
+        if (score.value > 0) {
+          return `${invert ? "-" : "+"}${score.value}`;
+        }
+        return `${invert ? "+" : "-"}${score.value}`;
+      })();
+      return `Mate ${valueStr}`;
     }
   }
-  return "-";
+  return "?";
 }
 
 const AnalysisResult: React.SFC<AnalysisResultProps> = props => {
   const items = props.result.variations.map((variation, i) => {
     const moves: JSX.Element[] = [];
+    const event = variation.gameNode.byEvent!;
     tree.traverse(variation.gameNode, (node, i) => {
       moves.push(
         <Move key={i} bold={i === 0}>
           {som.formats.ja.stringifyEvent(node.byEvent!)}
-        </Move>
+        </Move>,
       );
       return node.children[0];
     });
     return (
       <Item key={i}>
-        <Score key="score">{stringifyScore(variation.rawInfo.score, false)}</Score>
+        <Score key="score">
+          {stringifyScore(variation.rawInfo.score, event.color === som.Color.WHITE)}
+        </Score>
         {moves}
       </Item>
     );

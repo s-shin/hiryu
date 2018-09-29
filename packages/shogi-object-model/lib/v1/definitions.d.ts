@@ -149,6 +149,7 @@ export declare function demote(piece: Piece, alt?: Piece): Piece | undefined;
 export declare function canPromote(piece: Piece): boolean;
 export declare function isPromoted(piece: Piece): boolean;
 export declare function flipPiece(piece: Piece, alt?: Piece): Piece | undefined;
+export declare function isHeads(piece: Piece): boolean;
 export declare function flipColor(color: Color): Color;
 export declare function colorPieceEquals(cp1: ColorPiece, cp2: ColorPiece): boolean;
 export declare function squareToBoardIndex(sq: Square): number;

@@ -307,6 +307,10 @@ export function flipPiece(piece: Piece, alt?: Piece) {
   return promote(piece) || demote(piece) || alt;
 }
 
+export function isHeads(piece: Piece) {
+  return canPromote(piece) || piece === Piece.KI || piece === Piece.OU;
+}
+
 // === Color Methods ===
 
 export function flipColor(color: Color) {

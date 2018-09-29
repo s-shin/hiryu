@@ -91,7 +91,7 @@ function applyEvent(node, event) {
             // dstSquare!
             if (prevMoveEventNode) {
                 const pe = prevMoveEventNode.byEvent;
-                e.sameDstSquare = e.dstSquare === pe.dstSquare;
+                e.sameDstSquare = definitions_1.squareEquals(e.dstSquare, pe.dstSquare);
             }
             else if (e.sameDstSquare === undefined) {
                 e.sameDstSquare = false;
@@ -148,7 +148,7 @@ function applyEvent(node, event) {
                 if (e.srcSquare === null ||
                     (event.movements && event.movements.indexOf(definitions_1.Movement.DROPPED) !== -1)) {
                     isDrop = true;
-                    if (e.promote || !definitions_1.canPromote(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
+                    if (e.promote || !definitions_1.isHeads(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
                         ret.violations.push(Violation.INVALID_MOVE_EVENT);
                         return ret;
                     }
@@ -163,7 +163,7 @@ function applyEvent(node, event) {
                     });
                     if (matches.length === 0) {
                         isDrop = true;
-                        if (e.promote || !definitions_1.canPromote(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
+                        if (e.promote || !definitions_1.isHeads(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
                             ret.violations.push(Violation.INVALID_MOVE_EVENT);
                             return ret;
                         }
@@ -182,9 +182,7 @@ function applyEvent(node, event) {
                         }
                         if (candidates.length === 0) {
                             isDrop = true;
-                            if (e.promote ||
-                                !definitions_1.canPromote(e.srcPiece) ||
-                                (e.dstPiece && e.dstPiece !== e.srcPiece)) {
+                            if (e.promote || !definitions_1.isHeads(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
                                 ret.violations.push(Violation.INVALID_MOVE_EVENT);
                                 return ret;
                             }

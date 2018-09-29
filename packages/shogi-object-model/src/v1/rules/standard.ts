@@ -28,6 +28,7 @@ import {
   SQUARE_NUMBERS,
   HIRATE_STATE,
   isCompleteMoveEvent,
+  isHeads,
 } from "../definitions";
 import { DeepReadonly } from "../../util";
 
@@ -148,7 +149,7 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
       // dstSquare!
       if (prevMoveEventNode) {
         const pe = prevMoveEventNode.byEvent as MoveEvent;
-        e.sameDstSquare = e.dstSquare === pe.dstSquare!;
+        e.sameDstSquare = squareEquals(e.dstSquare, pe.dstSquare!);
       } else if (e.sameDstSquare === undefined) {
         e.sameDstSquare = false;
       }
@@ -204,7 +205,7 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
           (event.movements && event.movements.indexOf(Movement.DROPPED) !== -1)
         ) {
           isDrop = true;
-          if (e.promote || !canPromote(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
+          if (e.promote || !isHeads(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
             ret.violations.push(Violation.INVALID_MOVE_EVENT);
             return ret;
           }
@@ -218,7 +219,7 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
           }) as Array<[ColorPiece, Square]>;
           if (matches.length === 0) {
             isDrop = true;
-            if (e.promote || !canPromote(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
+            if (e.promote || !isHeads(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
               ret.violations.push(Violation.INVALID_MOVE_EVENT);
               return ret;
             }
@@ -242,11 +243,7 @@ export function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Eve
             }
             if (candidates.length === 0) {
               isDrop = true;
-              if (
-                e.promote ||
-                !canPromote(e.srcPiece) ||
-                (e.dstPiece && e.dstPiece !== e.srcPiece)
-              ) {
+              if (e.promote || !isHeads(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
                 ret.violations.push(Violation.INVALID_MOVE_EVENT);
                 return ret;
               }

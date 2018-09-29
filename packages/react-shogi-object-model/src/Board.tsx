@@ -33,7 +33,7 @@ const squareStyles = {
 
 const BoardSquare = styled<
   { css?: InterpolationValue[]; rotate: boolean } & React.HTMLAttributes<HTMLDivElement>
->(props => <BasicSquare {...props} />)`
+>(({ css, rotate, ...rest }) => <BasicSquare {...rest} />)`
   ${props =>
     props.rotate &&
     css`

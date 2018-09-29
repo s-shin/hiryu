@@ -1,4 +1,13 @@
 "use strict";
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) if (e.indexOf(p[i]) < 0)
+            t[p[i]] = s[p[i]];
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -36,7 +45,10 @@ const squareStyles = {
     font-weight: bold;
   `,
 };
-const BoardSquare = styled_components_1.default(props => react_1.default.createElement(BasicSquare, Object.assign({}, props))) `
+const BoardSquare = styled_components_1.default((_a) => {
+    var { css, rotate } = _a, rest = __rest(_a, ["css", "rotate"]);
+    return react_1.default.createElement(BasicSquare, Object.assign({}, rest));
+}) `
   ${props => props.rotate &&
     styled_components_1.css `
       transform: rotate(180deg);

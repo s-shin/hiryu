@@ -129,6 +129,7 @@ describe("kif", () => {
   test("detectEncoding and parse", () => {
     const data = fs.readFileSync(
       path.resolve(__dirname, "__test__/sample_swks_sakura_ne_jp_wars_kifsearch.kif"),
+      // path.resolve(__dirname, "__test__/sample_swks_sakura_ne_jp_wars_kifsearch_02.kif"),
     );
     const encoding = kif.detectEncoding(data);
     let text: string;

@@ -83,8 +83,18 @@ function parseColor(s, opts = { style: ColorFormatStyle.DEFAULT }) {
     throw new Error("TODO");
 }
 exports.parseColor = parseColor;
+//---
+var PieceFormatStyle;
+(function (PieceFormatStyle) {
+    PieceFormatStyle[PieceFormatStyle["LONG"] = 0] = "LONG";
+    PieceFormatStyle[PieceFormatStyle["ABBR"] = 1] = "ABBR";
+})(PieceFormatStyle = exports.PieceFormatStyle || (exports.PieceFormatStyle = {}));
+var PieceFormatVariant;
+(function (PieceFormatVariant) {
+    PieceFormatVariant[PieceFormatVariant["GYOKU"] = 0] = "GYOKU";
+})(PieceFormatVariant = exports.PieceFormatVariant || (exports.PieceFormatVariant = {}));
 const pieceStrs = {
-    [0 /* LONG */]: {
+    [PieceFormatStyle.LONG]: {
         [definitions_1.Piece.FU]: "歩兵",
         [definitions_1.Piece.KY]: "香車",
         [definitions_1.Piece.KE]: "桂馬",
@@ -92,7 +102,7 @@ const pieceStrs = {
         [definitions_1.Piece.KI]: "金将",
         [definitions_1.Piece.KA]: "角行",
         [definitions_1.Piece.HI]: "飛車",
-        [definitions_1.Piece.OU]: { default: "王将", [0 /* GYOKU */]: "玉将" },
+        [definitions_1.Piece.OU]: { default: "王将", [PieceFormatVariant.GYOKU]: "玉将" },
         [definitions_1.Piece.TO]: "と金",
         [definitions_1.Piece.NY]: "成香",
         [definitions_1.Piece.NK]: "成桂",
@@ -100,7 +110,7 @@ const pieceStrs = {
         [definitions_1.Piece.UM]: "龍馬",
         [definitions_1.Piece.RY]: "龍王",
     },
-    [1 /* ABBR */]: {
+    [PieceFormatStyle.ABBR]: {
         [definitions_1.Piece.FU]: "歩",
         [definitions_1.Piece.KY]: "香",
         [definitions_1.Piece.KE]: "桂",
@@ -108,7 +118,7 @@ const pieceStrs = {
         [definitions_1.Piece.KI]: "金",
         [definitions_1.Piece.KA]: "角",
         [definitions_1.Piece.HI]: "飛",
-        [definitions_1.Piece.OU]: { default: "王", [0 /* GYOKU */]: "玉" },
+        [definitions_1.Piece.OU]: { default: "王", [PieceFormatVariant.GYOKU]: "玉" },
         [definitions_1.Piece.TO]: "と",
         [definitions_1.Piece.NY]: "杏",
         [definitions_1.Piece.NK]: "圭",
@@ -117,7 +127,7 @@ const pieceStrs = {
         [definitions_1.Piece.RY]: "龍",
     },
 };
-function stringifyPiece(p, opts = { style: 1 /* ABBR */, variants: [] }) {
+function stringifyPiece(p, opts = { style: PieceFormatStyle.ABBR, variants: [] }) {
     const t = pieceStrs[opts.style][p];
     if (typeof t === "string") {
         return t;
@@ -131,7 +141,7 @@ function stringifyPiece(p, opts = { style: 1 /* ABBR */, variants: [] }) {
     return t.default;
 }
 exports.stringifyPiece = stringifyPiece;
-function parsePiece(s, opts = { style: 1 /* ABBR */ }) {
+function parsePiece(s, opts = { style: PieceFormatStyle.ABBR, variants: [] }) {
     // TODO: performance
     const strs = pieceStrs[opts.style];
     for (const p of Object.keys(strs)) {

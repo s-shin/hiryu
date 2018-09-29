@@ -30,7 +30,7 @@ import {
   Record,
   flipColor,
 } from "../definitions";
-import * as jp from "./ja";
+import * as ja from "./ja";
 
 // 棋譜ファイル KIF 形式: http://kakinoki.o.oo7.jp/kif_format.html
 
@@ -81,7 +81,7 @@ export const recordParser = (() => {
     // TODO
     const setters: { [key: string]: (s: string) => void } = {
       棋戦: s => (r.competition = s),
-      手合割: s => (r.startingSetup.handicap = jp.parseHandicap(s) || undefined),
+      手合割: s => (r.startingSetup.handicap = ja.parseHandicap(s) || undefined),
       先手: s => (r.players.black.name = s),
       後手: s => (r.players.white.name = s),
     };
@@ -130,11 +130,14 @@ export const recordParser = (() => {
   const dst = desc(oneOf(square, sameDst), "dst");
   const pieceParsers = "歩香桂銀金角飛玉と杏圭全馬龍"
     .split("")
-    .map(s => transform(string(s), v => jp.parsePiece(v)!));
+    .concat("香桂銀".split("").map(s => `成${s}`))
+    .map(s => {
+      const piece =
+        ja.parsePiece(s) || ja.parsePiece(s, { style: ja.PieceFormatStyle.LONG, variants: [] })!;
+      return constant(string(s), piece);
+    });
   const piece = desc(oneOf(...pieceParsers), "piece");
-  const movementParsers = "打"
-    .split("")
-    .map(s => transform(string(s), v => jp.parseMovement(v)!));
+  const movementParsers = "打".split("").map(s => transform(string(s), v => ja.parseMovement(v)!));
   const movement = desc(oneOf(...movementParsers), "movements");
   const src = desc(transform(seq(char("("), seq(hanNum, hanNum), char(")")), vs => vs[1]), "src");
   const eventBody = desc(

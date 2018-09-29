@@ -13,9 +13,12 @@ export declare function stringifyColor(c: Color, opts?: {
 export declare function parseColor(s: string, opts?: {
     style: ColorFormatStyle;
 }): Color | null;
-declare const enum PieceFormatStyle {
+export declare enum PieceFormatStyle {
     LONG = 0,
     ABBR = 1
+}
+export declare enum PieceFormatVariant {
+    GYOKU = 0
 }
 export declare function stringifyPiece(p: Piece, opts?: {
     style: PieceFormatStyle;
@@ -23,6 +26,7 @@ export declare function stringifyPiece(p: Piece, opts?: {
 }): string;
 export declare function parsePiece(s: string, opts?: {
     style: PieceFormatStyle;
+    variants: never[];
 }): Piece | null;
 export declare function stringifySquare(sq: Square): string;
 export declare function parseSquare(s: string): Square | null;
@@ -39,4 +43,3 @@ export declare function stringifyResignEvent(e: ResignEvent, opts?: {
 export declare function stringifyEvent(e: Event, opts?: {
     withColor: boolean;
 }): string | null;
-export {};

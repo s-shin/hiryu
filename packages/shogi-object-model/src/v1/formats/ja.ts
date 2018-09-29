@@ -120,12 +120,12 @@ export function parseColor(s: string, opts = { style: ColorFormatStyle.DEFAULT }
 
 //---
 
-const enum PieceFormatStyle {
+export enum PieceFormatStyle {
   LONG,
   ABBR,
 }
 
-const enum PieceFormatVariant {
+export enum PieceFormatVariant {
   GYOKU,
 }
 
@@ -217,7 +217,10 @@ export function stringifyPiece(
   return t.default;
 }
 
-export function parsePiece(s: string, opts = { style: PieceFormatStyle.ABBR }): Piece | null {
+export function parsePiece(
+  s: string,
+  opts = { style: PieceFormatStyle.ABBR, variants: [] },
+): Piece | null {
   // TODO: performance
   const strs = pieceStrs[opts.style];
   for (const p of Object.keys(strs)) {

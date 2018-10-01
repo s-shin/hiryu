@@ -10,7 +10,9 @@
     "lint": "tslint src/**/*",
     "test": "jest"
   },
-  "dependencies": {},
+  "dependencies": {
+    "immer": "^1.7.2"
+  },
   "devDependencies": {
     "@types/jest": "^23.3.1",
     "jest": "^23.5.0",

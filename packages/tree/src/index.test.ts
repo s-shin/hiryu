@@ -62,4 +62,22 @@ describe("tree", () => {
     const n2 = tree.findParentNode(sampleLeafNode, tree.isRootNode);
     expect(n2!.path).toEqual(tree.ROOT_PATH);
   });
+
+  it("getParentNode", () => {
+    expect(tree.getParentNode(sampleRootNode)).toBeUndefined();
+    expect(
+      tree.getParentNode({ tree: sampleTrees[0], path: { points: [], depth: 1 } }).path,
+    ).toEqual(tree.ROOT_PATH);
+  });
+
+  it("getChildNodes", () => {
+    const cs1 = tree.getChildNodes(sampleRootNode);
+    expect(cs1.map(n => n.path)).toEqual([
+      { points: [], depth: 1 },
+      { points: [{ depth: 1, forkIndex: 0 }], depth: 0 },
+      { points: [{ depth: 1, forkIndex: 1 }], depth: 0 },
+    ]);
+    const cs2 = tree.getChildNodes(cs1[0]);
+    expect(cs2.map(n => n.path)).toEqual([{ points: [], depth: 2 }]);
+  });
 });

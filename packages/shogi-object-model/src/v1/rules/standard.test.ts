@@ -18,9 +18,9 @@ describe("standard rule", () => {
     game = tree.appendChild(game, data);
 
     [
-      { color: som.Color.WHITE, srcSquare: [3, 3], dstSquare: [3, 4] },
-      { color: som.Color.BLACK, srcSquare: [8, 8], dstSquare: [2, 2], promote: true },
-      { color: som.Color.WHITE, srcSquare: [3, 1], dstSquare: [2, 2] },
+      { color: som.Color.WHITE, dstSquare: [3, 4], dstPiece: som.Piece.FU },
+      { color: som.Color.BLACK, srcPiece: som.Piece.KA, dstSquare: [2, 2], promote: true },
+      { color: som.Color.WHITE, sameDstSquare: true, srcPiece: som.Piece.HI },
       { color: som.Color.BLACK, srcSquare: null, dstSquare: [5, 5], srcPiece: som.Piece.KA },
     ].forEach((e, i) => {
       data = standard.applyEvent(game, { type: som.EventType.MOVE, ...e } as any);

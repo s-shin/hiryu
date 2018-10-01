@@ -203,7 +203,7 @@ export function applyEvent(current: GameNode, event: Event): GameNodeData {
           // ## srcSquare!, srcPiece!, dstPiece!, promote!
         } else {
           const matches = filterBoardSquare(currentData.state.board, cp => {
-            return cp !== null && cp.color === event.color && cp.piece === e.srcPiece;
+            return cp !== null && cp.color === event.color && cp.piece === piece;
           }) as Array<[ColorPiece, Square]>;
           if (matches.length === 0) {
             const r = shouldDrop();

@@ -125,6 +125,10 @@ export interface Record {
     startingSetup: StartingSetup;
     events: EventList;
 }
+export interface RecordFile {
+    version: "v1";
+    record: Record;
+}
 export declare const MIN_SQUARE_NUMBER: SquareNumber;
 export declare const MAX_SQUARE_NUMBER: SquareNumber;
 export declare function getSquareNumbers(): SquareNumber[];
@@ -145,6 +149,7 @@ export declare function demote(piece: Piece, alt?: Piece): Piece | undefined;
 export declare function canPromote(piece: Piece): boolean;
 export declare function isPromoted(piece: Piece): boolean;
 export declare function flipPiece(piece: Piece, alt?: Piece): Piece | undefined;
+export declare function isHeads(piece: Piece): boolean;
 export declare function flipColor(color: Color): Color;
 export declare function colorPieceEquals(cp1: ColorPiece, cp2: ColorPiece): boolean;
 export declare function squareToBoardIndex(sq: Square): number;

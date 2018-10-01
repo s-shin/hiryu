@@ -20,9 +20,10 @@ const Container = styled_components_1.default.div `
   display: flex;
 `;
 const HandColumn = styled_components_1.default("div") `
-  ${props => props.color === som.Color.WHITE && styled_components_1.css `
-    transform: rotate(180deg);
-  `}
+  ${props => props.color === som.Color.WHITE &&
+    styled_components_1.css `
+      transform: rotate(180deg);
+    `};
 `;
 const BoardColumn = styled_components_1.default.div `
   margin: 0 0.5em;
@@ -32,19 +33,26 @@ function Game(props) {
     const active = props.activeGameObject;
     return (react_1.default.createElement(Container, null,
         react_1.default.createElement(HandColumn, { color: som.Color.WHITE },
-            react_1.default.createElement(Hand_1.default, { hand: som.getHand(state.hands, som.Color.WHITE), color: som.Color.WHITE, activePiece: active
-                    && active.type === entities_1.GameObjectType.HAND_PIECE
-                    && active.color === som.Color.WHITE
+            react_1.default.createElement(Hand_1.default, { hand: som.getHand(state.hands, som.Color.WHITE), color: som.Color.WHITE, activePiece: active && active.type === entities_1.GameObjectType.HAND_PIECE && active.color === som.Color.WHITE
                     ? active.piece
-                    : undefined, onClickPiece: piece => props.onClickGameObject({ type: entities_1.GameObjectType.HAND_PIECE, color: som.Color.WHITE, piece }) })),
+                    : undefined, onClickPiece: piece => props.onClickGameObject({
+                    type: entities_1.GameObjectType.HAND_PIECE,
+                    color: som.Color.WHITE,
+                    piece,
+                }) })),
         react_1.default.createElement(BoardColumn, null,
-            react_1.default.createElement(Board_1.default, { board: state.board, activeSquare: active && active.type === entities_1.GameObjectType.BOARD_SQUARE ? active.square : undefined, promotionSelector: props.promotionSelector, onClickSquare: sq => props.onClickGameObject({ type: entities_1.GameObjectType.BOARD_SQUARE, square: sq }) })),
+            react_1.default.createElement(Board_1.default, { board: state.board, highlight: {
+                    selected: active && active.type === entities_1.GameObjectType.BOARD_SQUARE ? active.square : undefined,
+                    lastMovedTo: props.lastMovedTo,
+                }, promotionSelector: props.promotionSelector, onClickSquare: sq => props.onClickGameObject({ type: entities_1.GameObjectType.BOARD_SQUARE, square: sq }) })),
         react_1.default.createElement(HandColumn, null,
-            react_1.default.createElement(Hand_1.default, { hand: som.getHand(state.hands, som.Color.BLACK), color: som.Color.BLACK, activePiece: active
-                    && active.type === entities_1.GameObjectType.HAND_PIECE
-                    && active.color === som.Color.BLACK
+            react_1.default.createElement(Hand_1.default, { hand: som.getHand(state.hands, som.Color.BLACK), color: som.Color.BLACK, activePiece: active && active.type === entities_1.GameObjectType.HAND_PIECE && active.color === som.Color.BLACK
                     ? active.piece
-                    : undefined, onClickPiece: piece => props.onClickGameObject({ type: entities_1.GameObjectType.HAND_PIECE, color: som.Color.BLACK, piece }) }))));
+                    : undefined, onClickPiece: piece => props.onClickGameObject({
+                    type: entities_1.GameObjectType.HAND_PIECE,
+                    color: som.Color.BLACK,
+                    piece,
+                }) }))));
 }
 exports.Game = Game;
 exports.default = Game;

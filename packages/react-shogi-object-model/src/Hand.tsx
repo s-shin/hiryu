@@ -45,14 +45,14 @@ export function Hand(props: HandProps) {
         onClick={e => { e.stopPropagation(); props.onClickPiece(p) }}
       >
         <PieceCharacter>
-          {som.formats.general.stringifyPiece(p)}{n > 1 ? som.formats.general.toKansuji(n) : ""}
+          {som.formats.ja.stringifyPiece(p)}{n > 1 ? som.formats.ja.num2kan(n) : ""}
         </PieceCharacter>
       </HandPiece>
     );
   }
   return (
     <HandContainer>
-      <HandHeader>{som.formats.general.stringifyColor(props.color)}</HandHeader>
+      <HandHeader>{som.formats.ja.stringifyColor(props.color)}</HandHeader>
       {els}
     </HandContainer>
   )

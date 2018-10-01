@@ -6,10 +6,11 @@ import Board from "./Board";
 import { GameObject, GameObjectType, PromotionSelectorProps } from "./entities";
 
 export interface GameProps {
-  state: som.State,
+  state: som.State;
   activeGameObject?: GameObject;
   onClickGameObject: (obj: GameObject) => void;
   promotionSelector?: PromotionSelectorProps;
+  lastMovedTo?: som.Square;
 }
 
 const Container = styled.div`
@@ -17,9 +18,11 @@ const Container = styled.div`
 `;
 
 const HandColumn = styled<{ color?: som.Color }, "div">("div")`
-  ${props => props.color === som.Color.WHITE && css`
-    transform: rotate(180deg);
-  `}
+  ${props =>
+    props.color === som.Color.WHITE &&
+    css`
+      transform: rotate(180deg);
+    `};
 `;
 
 const BoardColumn = styled.div`
@@ -38,21 +41,31 @@ export function Game(props: GameProps) {
           hand={som.getHand(state.hands, som.Color.WHITE)}
           color={som.Color.WHITE}
           activePiece={
-            active
-              && active.type === GameObjectType.HAND_PIECE
-              && active.color === som.Color.WHITE
+            active && active.type === GameObjectType.HAND_PIECE && active.color === som.Color.WHITE
               ? active.piece
               : undefined
           }
-          onClickPiece={piece => props.onClickGameObject({ type: GameObjectType.HAND_PIECE, color: som.Color.WHITE, piece })}
+          onClickPiece={piece =>
+            props.onClickGameObject({
+              type: GameObjectType.HAND_PIECE,
+              color: som.Color.WHITE,
+              piece,
+            })
+          }
         />
       </HandColumn>
       <BoardColumn>
         <Board
           board={state.board}
-          activeSquare={active && active.type === GameObjectType.BOARD_SQUARE ? active.square : undefined}
+          highlight={{
+            selected:
+              active && active.type === GameObjectType.BOARD_SQUARE ? active.square : undefined,
+            lastMovedTo: props.lastMovedTo,
+          }}
           promotionSelector={props.promotionSelector}
-          onClickSquare={sq => props.onClickGameObject({ type: GameObjectType.BOARD_SQUARE, square: sq })}
+          onClickSquare={sq =>
+            props.onClickGameObject({ type: GameObjectType.BOARD_SQUARE, square: sq })
+          }
         />
       </BoardColumn>
       <HandColumn>
@@ -60,17 +73,21 @@ export function Game(props: GameProps) {
           hand={som.getHand(state.hands, som.Color.BLACK)}
           color={som.Color.BLACK}
           activePiece={
-            active
-              && active.type === GameObjectType.HAND_PIECE
-              && active.color === som.Color.BLACK
+            active && active.type === GameObjectType.HAND_PIECE && active.color === som.Color.BLACK
               ? active.piece
               : undefined
           }
-          onClickPiece={piece => props.onClickGameObject({ type: GameObjectType.HAND_PIECE, color: som.Color.BLACK, piece })}
+          onClickPiece={piece =>
+            props.onClickGameObject({
+              type: GameObjectType.HAND_PIECE,
+              color: som.Color.BLACK,
+              piece,
+            })
+          }
         />
       </HandColumn>
     </Container>
-  )
+  );
 }
 
 export default Game;

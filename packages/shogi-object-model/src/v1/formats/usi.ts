@@ -1,7 +1,21 @@
 import {
-  Board, Color, ColorPiece, Hand, Handicap, Hands, Piece, Square, State,
-  MIN_SQUARE_NUMBER, MAX_SQUARE_NUMBER, SQUARE_NUMBERS, getEmptyBoard, getEmptyHands,
-  getBoardSquare, colorToKeyOfHands, pieceToKeyOfHand,
+  Board,
+  Color,
+  ColorPiece,
+  Hand,
+  Handicap,
+  Hands,
+  Piece,
+  Square,
+  State,
+  MIN_SQUARE_NUMBER,
+  MAX_SQUARE_NUMBER,
+  SQUARE_NUMBERS,
+  getEmptyBoard,
+  getEmptyHands,
+  getBoardSquare,
+  colorToKeyOfHands,
+  pieceToKeyOfHand,
 } from "../definitions";
 import { flipObject } from "../../util";
 
@@ -32,10 +46,10 @@ export function stringifyPiece(piece: Piece): string {
   return PIECE_TO_USI_STRING[piece];
 }
 
-export function parsePiece(s: string, asColor = Color.BLACK): Piece {
+export function parsePiece(s: string, asColor = Color.BLACK): Piece | null {
   const piece = USI_STRING_TO_PIECE[asColor === Color.BLACK ? s : s.toUpperCase()];
   if (!piece) {
-    throw new Error("parsePiece: invalid Piece string");
+    return null;
   }
   return piece;
 }
@@ -44,10 +58,10 @@ export function stringifyColor(color: Color): string {
   return color === Color.BLACK ? "b" : "w";
 }
 
-export function parseColor(s: string): Color {
-  const color = s === "b" ? Color.BLACK : (s === "w" ? Color.WHITE : null);
+export function parseColor(s: string): Color | null {
+  const color = s === "b" ? Color.BLACK : s === "w" ? Color.WHITE : null;
   if (!color) {
-    throw new Error("parseColor: invalid Color string");
+    return null;
   }
   return color;
 }
@@ -57,33 +71,41 @@ export function stringifyColorPiece(cp: ColorPiece): string {
   return cp.color === Color.BLACK ? s : s.toLowerCase();
 }
 
-export function parseColorPiece(s: string): ColorPiece {
-  try {
+export function parseColorPiece(s: string): ColorPiece | null {
+  {
     const piece = parsePiece(s);
-    return { color: Color.BLACK, piece };
-  } catch { /* do nothing here */ }
-  try {
+    if (piece) {
+      return { color: Color.BLACK, piece };
+    }
+  }
+  {
     const piece = parsePiece(s, Color.WHITE);
-    return { color: Color.WHITE, piece };
-  } catch { /* do nothing here */ }
-  throw new Error("parseColorPiece: invalid ColorPiece string");
+    if (piece) {
+      return { color: Color.WHITE, piece };
+    }
+  }
+  return null;
 }
 
 export function stringifySquare(pos: Square): string {
-  return String.fromCharCode("a".charCodeAt(0) + (pos[0] - 1)) + pos[1];
+  return pos[0] + String.fromCharCode("a".charCodeAt(0) + (pos[1] - 1));
 }
 
-export function parseSquare(s: string): Square {
+export function parseSquare(s: string): Square | null {
   if (s.length !== 2) {
-    throw new Error("parseSquare: invalid length of Square string");
+    return null;
   }
-  const x = s[0].charCodeAt(0) - "a".charCodeAt(0) + 1;
-  const y = Number(s[1]);
-  if (MIN_SQUARE_NUMBER <= x && x <= MAX_SQUARE_NUMBER
-    && MIN_SQUARE_NUMBER <= y && y <= MAX_SQUARE_NUMBER) {
+  const x = Number(s[0]);
+  const y = s[1].charCodeAt(0) - "a".charCodeAt(0) + 1;
+  if (
+    MIN_SQUARE_NUMBER <= x &&
+    x <= MAX_SQUARE_NUMBER &&
+    MIN_SQUARE_NUMBER <= y &&
+    y <= MAX_SQUARE_NUMBER
+  ) {
     return [x, y] as Square;
   }
-  throw new Error("parseSquare: invalid Square string");
+  return null;
 }
 
 export function stringifyBoard(board: Board): string {
@@ -111,7 +133,7 @@ export function stringifyBoard(board: Board): string {
   return rows.join("/");
 }
 
-export function parseBoard(s: string): Board {
+export function parseBoard(s: string): Board | null {
   const board = getEmptyBoard();
   let sqrIdx = 0;
   let i = 0;
@@ -119,7 +141,7 @@ export function parseBoard(s: string): Board {
     let cpStr = s[i++];
     if (cpStr === "/") {
       if (sqrIdx > 0 && sqrIdx % 9 !== 0) {
-        throw new Error("parseBoard: invalid Board string");
+        return null;
       }
       continue;
     }
@@ -130,36 +152,28 @@ export function parseBoard(s: string): Board {
           sqrIdx += spaces;
           continue;
         } else {
-          throw new Error("parseBoard: invalid Board string");
+          return null;
         }
       }
     }
     if (cpStr === "+") {
       i++;
       if (i >= s.length) {
-        throw new Error("parseBoard: invalid Board string");
+        return null;
       }
       cpStr += s[i];
     }
     board[sqrIdx++] = parseColorPiece(cpStr);
   }
   if (sqrIdx !== 81) {
-    throw new Error("parseBoard: invalid Board string");
+    return null;
   }
   return board;
 }
 
 export function stringifyHand(hand: Hand, color = Color.BLACK): string {
   const ss = [];
-  for (const piece of [
-    Piece.FU,
-    Piece.KY,
-    Piece.KE,
-    Piece.GI,
-    Piece.KI,
-    Piece.KA,
-    Piece.HI,
-  ]) {
+  for (const piece of [Piece.FU, Piece.KY, Piece.KE, Piece.GI, Piece.KI, Piece.KA, Piece.HI]) {
     const n = hand[piece as keyof Hand];
     if (n === 0) {
       continue;
@@ -176,7 +190,7 @@ export function stringifyHands(hands: Hands): string {
   return s.length > 0 ? s : "-";
 }
 
-export function parseHands(s: string): Hands {
+export function parseHands(s: string): Hands | null {
   const hands = getEmptyHands();
   if (s === "-") {
     return hands;
@@ -186,13 +200,16 @@ export function parseHands(s: string): Hands {
     let n = Number(cpStr);
     if (!isNaN(n)) {
       if (++i >= s.length) {
-        throw new Error("invalid Hand string");
+        return null;
       }
       cpStr = s[i + 1];
     } else {
       n = 1;
     }
     const cp = parseColorPiece(cpStr);
+    if (!cp) {
+      return null;
+    }
     hands[colorToKeyOfHands(cp.color)][pieceToKeyOfHand(cp.piece)] = n;
   }
   return hands;
@@ -206,14 +223,17 @@ export function stringifyState(state: State) {
   ].join(" ");
 }
 
-export function parseState(s: string): State {
+export function parseState(s: string): State | null {
   const ss = s.split(" ");
   if (ss.length !== 3) {
-    throw new Error("parseState: invalid number of tokens in State string");
+    return null;
   }
   const board = parseBoard(ss[0]);
   const color = parseColor(ss[1]);
   const hands = parseHands(ss[2]);
+  if (!board || !color || !hands) {
+    return null;
+  }
   return { board, hands, nextTurn: color };
 }
 
@@ -223,21 +243,21 @@ export interface SFEN {
 }
 
 export function stringifySFEN(sfen: SFEN) {
-  return [
-    stringifyState(sfen.state),
-    sfen.nextMoveNum,
-  ].join(" ");
+  return [stringifyState(sfen.state), sfen.nextMoveNum].join(" ");
 }
 
-export function parseSFEN(s: string): SFEN {
+export function parseSFEN(s: string): SFEN | null {
   const ss = s.split(" ");
   if (ss.length !== 4) {
-    throw new Error("invalid number of tokens in SFEN string");
+    return null;
   }
   const state = parseState(ss.slice(0, 3).join(" "));
   const nextMoveNum = Number(ss[3]);
   if (isNaN(nextMoveNum)) {
-    throw new Error("invalid SFEN string");
+    return null;
+  }
+  if (!state) {
+    return null;
   }
   return { state, nextMoveNum };
 }
@@ -269,13 +289,13 @@ export function getSFEN(h: Handicap): SFEN {
 }
 
 export interface Move {
-  srcSquare?: Square;
+  srcSquare?: Square | null;
   srcPiece?: Piece;
   dstSquare: Square;
   promote?: boolean;
 }
 
-export function parseMove(s: string): Move {
+export function parseMove(s: string): Move | null {
   const len = s.length;
   if (len < 4 || 5 < len) {
     throw new Error("parseMove: invalid Move string");
@@ -287,11 +307,17 @@ export function parseMove(s: string): Move {
   if (!srcSquare) {
     // try to parse src as drop
     const piece = parsePiece(src[0]);
+    if (!piece) {
+      return null;
+    }
     srcPiece = piece;
   }
 
-  const dst = s.slice(2, 2);
+  const dst = s.slice(2, 4);
   const dstSquare = parseSquare(dst);
+  if (!dstSquare) {
+    return null;
+  }
 
   let promote;
   if (len === 5) {

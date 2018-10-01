@@ -150,7 +150,13 @@ declare const _default: {
                     "$ref": string;
                 };
                 "srcSquare": {
-                    "$ref": string;
+                    "oneOf": ({
+                        "$ref": string;
+                        "type"?: undefined;
+                    } | {
+                        "type": string;
+                        "$ref"?: undefined;
+                    })[];
                 };
                 "srcPiece": {
                     "$ref": string;
@@ -293,7 +299,7 @@ declare const _default: {
         "RecordFile": {
             "type": string;
             "properties": {
-                "schema": {
+                "version": {
                     "type": string;
                     "const": string;
                 };

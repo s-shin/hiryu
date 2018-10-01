@@ -256,9 +256,9 @@ definitions:
   RecordFile:
     type: object
     properties:
-      schema:
+      version:
         type: string
-        const: http://s-shin.github.com/hiryu/packages/shogi-object-model/schema/v1
+        const: v1
       record:
         $ref: "#/definitions/Record"
-    required: [schema, record]
+    required: [version, record]

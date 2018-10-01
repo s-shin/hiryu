@@ -99,15 +99,23 @@ export type Move = string;
 
 export type BestMove = Move | "resign" | "win";
 
-export interface ScoreInfo {
+export enum ScoreType {
+  CP,
+  MATE,
+}
+
+export interface CpScore {
+  type: ScoreType.CP;
   value: number;
   bound?: "lower" | "upper";
 }
 
-export interface MateInfo {
-  num?: number;
-  is_engine_side_mated: boolean;
+export interface MateScore {
+  type: ScoreType.MATE;
+  value: number | "+" | "-";
 }
+
+export type Score = CpScore | MateScore;
 
 export interface Info {
   depth?: number;
@@ -116,8 +124,7 @@ export interface Info {
   nodes?: number;
   pv?: Move[];
   multipv?: number;
-  cp?: ScoreInfo;
-  mate?: MateInfo;
+  score?: Score;
   currmove?: Move;
   hashfull?: number;
   nps?: number;
@@ -513,7 +520,11 @@ export class Engine {
   private parseInfoArgs(args: string[]) {
     const info: any = {};
     let i = 0;
+    let stopper = 0;
     while (i < args.length) {
+      if (stopper++ === 10000) {
+        throw new Error("parseInfoArgs: busy loop may occur");
+      }
       if (i + 1 >= args.length) {
         // engine error
         break;
@@ -533,36 +544,46 @@ export class Engine {
         case "currmove":
         case "hashfull":
         case "nps": {
-          info[key] = parseInt(value, 10);
           i += 2;
+          info[key] = parseInt(value, 10);
           break;
         }
         case "pv": {
-          info[key] = args.slice(i + 1);
+          info[key] = args[i + 1] === "None" ? [] : args.slice(i + 1);
           i = args.length;
           break;
         }
         case "cp": {
-          info[key] = {
+          i += 2;
+          const score: CpScore = {
+            type: ScoreType.CP,
             value: parseInt(value, 10),
           };
-          i += 2;
           if (i < args.length) {
             if (args[i] === "lowerbound") {
-              info[key].bound = "lower";
+              score.bound = "lower";
               i++;
             } else if (args[i] === "upperbound") {
-              info[key].bound = "upper";
+              score.bound = "upper";
               i++;
             }
           }
+          info.score = score;
           break;
         }
         case "mate": {
-          info[key] = {
-            num: parseInt(value.slice(1), 10) || undefined,
-            is_engine_side_mated: value[0] === "-",
+          i += 2;
+          const score: MateScore = {
+            type: ScoreType.MATE,
+            value: parseInt(value, 10) || (value[0] as "+" | "-"),
           };
+          info.score = score;
+          if (i < args.length) {
+            if (args[i] === "lowerbound" || args[i] === "upperbound") {
+              // ignore
+              i++;
+            }
+          }
           break;
         }
         case "string": {
@@ -604,7 +625,9 @@ export class Engine {
       return;
     }
     if (availableEngineStateTransitions[this.state].indexOf(state) === -1) {
-      this._error(new Error(`invalid state transition: ${EngineState[this.state]} -> ${EngineState[state]}`));
+      this._error(
+        new Error(`invalid state transition: ${EngineState[this.state]} -> ${EngineState[state]}`),
+      );
       return;
     }
     this.emitDebug(`change state: ${EngineState[this.state]} -> ${EngineState[state]}`);
@@ -614,7 +637,9 @@ export class Engine {
   private assertState(...states: EngineState[]) {
     if (states.indexOf(this.state) === -1) {
       const statesStr = states.map(s => EngineState[s]).join("/");
-      this._error(new Error(`invalid state: expected ${statesStr}, but ${EngineState[this.state]}`));
+      this._error(
+        new Error(`invalid state: expected ${statesStr}, but ${EngineState[this.state]}`),
+      );
     }
   }
 

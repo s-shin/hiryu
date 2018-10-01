@@ -186,6 +186,10 @@ function flipPiece(piece, alt) {
     return promote(piece) || demote(piece) || alt;
 }
 exports.flipPiece = flipPiece;
+function isHeads(piece) {
+    return canPromote(piece) || piece === Piece.KI || piece === Piece.OU;
+}
+exports.isHeads = isHeads;
 // === Color Methods ===
 function flipColor(color) {
     return color === Color.BLACK ? Color.WHITE : Color.BLACK;

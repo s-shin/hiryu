@@ -153,6 +153,11 @@ export interface Record {
   events: EventList;
 }
 
+export interface RecordFile {
+  version: "v1";
+  record: Record;
+}
+
 //------------------------------------------------------------------------------
 // Constants
 //------------------------------------------------------------------------------
@@ -300,6 +305,10 @@ export function isPromoted(piece: Piece) {
 
 export function flipPiece(piece: Piece, alt?: Piece) {
   return promote(piece) || demote(piece) || alt;
+}
+
+export function isHeads(piece: Piece) {
+  return canPromote(piece) || piece === Piece.KI || piece === Piece.OU;
 }
 
 // === Color Methods ===

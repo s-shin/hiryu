@@ -2,8 +2,10 @@
 node_modules/
 tmp/
 dist/
+coverage/
 .cache/
 yarn-error.log
 lerna-debug.log
 
 .vscode
+.idea

@@ -1,3 +1,4 @@
+import * as ja from "./ja";
 import * as usi from "./usi";
-import * as general from "./general";
-export { usi, general };
+import * as kif from "./kif";
+export { ja, usi, kif };

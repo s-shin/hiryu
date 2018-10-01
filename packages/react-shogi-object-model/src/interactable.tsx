@@ -1,5 +1,6 @@
 import React from "react";
 import * as som from "@hiryu/shogi-object-model";
+import * as tree from "@hiryu/tree";
 import { GameProps } from "./Game";
 import { GameObject, GameObjectType, PromotionSelectorProps } from "./entities";
 
@@ -26,17 +27,18 @@ export default function interactable(WrappedComponent: GameComponent) {
     }
 
     render() {
+      const data = tree.getValue(this.props.gameNode);
       return (
         <div onClick={() => !this.state.promotionSelector && this.setActiveGameObject()}>
           <WrappedComponent
-            state={this.props.gameNode.state}
+            state={data.state}
             activeGameObject={this.state.activeGameObject}
             promotionSelector={this.state.promotionSelector}
             onClickGameObject={obj => this.updateActiveGameObject(obj)}
             lastMovedTo={
-              (this.props.gameNode.byEvent &&
-                this.props.gameNode.byEvent.type === som.EventType.MOVE &&
-                this.props.gameNode.byEvent.dstSquare) ||
+              (data.byEvent &&
+                data.byEvent.type === som.EventType.MOVE &&
+                data.byEvent.dstSquare) ||
               undefined
             }
           />
@@ -62,6 +64,7 @@ export default function interactable(WrappedComponent: GameComponent) {
         return;
       }
       const gameNode = this.props.gameNode;
+      const gameNodeData = tree.getValue(gameNode);
       const prev = this.state.activeGameObject;
       if (prev) {
         switch (prev.type) {
@@ -73,16 +76,16 @@ export default function interactable(WrappedComponent: GameComponent) {
                 }
                 const move = (promote: boolean) => {
                   this.props.onMoveEvent(
-                    som.newMoveEvent(gameNode.state.nextTurn, prev.square, obj.square, promote),
+                    som.newMoveEvent(gameNodeData.state.nextTurn, prev.square, obj.square, promote),
                   );
                   return this.resetActivatedState();
                 };
                 const mcs = som.rules.standard
-                  .searchMoveCandidates(gameNode.state.board, prev.square)
+                  .searchMoveCandidates(gameNodeData.state.board, prev.square)
                   .filter(mc => som.squareEquals(mc.dst, obj.square));
                 const isPromotionSelectable = mcs.length === 2;
                 if (isPromotionSelectable) {
-                  const cp = som.getBoardSquare(gameNode.state.board, prev.square);
+                  const cp = som.getBoardSquare(gameNodeData.state.board, prev.square);
                   this.setState({
                     ...this.state,
                     promotionSelector: {
@@ -111,7 +114,7 @@ export default function interactable(WrappedComponent: GameComponent) {
             switch (obj.type) {
               case GameObjectType.BOARD_SQUARE: {
                 this.props.onMoveEvent(
-                  som.newDropEvent(gameNode.state.nextTurn, prev.piece, obj.square),
+                  som.newDropEvent(gameNodeData.state.nextTurn, prev.piece, obj.square),
                 );
                 return this.resetActivatedState();
               }
@@ -128,17 +131,17 @@ export default function interactable(WrappedComponent: GameComponent) {
       }
       switch (obj.type) {
         case GameObjectType.BOARD_SQUARE: {
-          const cp = som.getBoardSquare(gameNode.state.board, obj.square);
-          if (!cp || cp.color !== gameNode.state.nextTurn) {
+          const cp = som.getBoardSquare(gameNodeData.state.board, obj.square);
+          if (!cp || cp.color !== gameNodeData.state.nextTurn) {
             return this.setActiveGameObject();
           }
           break;
         }
         case GameObjectType.HAND_PIECE: {
-          if (obj.color !== gameNode.state.nextTurn) {
+          if (obj.color !== gameNodeData.state.nextTurn) {
             return this.setActiveGameObject();
           } else {
-            const n = som.getNumPieces(som.getHand(gameNode.state.hands, obj.color), obj.piece);
+            const n = som.getNumPieces(som.getHand(gameNodeData.state.hands, obj.color), obj.piece);
             if (n === 0) {
               return this.setActiveGameObject();
             }

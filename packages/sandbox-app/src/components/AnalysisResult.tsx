@@ -1,9 +1,9 @@
 import React from "react";
 import styled, { css } from "styled-components";
 import * as som from "@hiryu/shogi-object-model";
+import * as tree from "@hiryu/tree";
 import { Score, ScoreType } from "@hiryu/usi-engine";
 import { AnalysisResult } from "../utils/game";
-import * as tree from "../utils/tree";
 
 const Item = styled.div`
   font-size: 0.8em;
@@ -64,15 +64,21 @@ function stringifyScore(score?: Score, invert: boolean = false): number | string
 const AnalysisResult: React.SFC<AnalysisResultProps> = props => {
   const items = props.result.variations.map((variation, i) => {
     const moves: JSX.Element[] = [];
-    const event = variation.gameNode.byEvent!;
-    tree.traverse(variation.gameNode, (node, i) => {
-      moves.push(
-        <Move key={i} bold={i === 0}>
-          {som.formats.ja.stringifyEvent(node.byEvent!)}
-        </Move>,
-      );
-      return node.children[0];
-    });
+    const data = tree.getValue(variation.startGameNode);
+    const event = data.byEvent!;
+    tree.walkTowardsChild(
+      variation.startGameNode,
+      (node, i) => {
+        const v = tree.getValue(node);
+        moves.push(
+          <Move key={i} bold={i === 0}>
+            {som.formats.ja.stringifyEvent(v.byEvent!)}
+          </Move>,
+        );
+        return true;
+      },
+      { points: variation.startGameNode.path.points },
+    );
     return (
       <Item key={i}>
         <Score key="score">

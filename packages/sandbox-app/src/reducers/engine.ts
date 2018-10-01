@@ -1,10 +1,11 @@
 import { Reducer } from "redux";
 import produce from "immer";
+import * as tree from "@hiryu/tree";
 import * as som from "@hiryu/shogi-object-model";
 import { EngineManagerAction } from "../actions/engine_manager";
 import EngineManagerActionType from "../constants/EngineManagerActionType";
 import { EnginePhase, EngineState, LogLevel } from "../state";
-import { newAnalysisResult } from "../utils/game";
+import { newAnalysisResult, Variation } from "../utils/game";
 
 const initialState: EngineState = {
   phase: EnginePhase.INIT,
@@ -70,8 +71,9 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
       if (!info.multipv || !info.pv) {
         return state;
       }
-      const subRoot = (() => {
-        const gameNode = state.analyzedGameNode!;
+      const gameNode = state.analyzedGameNode!;
+      const gameNodeData = tree.getValue(gameNode);
+      let node = (() => {
         const move = som.formats.usi.parseMove(info.pv[0]);
         if (!move) {
           console.error(`failed to parse ${move}`);
@@ -79,47 +81,43 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
         }
         const next = som.rules.standard.applyEvent(gameNode, {
           type: som.EventType.MOVE,
-          color: gameNode.state.nextTurn,
+          color: gameNodeData.state.nextTurn,
           ...move,
         });
-        next.parent = undefined;
-        return next;
+        // NOTE: tuning point of memory usage
+        return tree.appendChild(gameNode, next);
       })();
-      if (!subRoot) {
+      if (!node) {
         return state;
       }
-      // TODO: think circular reference problem
-      // {
-      //   let node = subRoot;
-      //   for (const usiMove of info.pv.slice(1)) {
-      //     const move = som.formats.usi.parseMove(usiMove);
-      //     if (!move) {
-      //       console.error(`failed to parse ${move}`);
-      //       return state;
-      //     }
-      //     const next = som.rules.standard.applyEvent(node, {
-      //       type: som.EventType.MOVE,
-      //       color: node.state.nextTurn,
-      //       ...move,
-      //     });
-      //     node.children.push(next);
-      //     node = next;
-      //   }
-      // }
-      // TODO: rest of moves
-      const newResult = {
+      const startPath = node.path;
+      for (const usiMove of info.pv.slice(1)) {
+        const move = som.formats.usi.parseMove(usiMove);
+        if (!move) {
+          console.error(`failed to parse ${move}`);
+          return state;
+        }
+        const data = tree.getValue(node);
+        const next = som.rules.standard.applyEvent(node, {
+          type: som.EventType.MOVE,
+          color: data.state.nextTurn,
+          ...move,
+        });
+        node = tree.appendChild(node, next);
+      }
+      const newResult: Variation = {
         rawInfo: info,
-        gameNode: subRoot,
+        startGameNode: { tree: node.tree, path: startPath },
       };
       return produce(state, s => {
-        const result = s.analysisResults[s.analyzedGameNode!.id] || newAnalysisResult();
+        const result = s.analysisResults[gameNodeData.id] || newAnalysisResult();
         const idx = result.variations.findIndex(v => v.rawInfo.multipv === info.multipv);
         if (idx >= 0) {
           result.variations[idx] = newResult;
         } else {
           result.variations.push(newResult);
         }
-        s.analysisResults[s.analyzedGameNode!.id] = result;
+        s.analysisResults[gameNodeData.id] = result;
       });
     }
     case EngineManagerActionType.EXIT: {

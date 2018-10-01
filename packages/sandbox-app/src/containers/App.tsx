@@ -3,6 +3,7 @@ import { connect } from "react-redux";
 import styled from "styled-components";
 import { InteractableGame } from "@hiryu/react-shogi-object-model";
 import * as som from "@hiryu/shogi-object-model";
+import * as tree from "@hiryu/tree";
 import {
   LinearProgress,
   Button,
@@ -14,7 +15,7 @@ import {
 } from "@material-ui/core";
 import MenuIcon from "@material-ui/icons/Menu";
 import InsertDriveFileIcon from "@material-ui/icons/InsertDriveFile";
-import { RootState, EngineState, EnginePhase, AnalysisResults } from "../state";
+import { RootState, EngineState, EnginePhase } from "../state";
 import { newEngine, newGame, setGameState, go } from "../actions/engine_manager";
 import { setCurrentGameNode } from "../actions/game";
 import LogView from "../components/LogView";
@@ -25,9 +26,7 @@ import LoadRecordDialog from "../components/LoadRecordDialog";
 import RecordEventList from "../components/RecordEventList";
 import GameControlPanel, { ControlType } from "../components/GameControlPanel";
 import AnalysisResult from "../components/AnalysisResult";
-import * as tree from "../utils/tree";
-import { getGameState } from "../utils/usi";
-import { GameNode, applyEvent, newAnalysisResult } from "../utils/game";
+import { newAnalysisResult } from "../utils/game";
 
 interface AppOwnProps {
   //
@@ -35,7 +34,7 @@ interface AppOwnProps {
 
 interface AppStateProps {
   engineState: EngineState;
-  currentGameNode: GameNode;
+  currentGameNode: som.rules.standard.GameNode;
 }
 
 interface AppDispatchProps {
@@ -107,6 +106,7 @@ class App extends React.Component<AppProps, AppState> {
 
   render() {
     const { engineState, currentGameNode } = this.props;
+    const currentGameNodeData = tree.getValue(currentGameNode);
 
     // TODO: devide into component or container
     let enginePanel;
@@ -196,51 +196,46 @@ class App extends React.Component<AppProps, AppState> {
         <InteractableGame
           gameNode={this.props.currentGameNode}
           onMoveEvent={e => {
-            const next = applyEvent(currentGameNode, e);
+            const next = som.rules.standard.applyEvent(currentGameNode, e);
             if (next.violations.length > 0) {
               return;
             }
-            tree.appendChild(currentGameNode, next);
-            this.props.setCurrentGameNode(next);
+            this.props.setCurrentGameNode(tree.appendChild(currentGameNode, next));
           }}
         />
       ),
       gameCtrl: (
         <GameControlPanel
-          isFirst={tree.isRoot(currentGameNode)}
-          isLast={tree.isLeaf(currentGameNode)}
+          isFirst={tree.isRootNode(currentGameNode)}
+          isLast={tree.isLeafNode(currentGameNode)}
           onClick={type => {
             let node = currentGameNode;
             switch (type) {
               case ControlType.FIRST: {
-                node = tree.getRootNode(node);
+                node = { tree: node.tree, path: tree.ROOT_PATH };
                 break;
               }
               case ControlType.PREV2: {
-                node = tree.findParent(node, (n, i) => !n.parent || i === 10)!;
+                node = tree.findParentNode(node, (n, i) => tree.isRootNode(n) || i === 10)!;
                 break;
               }
               case ControlType.PREV: {
-                node = node.parent || node;
+                node = tree.getParentNode(node) || node;
                 break;
               }
               case ControlType.NEXT: {
-                // TODO: child index
-                node = node.children[0] || node;
+                // TODO: route
+                node = tree.getChildNodes(node)[0] || node;
                 break;
               }
               case ControlType.NEXT2: {
                 // TODO: route
-                node = tree.findAlongRoute(
-                  node,
-                  [],
-                  (n, i) => n.children.length === 0 || i === 10,
-                )!;
+                node = tree.findChildNode(node, (n, i) => tree.isLeafNode(n) || i === 10)!;
                 break;
               }
               case ControlType.LAST: {
                 // TODO: route
-                node = tree.getLeafNode(node, []);
+                node = tree.getLeafNode(node.tree, []);
                 break;
               }
             }
@@ -250,13 +245,13 @@ class App extends React.Component<AppProps, AppState> {
       ),
       analysis: (
         <AnalysisResult
-          result={engineState.analysisResults[currentGameNode.id] || newAnalysisResult()}
+          result={engineState.analysisResults[currentGameNodeData.id] || newAnalysisResult()}
         />
       ),
       record: (
         <RecordEventList
           current={currentGameNode}
-          route={undefined}
+          points={undefined} // TODO
           onSelect={node => {
             this.props.setCurrentGameNode(node);
           }}

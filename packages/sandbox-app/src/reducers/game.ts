@@ -1,12 +1,11 @@
 import { Reducer } from "redux";
-// import * as som from "@hiryu/shogi-object-model";
+import * as som from "@hiryu/shogi-object-model";
 import GameActionType from "../constants/GameActionType";
 import { GameState } from "../state";
 import { GameAction } from "../actions/game";
-import { newRootGameNode, AnalysisResult } from "../utils/game";
 
 const initialState: GameState = {
-  currentGameNode: newRootGameNode(),
+  currentGameNode: som.rules.standard.newRootGameNode(),
 };
 
 const game: Reducer<GameState, GameAction> = (state = initialState, action) => {

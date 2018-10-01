@@ -1,4 +1,5 @@
 import produce, { Draft } from "immer";
+import isEqual from "lodash.isequal";
 
 export type Value<T> = Draft<T>;
 
@@ -48,6 +49,24 @@ export function isRootPath(path: Path) {
   return path.points.length === 0 && path.depth === 0;
 }
 
+export function pathEquals(lhs: Path, rhs: Path) {
+  return isEqual(lhs, rhs);
+}
+
+export function nodeEquals<T>(lhs: Node<T>, rhs: Node<T>, opts?: { strict: boolean }) {
+  return opts && opts.strict
+    ? isEqual(lhs, rhs)
+    : lhs.tree === rhs.tree && pathEquals(lhs.path, rhs.path);
+}
+
+export function updateNodePath<T>(node: Node<T>, path: Path) {
+  return { tree: node.tree, path };
+}
+
+export function getRootNode<T>(node: Node<T>) {
+  return updateNodePath(node, ROOT_PATH);
+}
+
 export function getForkTree<T>(tree: Tree<T>, p: PathPoint): Tree<T> {
   const trees = tree.forks[p.depth];
   if (!trees) {
@@ -64,7 +83,7 @@ export function getLastForkTree<T>(tree: Tree<T>, path: Path): Tree<T> {
   return t;
 }
 
-export function getValue<T>(tree: Tree<T>, node: Node<T>) {
+export function getValue<T>(node: Node<T>) {
   const t = getLastForkTree(node.tree, node.path);
   if (node.path.depth >= t.values.length) {
     throw new Error("value not found");
@@ -96,7 +115,8 @@ export function getChildNodes<T>(node: Node<T>) {
       path: { points: node.path.points, depth: nextDepth },
     });
   }
-  const forkTrees = node.tree.forks[nextDepth];
+  const t = getLastForkTree(node.tree, node.path);
+  const forkTrees = t.forks[nextDepth];
   if (forkTrees) {
     for (let i = 0; i < forkTrees.length; i++) {
       r.push({
@@ -129,6 +149,7 @@ export function appendChild<T>(node: Node<T>, value: Value<T>): Node<T> {
       forkIndex: ts ? ts.length : 0,
     });
     ts!.push(newTree(value));
+    draft.path.depth = 0;
   });
 }
 
@@ -154,9 +175,10 @@ export function walk<T>(node: Node<T>, director: WalkDirector<T>, opts?: WalkOpt
     }
     next = director(next!, i);
     if (!next) {
-      break;
+      return true;
     }
   }
+  return false;
 }
 
 export type Predicate<T> = (node: Node<T>, i: number) => boolean;
@@ -179,10 +201,10 @@ export const towardsParent /* : <T> PredicableWalkDirector<T> */ = <T>(
   if (node.path.points.length === 0) {
     return; // root
   }
-  const points = node.path.points.slice(0, node.path.points.length - 1);
+  const points = [...node.path.points];
+  const p = points.pop()!;
   const path = { points, depth: 0 };
-  const t = getLastForkTree(node.tree, path);
-  path.depth = t.values.length - 1;
+  path.depth = p.depth - 1;
   return { tree: node.tree, path };
 };
 
@@ -194,7 +216,7 @@ export const towardsChild = <T>(points?: PathPoint[]): PredicableWalkDirector<T>
     return;
   }
   const depth = node.path.depth + 1;
-  if (points) {
+  if (points && points.length > node.path.points.length) {
     const point = points[node.path.points.length];
     if (depth === point.depth) {
       return {
@@ -206,11 +228,26 @@ export const towardsChild = <T>(points?: PathPoint[]): PredicableWalkDirector<T>
       };
     }
   }
+  if (isLeafNode(node)) {
+    return;
+  }
   return {
     tree: node.tree,
     path: { points: node.path.points, depth },
   };
 };
+
+export function walkTowardsParent<T>(node: Node<T>, pred: Predicate<T>, opts?: WalkOptions) {
+  return walk(node, towardsParent(pred), opts);
+}
+
+export function walkTowardsChild<T>(
+  node: Node<T>,
+  pred: Predicate<T>,
+  opts?: WalkOptions & { points?: PathPoint[] },
+) {
+  return walk(node, towardsChild<T>(opts && opts.points)(pred), opts);
+}
 
 export function findNode<T>(
   node: Node<T>,

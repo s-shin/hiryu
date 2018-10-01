@@ -1,13 +1,13 @@
 import React from "react";
-import { FormControl, Input, InputLabel, Button, Grid } from "@material-ui/core";
+import { FormControl, Input, InputLabel, Button } from "@material-ui/core";
 
 export interface GameSetupFormProps {
-  onSubmit: (posisions: { state: string, moves: string }) => any;
+  onSubmit: (posisions: { state: string; moves: string }) => any;
 }
 
 export interface GameSetupFormState {
-    state: string;
-    moves: string;
+  state: string;
+  moves: string;
 }
 
 export default class GameSetupForm extends React.Component<GameSetupFormProps, GameSetupFormState> {

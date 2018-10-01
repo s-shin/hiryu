@@ -1,5 +1,5 @@
+import * as tree from "@hiryu/tree";
 import { Square, Color, Piece, ColorPiece, Board, State, Event } from "../definitions";
-import { DeepReadonly } from "../../util";
 export declare enum Violation {
     ALREADY_RESIGNED = 0,
     INVALID_MOVE_EVENT = 1,
@@ -15,20 +15,16 @@ export declare enum Violation {
     NO_SPECIFIED_PIECE_ON_BOARD = 11
 }
 export declare function generateGameNodeId(prefix?: string): string;
-export interface GameNode {
+export interface GameNodeData {
     id: string;
     state: State;
     moveNum: number;
     byEvent?: Event;
     violations: Violation[];
-    children: GameNode[];
-    parent?: GameNode;
 }
+export declare type GameNode = tree.Node<GameNodeData>;
 export declare function newRootGameNode(state?: State, moveNum?: number): GameNode;
-export declare function cloneGameNode(node: GameNode, opts: {
-    recursiveParent?: boolean;
-}): GameNode;
-export declare function applyEvent(node: DeepReadonly<GameNode>, event: DeepReadonly<Event>): GameNode;
+export declare function applyEvent(current: GameNode, event: Event): GameNodeData;
 export declare function isDroppablePiece(piece: Piece): boolean;
 export declare function isInPromortableArea(sq: Square, color: Color): boolean;
 export declare function isNeverMovable(sq: Square, color: Color, piece: Piece): boolean;

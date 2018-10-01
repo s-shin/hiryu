@@ -56,7 +56,7 @@ export function pathEquals(lhs: Path, rhs: Path) {
 export function nodeEquals<T>(lhs: Node<T>, rhs: Node<T>, opts?: { strict: boolean }) {
   return opts && opts.strict
     ? isEqual(lhs, rhs)
-    : lhs.tree === lhs.tree && pathEquals(lhs.path, rhs.path);
+    : lhs.tree === rhs.tree && pathEquals(lhs.path, rhs.path);
 }
 
 export function updateNodePath<T>(node: Node<T>, path: Path) {

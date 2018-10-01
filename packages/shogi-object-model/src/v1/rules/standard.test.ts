@@ -1,17 +1,19 @@
 import * as som from "../";
+import * as tree from "@hiryu/tree";
 
 const standard = som.rules.standard;
 
 describe("standard rule", () => {
   test("applyEvent", () => {
-    const game = standard.newRootGameNode();
+    let game = standard.newRootGameNode();
     const next = standard.applyEvent(game, {
       type: som.EventType.MOVE,
       color: som.Color.BLACK,
       srcSquare: [7, 7],
       dstSquare: [7, 6],
     });
-    game.children.push(next);
+
+    game = tree.appendChild(game, next);
     expect(next.state.nextTurn).toEqual(som.Color.WHITE);
     expect(next.moveNum).toEqual(1);
   });

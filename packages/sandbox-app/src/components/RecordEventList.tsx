@@ -1,6 +1,6 @@
 import React from "react";
 import * as som from "@hiryu/shogi-object-model";
-import * as tree from "../utils/tree";
+import * as tree from "@hiryu/tree";
 import {
   List,
   ListItem,
@@ -27,7 +27,7 @@ const EventListItem = styled.span`
 
 export interface RecordEventListProps {
   current: som.rules.standard.GameNode;
-  route?: tree.Route<som.rules.standard.GameNode>;
+  points?: tree.PathPoint[];
   onSelect: (node: som.rules.standard.GameNode, depth: number) => void;
 }
 
@@ -45,73 +45,79 @@ class RecordEventList extends React.Component<RecordEventListProps, RecordEventL
 
   render() {
     const items: JSX.Element[] = [];
-    const rr = tree.getNodeInfo(this.props.current);
-    tree.traverseRoute(rr.root, this.props.route || rr.route, (node, depth) => {
-      const parent = node.parent;
-      const event = node.byEvent;
-      const isSelected = this.props.current === node;
-      const text =
-        !event || !parent ? (
-          <ListItemText>
-            <EventListItem data-marker="#">初期局面</EventListItem>
-          </ListItemText>
-        ) : (
-          <ListItemText>
-            <EventListItem data-marker={depth}>
-              {som.formats.ja.stringifyEvent(event)!}
-            </EventListItem>
-          </ListItemText>
+    const root = tree.getRootNode(this.props.current);
+    tree.walkTowardsChild(
+      root,
+      (node, depth) => {
+        const v = tree.getValue(node);
+        const event = v.byEvent;
+        const isSelected = tree.nodeEquals(this.props.current, node);
+        const text =
+          !event || tree.isRootNode(node) ? (
+            <ListItemText key={depth}>
+              <EventListItem data-marker="#">初期局面</EventListItem>
+            </ListItemText>
+          ) : (
+            <ListItemText key={depth}>
+              <EventListItem data-marker={depth}>
+                {som.formats.ja.stringifyEvent(event)!}
+              </EventListItem>
+            </ListItemText>
+          );
+        let action: JSX.Element | undefined;
+        const siblings = tree.getSiblings(node);
+        if (siblings.length >= 2) {
+          const { menu } = this.state;
+          action = (
+            <ListItemSecondaryAction>
+              <IconButton
+                style={{ padding: 5, verticalAlign: "baseline" }}
+                onClick={e => {
+                  this.setState({
+                    ...this.state,
+                    menu: { anchorEl: e.currentTarget, depth },
+                  });
+                }}
+              >
+                <AddIcon style={{ fontSize: 15 }} />
+              </IconButton>
+              <Menu
+                open={Boolean(menu && menu.depth === depth)}
+                anchorEl={menu && menu.anchorEl}
+                onClose={() => {
+                  this.setState({ ...this.state, menu: null });
+                }}
+              >
+                {siblings.map(n => (
+                  <MenuItem
+                    onClick={() => {
+                      this.props.onSelect(n, depth);
+                      this.setState({ ...this.state, menu: null });
+                    }}
+                  >
+                    {som.formats.ja.stringifyEvent(tree.getValue(n).byEvent!)!}
+                  </MenuItem>
+                ))}
+              </Menu>
+            </ListItemSecondaryAction>
+          );
+        }
+        items.push(
+          <ListItem
+            key={depth}
+            button
+            selected={isSelected}
+            onClick={() => this.props.onSelect(node, depth)}
+            style={{ padding: 10 }}
+          >
+            {text}
+            {action}
+          </ListItem>,
         );
-      let action: JSX.Element | undefined;
-      if (parent && parent.children.length >= 2) {
-        const { menu } = this.state;
-        action = (
-          <ListItemSecondaryAction>
-            <IconButton
-              style={{ padding: 5, verticalAlign: "baseline" }}
-              onClick={e => {
-                this.setState({
-                  ...this.state,
-                  menu: { anchorEl: e.currentTarget, depth },
-                });
-              }}
-            >
-              <AddIcon style={{ fontSize: 15 }} />
-            </IconButton>
-            <Menu
-              open={Boolean(menu && menu.depth === depth)}
-              anchorEl={menu && menu.anchorEl}
-              onClose={() => {
-                this.setState({ ...this.state, menu: null });
-              }}
-            >
-              {parent.children.map(n => (
-                <MenuItem
-                  onClick={() => {
-                    this.props.onSelect(n, depth);
-                    this.setState({ ...this.state, menu: null });
-                  }}
-                >
-                  {som.formats.ja.stringifyEvent(n.byEvent!)!}
-                </MenuItem>
-              ))}
-            </Menu>
-          </ListItemSecondaryAction>
-        );
-      }
-      items.push(
-        <ListItem
-          key={depth}
-          button
-          selected={isSelected}
-          onClick={() => this.props.onSelect(node, depth)}
-          style={{padding: 10}}
-        >
-          {text}
-          {action}
-        </ListItem>,
-      );
-    });
+        return true;
+      },
+      { points: this.props.points || this.props.current.path.points },
+    );
 
     return (
       <List dense style={{ width: "10em" }}>

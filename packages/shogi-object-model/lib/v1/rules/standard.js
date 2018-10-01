@@ -1,5 +1,13 @@
 "use strict";
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
 Object.defineProperty(exports, "__esModule", { value: true });
+const tree = __importStar(require("@hiryu/tree"));
 const definitions_1 = require("../definitions");
 var Violation;
 (function (Violation) {
@@ -24,73 +32,86 @@ function generateGameNodeId(prefix = "som") {
 }
 exports.generateGameNodeId = generateGameNodeId;
 function newRootGameNode(state = definitions_1.HIRATE_STATE, moveNum = 0) {
-    return {
+    return tree.newRootNode({
         id: generateGameNodeId(),
         state,
         moveNum,
         violations: [],
-        children: [],
-    };
+    });
 }
 exports.newRootGameNode = newRootGameNode;
-function cloneGameNode(node, opts) {
-    const fixedOpts = {
-        recursiveParent: opts.recursiveParent !== undefined ? opts.recursiveParent : false,
-    };
-    return Object.assign({}, node, { byEvent: node.byEvent ? definitions_1.cloneEvent(node.byEvent) : undefined, violations: [...node.violations], children: [...node.children], parent: !fixedOpts.recursiveParent
-            ? node.parent
-            : node.parent
-                ? cloneGameNode(node.parent, opts)
-                : undefined });
-}
-exports.cloneGameNode = cloneGameNode;
-function findParent(leaf, cond) {
-    const node = leaf.parent;
-    return node ? (cond(node) ? node : findParent(node, cond)) : null;
-}
-function applyEvent(node, event) {
-    const ret = {
+// export function cloneGameNode(
+//   node: GameNode,
+//   opts: {
+//     recursiveParent?: boolean;
+//   },
+// ): GameNode {
+//   const fixedOpts = {
+//     recursiveParent: opts.recursiveParent !== undefined ? opts.recursiveParent : false,
+//   };
+//   return {
+//     ...node,
+//     byEvent: node.byEvent ? cloneEvent(node.byEvent) : undefined,
+//     violations: [...node.violations],
+//     children: [...node.children],
+//     parent: !fixedOpts.recursiveParent
+//       ? node.parent
+//       : node.parent
+//         ? cloneGameNode(node.parent, opts)
+//         : undefined,
+//   };
+// }
+// function findParent(leaf: GameNode, cond: (node: GameNode) => boolean): GameNode | null {
+//   const node = leaf.parent;
+//   return node ? (cond(node) ? node : findParent(node, cond)) : null;
+// }
+function applyEvent(current, event) {
+    const currentData = tree.getValue(current);
+    const nextData = {
         id: generateGameNodeId(),
-        state: definitions_1.cloneState(node.state),
-        moveNum: node.moveNum,
+        state: definitions_1.cloneState(currentData.state),
+        moveNum: currentData.moveNum,
         byEvent: definitions_1.cloneEvent(event),
         violations: [],
-        children: [],
-        parent: node,
     };
-    if (node.parent && node.parent.byEvent && node.parent.byEvent.type === definitions_1.EventType.RESIGN) {
-        ret.violations.push(Violation.ALREADY_RESIGNED);
-        return ret;
+    const parent = tree.getParentNode(current);
+    const parentData = parent && tree.getValue(parent);
+    if (parentData && parentData.byEvent && parentData.byEvent.type === definitions_1.EventType.RESIGN) {
+        nextData.violations.push(Violation.ALREADY_RESIGNED);
+        return nextData;
     }
     switch (event.type) {
         case definitions_1.EventType.MOVE: {
             // check turn
-            const isMoveEventNode = (n) => Boolean(n.byEvent && n.byEvent.type === definitions_1.EventType.MOVE);
-            const prevMoveEventNode = isMoveEventNode(node) ? node : findParent(node, isMoveEventNode);
-            if (prevMoveEventNode) {
-                if (event.color !== prevMoveEventNode.state.nextTurn) {
-                    ret.violations.push(Violation.BAD_TURN);
+            const prevMoveEventNode = tree.findParentNode(current, n => {
+                const v = tree.getValue(n);
+                return Boolean(v.byEvent && v.byEvent.type === definitions_1.EventType.MOVE);
+            });
+            const prevMoveEventNodeData = prevMoveEventNode && tree.getValue(prevMoveEventNode);
+            if (prevMoveEventNodeData) {
+                if (event.color !== prevMoveEventNodeData.state.nextTurn) {
+                    nextData.violations.push(Violation.BAD_TURN);
                     // continue
                 }
             }
             // check move on board or drop and fix some event props.
             let isDrop = null;
-            const e = ret.byEvent;
+            const e = nextData.byEvent;
             if (e.sameDstSquare) {
-                if (!prevMoveEventNode) {
-                    ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                    return ret;
+                if (!prevMoveEventNodeData) {
+                    nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                    return nextData;
                 }
-                const pe = prevMoveEventNode.byEvent;
+                const pe = prevMoveEventNodeData.byEvent;
                 e.dstSquare = pe.dstSquare;
             }
             if (!e.dstSquare) {
-                ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                return ret;
+                nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                return nextData;
             }
             // dstSquare!
-            if (prevMoveEventNode) {
-                const pe = prevMoveEventNode.byEvent;
+            if (prevMoveEventNodeData) {
+                const pe = prevMoveEventNodeData.byEvent;
                 e.sameDstSquare = definitions_1.squareEquals(e.dstSquare, pe.dstSquare);
             }
             else if (e.sameDstSquare === undefined) {
@@ -100,14 +121,14 @@ function applyEvent(node, event) {
             if (e.srcSquare) {
                 // # srcSquare
                 isDrop = false;
-                const cp = definitions_1.getBoardSquare(node.state.board, e.srcSquare);
+                const cp = definitions_1.getBoardSquare(currentData.state.board, e.srcSquare);
                 if (!cp) {
-                    ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                    return ret;
+                    nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                    return nextData;
                 }
                 if (e.srcPiece && e.srcPiece !== cp.piece) {
-                    ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                    return ret;
+                    nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                    return nextData;
                 }
                 e.srcPiece = cp.piece;
                 // # srcPiece!
@@ -115,13 +136,13 @@ function applyEvent(node, event) {
                     // ## dstPiece!
                     const mightBePromoted = e.srcPiece !== e.dstPiece;
                     if (mightBePromoted && definitions_1.promote(e.srcPiece) !== e.dstPiece) {
-                        ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                        return ret;
+                        nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                        return nextData;
                     }
                     const isPromoted = mightBePromoted;
                     if (isPromoted && e.promote === false) {
-                        ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                        return ret;
+                        nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                        return nextData;
                     }
                     e.promote = isPromoted;
                     // ## promote!
@@ -131,8 +152,8 @@ function applyEvent(node, event) {
                     // ## promote!
                     const dstPiece = e.promote ? definitions_1.promote(e.srcPiece) : e.srcPiece;
                     if (!dstPiece || (e.dstPiece && e.dstPiece !== dstPiece)) {
-                        ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                        return ret;
+                        nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                        return nextData;
                     }
                     e.dstPiece = dstPiece;
                     // ## dstPiece!
@@ -149,8 +170,8 @@ function applyEvent(node, event) {
                     (event.movements && event.movements.indexOf(definitions_1.Movement.DROPPED) !== -1)) {
                     isDrop = true;
                     if (e.promote || !definitions_1.isHeads(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
-                        ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                        return ret;
+                        nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                        return nextData;
                     }
                     e.srcSquare = null;
                     e.dstPiece = e.srcPiece;
@@ -158,14 +179,14 @@ function applyEvent(node, event) {
                     // ## srcSquare!, dstPiece!, promote!
                 }
                 else {
-                    const matches = definitions_1.filterBoardSquare(node.state.board, cp => {
+                    const matches = definitions_1.filterBoardSquare(currentData.state.board, cp => {
                         return cp !== null && cp.color === event.color && cp.piece === e.srcPiece;
                     });
                     if (matches.length === 0) {
                         isDrop = true;
                         if (e.promote || !definitions_1.isHeads(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
-                            ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                            return ret;
+                            nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                            return nextData;
                         }
                         e.srcSquare = null;
                         e.dstPiece = e.srcPiece;
@@ -175,7 +196,7 @@ function applyEvent(node, event) {
                     else {
                         const candidates = [];
                         for (const m of matches) {
-                            const mcs = searchMoveCandidates(node.state.board, m[1]).filter(c => definitions_1.squareEquals(c.dst, e.dstSquare));
+                            const mcs = searchMoveCandidates(currentData.state.board, m[1]).filter(c => definitions_1.squareEquals(c.dst, e.dstSquare));
                             if (mcs.length > 0) {
                                 candidates.push({ srcCP: m[0], srcSq: m[1], mcs });
                             }
@@ -183,8 +204,8 @@ function applyEvent(node, event) {
                         if (candidates.length === 0) {
                             isDrop = true;
                             if (e.promote || !definitions_1.isHeads(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
-                                ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                                return ret;
+                                nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                                return nextData;
                             }
                             e.srcSquare = null;
                             e.dstPiece = e.srcPiece;
@@ -203,14 +224,14 @@ function applyEvent(node, event) {
                                 e.promote = c.mcs[0].promote;
                             }
                             else if (e.promote === undefined) {
-                                ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                                return ret;
+                                nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                                return nextData;
                             }
                             // #### promote!
                             const dstPiece = e.promote ? definitions_1.promote(e.srcPiece) : e.srcPiece;
                             if (!dstPiece || (e.dstPiece && e.dstPiece !== dstPiece)) {
-                                ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                                return ret;
+                                nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                                return nextData;
                             }
                             e.dstPiece = dstPiece;
                             // #### dstPiece!
@@ -223,8 +244,8 @@ function applyEvent(node, event) {
             }
             else {
                 // NOTE: currently not supported more.
-                ret.violations.push(Violation.INVALID_MOVE_EVENT);
-                return ret;
+                nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                return nextData;
             }
             e.movements = []; // to be fixed
             // props without movements were fixed!
@@ -234,74 +255,74 @@ function applyEvent(node, event) {
             if (isDrop) {
                 // droppable piece?
                 if (!isDroppablePiece(e.dstPiece)) {
-                    ret.violations.push(Violation.NOT_DROPPABLE_PIECE);
-                    return ret;
+                    nextData.violations.push(Violation.NOT_DROPPABLE_PIECE);
+                    return nextData;
                 }
                 // have the piece?
-                const hand = definitions_1.getHand(node.state.hands, e.color);
+                const hand = definitions_1.getHand(currentData.state.hands, e.color);
                 const num = definitions_1.getNumPieces(hand, e.dstPiece);
                 if (num === 0) {
-                    ret.violations.push(Violation.NO_PIECE_TO_BE_DROPPED);
-                    return ret;
+                    nextData.violations.push(Violation.NO_PIECE_TO_BE_DROPPED);
+                    return nextData;
                 }
                 // piece exists on the square to be dropped?
-                if (definitions_1.getBoardSquare(node.state.board, e.dstSquare)) {
-                    ret.violations.push(Violation.PIECE_EXISTS);
-                    return ret;
+                if (definitions_1.getBoardSquare(currentData.state.board, e.dstSquare)) {
+                    nextData.violations.push(Violation.PIECE_EXISTS);
+                    return nextData;
                 }
                 // piece is movable after dropped?
                 if (isNeverMovable(e.dstSquare, e.color, e.dstPiece)) {
-                    ret.violations.push(Violation.NOT_MOVABLE_DROPPED_PIECE);
-                    return ret;
+                    nextData.violations.push(Violation.NOT_MOVABLE_DROPPED_PIECE);
+                    return nextData;
                 }
                 // check nifu
                 if (e.dstPiece === definitions_1.Piece.FU) {
                     for (const y of definitions_1.SQUARE_NUMBERS) {
-                        const cp = definitions_1.getBoardSquare(node.state.board, [e.dstSquare[0], y]);
+                        const cp = definitions_1.getBoardSquare(currentData.state.board, [e.dstSquare[0], y]);
                         if (cp && cp.color === e.color && cp.piece === definitions_1.Piece.FU) {
-                            ret.violations.push(Violation.NIFU);
+                            nextData.violations.push(Violation.NIFU);
                             break; // continue
                         }
                     }
                 }
                 // TODO: check uchifuzume
                 // TODO: fix movements prop
-                definitions_1.setBoardSquare(ret.state.board, e.dstSquare, { color: e.color, piece: e.dstPiece });
-                definitions_1.addNumPieces(definitions_1.getHand(ret.state.hands, e.color), e.dstPiece, -1);
-                ret.state.nextTurn = definitions_1.flipColor(e.color);
-                ret.moveNum++;
+                definitions_1.setBoardSquare(nextData.state.board, e.dstSquare, { color: e.color, piece: e.dstPiece });
+                definitions_1.addNumPieces(definitions_1.getHand(nextData.state.hands, e.color), e.dstPiece, -1);
+                nextData.state.nextTurn = definitions_1.flipColor(e.color);
+                nextData.moveNum++;
             }
             else {
-                const srcCP = definitions_1.getBoardSquare(node.state.board, e.srcSquare);
+                const srcCP = definitions_1.getBoardSquare(currentData.state.board, e.srcSquare);
                 // TODO: このチェックは不要か、fix時点で出すべきか
                 if (!srcCP || srcCP.color !== e.color) {
-                    ret.violations.push(Violation.NO_PIECE_TO_BE_MOVED);
-                    return ret;
+                    nextData.violations.push(Violation.NO_PIECE_TO_BE_MOVED);
+                    return nextData;
                 }
-                const mcs = searchMoveCandidates(node.state.board, e.srcSquare);
+                const mcs = searchMoveCandidates(currentData.state.board, e.srcSquare);
                 const mc = mcs.find(mc => definitions_1.squareEquals(mc.dst, e.dstSquare) && mc.promote === e.promote);
                 if (!mc) {
-                    ret.violations.push(Violation.NOT_MOVABLE_PIECE_TO_SQUARE);
-                    return ret;
+                    nextData.violations.push(Violation.NOT_MOVABLE_PIECE_TO_SQUARE);
+                    return nextData;
                 }
-                const dstCP = definitions_1.getBoardSquare(node.state.board, e.dstSquare);
+                const dstCP = definitions_1.getBoardSquare(currentData.state.board, e.dstSquare);
                 if (dstCP) {
                     if (dstCP.color === e.color) {
                         throw new Error("TODO");
                     }
                     // capture
-                    definitions_1.addNumPieces(definitions_1.getHand(ret.state.hands, e.color), definitions_1.demote(dstCP.piece, dstCP.piece), 1);
+                    definitions_1.addNumPieces(definitions_1.getHand(nextData.state.hands, e.color), definitions_1.demote(dstCP.piece, dstCP.piece), 1);
                 }
-                definitions_1.setBoardSquare(ret.state.board, e.srcSquare, null);
-                definitions_1.setBoardSquare(ret.state.board, e.dstSquare, { color: e.color, piece: e.dstPiece });
-                ret.state.nextTurn = definitions_1.flipColor(e.color);
-                ret.moveNum++;
+                definitions_1.setBoardSquare(nextData.state.board, e.srcSquare, null);
+                definitions_1.setBoardSquare(nextData.state.board, e.dstSquare, { color: e.color, piece: e.dstPiece });
+                nextData.state.nextTurn = definitions_1.flipColor(e.color);
+                nextData.moveNum++;
             }
             // TODO: sennichite
-            return ret;
+            return nextData;
         }
         case definitions_1.EventType.RESIGN: {
-            return ret;
+            return nextData;
         }
     }
     throw new Error(`invalid event type: ${event.type}`);

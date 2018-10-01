@@ -40,20 +40,43 @@ describe("tree", () => {
     expect(tree.isRootPath({ points: [], depth: 1 })).toBe(false);
   });
 
+  it("getValue", () => {
+    expect(tree.getValue(sampleRootNode)).toBe(1);
+    expect(tree.getValue(sampleLeafNode)).toBe(10000);
+  });
+
   it("appendChild", () => {
-    const n1a = tree.newRootNode(1);
-    const n1b = tree.appendChild(n1a, 2);
-    expect(n1b).toEqual({
+    const n1 = tree.newRootNode(1);
+    const n2 = tree.appendChild(n1, 2);
+    expect(n2).toEqual({
       tree: { values: [1, 2], forks: {} },
       path: { points: [], depth: 1 },
     });
 
-    const n2a = { ...n1b, path: tree.ROOT_PATH };
-    const n2b = tree.appendChild(n2a, 3);
-    expect(n2b).toEqual({
-      tree: { values: [1, 2], forks: { 1: [{ values: [3], forks: {} }] } },
-      path: { points: [{ depth: 1, forkIndex: 0 }], depth: 0 },
+    const n3 = tree.appendChild(tree.getParentNode(tree.appendChild(n2, 3)), 4);
+    expect(n3).toEqual({
+      tree: { values: [1, 2, 3], forks: { 2: [{ values: [4], forks: {} }] } },
+      path: { points: [{ depth: 2, forkIndex: 0 }], depth: 0 },
     });
+  });
+
+  it("getSiblings", () => {
+    expect(
+      tree
+        .getSiblings({
+          tree: sampleTrees[0],
+          path: { depth: 0, points: [{ depth: 1, forkIndex: 0 }] },
+        })
+        .map(n => n.path),
+    ).toEqual([
+      { depth: 1, points: [] },
+      { depth: 0, points: [{ depth: 1, forkIndex: 0 }] },
+      { depth: 0, points: [{ depth: 1, forkIndex: 1 }] },
+    ]);
+  });
+
+  it("walk", () => {
+    expect(tree.walkTowardsChild(sampleRootNode, () => true)).toBe(true);
   });
 
   it("find", () => {
@@ -67,6 +90,12 @@ describe("tree", () => {
     expect(tree.getParentNode(sampleRootNode)).toBeUndefined();
     expect(
       tree.getParentNode({ tree: sampleTrees[0], path: { points: [], depth: 1 } }).path,
+    ).toEqual(tree.ROOT_PATH);
+    expect(
+      tree.getParentNode({
+        tree: sampleTrees[0],
+        path: { depth: 0, points: [{ depth: 1, forkIndex: 0 }] },
+      }).path,
     ).toEqual(tree.ROOT_PATH);
   });
 

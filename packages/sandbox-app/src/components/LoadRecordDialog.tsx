@@ -12,7 +12,7 @@ import InsertDriveFileIcon from "@material-ui/icons/InsertDriveFile";
 import Dropzone from "react-dropzone";
 import styled from "styled-components";
 import * as som from "@hiryu/shogi-object-model";
-import { newRootGameNode, applyEvent } from "../utils/game";
+import * as tree from "@hiryu/tree";
 
 const DropzoneOverlay = styled.div`
   position: absolute;
@@ -131,23 +131,26 @@ class LoadRecordDialog extends React.Component<LoadRecordDialogProps, LoadRecord
     if (r.events.length === 0) {
       return;
     }
-    const root = newRootGameNode();
-    let leaf = root;
+    let leaf = som.rules.standard.newRootGameNode();
     for (const event of r.events) {
-      const next = applyEvent(leaf, event);
-      leaf.children.push(next);
-      leaf = next;
+      const next = som.rules.standard.applyEvent(leaf, event);
+      leaf = tree.appendChild(leaf, next);
       if (next.violations.length > 0) {
         break;
       }
     }
-    console.log({
-      root,
-      leaf,
-      r,
-      a: som.formats.usi.stringifySFEN({ nextMoveNum: leaf.moveNum + 1, state: leaf.state }),
-    });
-    this.props.onClose({ record: r, rootGameNode: root });
+    const rootGameNode = tree.getRootNode(leaf);
+    {
+      // TODO: remove
+      const v = tree.getValue(leaf);
+      console.log({
+        rootGameNode,
+        leaf,
+        r,
+        a: som.formats.usi.stringifySFEN({ nextMoveNum: v.moveNum + 1, state: v.state }),
+      });
+    }
+    this.props.onClose({ record: r, rootGameNode });
   }
 }
 

@@ -24,9 +24,21 @@ export declare function newTree<T>(v: T): Tree<T>;
 export declare function newForks<T>(): Forks<T>;
 export declare function newRootNode<T>(v: T): Node<T>;
 export declare function isRootPath(path: Path): boolean;
+export declare function pathEquals(lhs: Path, rhs: Path): boolean;
+export declare function nodeEquals<T>(lhs: Node<T>, rhs: Node<T>, opts?: {
+    strict: boolean;
+}): boolean;
+export declare function updateNodePath<T>(node: Node<T>, path: Path): {
+    tree: Tree<T>;
+    path: Path;
+};
+export declare function getRootNode<T>(node: Node<T>): {
+    tree: Tree<T>;
+    path: Path;
+};
 export declare function getForkTree<T>(tree: Tree<T>, p: PathPoint): Tree<T>;
 export declare function getLastForkTree<T>(tree: Tree<T>, path: Path): Tree<T>;
-export declare function getValue<T>(tree: Tree<T>, node: Node<T>): T;
+export declare function getValue<T>(node: Node<T>): T;
 export declare function getLeafNode<T>(tree: Tree<T>, points: PathPoint[]): {
     tree: Tree<T>;
     path: {
@@ -46,11 +58,15 @@ export declare const DEFAULT_WALK_OPTIONS: {
     limit: number;
 };
 export declare type WalkDirector<T> = (node: Node<T>, i: number) => Node<T> | undefined;
-export declare function walk<T>(node: Node<T>, director: WalkDirector<T>, opts?: WalkOptions): void;
+export declare function walk<T>(node: Node<T>, director: WalkDirector<T>, opts?: WalkOptions): boolean;
 export declare type Predicate<T> = (node: Node<T>, i: number) => boolean;
 export declare type PredicableWalkDirector<T> = (pred: Predicate<T>) => WalkDirector<T>;
 export declare const towardsParent: <T>(pred: Predicate<T>) => WalkDirector<T>;
 export declare const towardsChild: <T>(points?: PathPoint[] | undefined) => PredicableWalkDirector<T>;
+export declare function walkTowardsParent<T>(node: Node<T>, pred: Predicate<T>, opts?: WalkOptions): boolean;
+export declare function walkTowardsChild<T>(node: Node<T>, pred: Predicate<T>, opts?: WalkOptions & {
+    points?: PathPoint[];
+}): boolean;
 export declare function findNode<T>(node: Node<T>, director: PredicableWalkDirector<T>, pred: Predicate<T>, opts?: WalkOptions): Node<T> | undefined;
 export declare function findParentNode<T>(node: Node<T>, pred: Predicate<T>, opts?: WalkOptions): Node<T> | undefined;
 export declare function findChildNode<T>(node: Node<T>, pred: Predicate<T>, points?: PathPoint[], opts?: WalkOptions): Node<T> | undefined;

@@ -6,16 +6,30 @@ const standard = som.rules.standard;
 describe("standard rule", () => {
   test("applyEvent", () => {
     let game = standard.newRootGameNode();
-    const next = standard.applyEvent(game, {
+    let data = standard.applyEvent(game, {
       type: som.EventType.MOVE,
       color: som.Color.BLACK,
       srcSquare: [7, 7],
       dstSquare: [7, 6],
     });
+    expect(data.violations.length).toBe(0);
+    expect(data.state.nextTurn).toEqual(som.Color.WHITE);
+    expect(data.moveNum).toEqual(1);
+    game = tree.appendChild(game, data);
 
-    game = tree.appendChild(game, next);
-    expect(next.state.nextTurn).toEqual(som.Color.WHITE);
-    expect(next.moveNum).toEqual(1);
+    [
+      { color: som.Color.WHITE, srcSquare: [3, 3], dstSquare: [3, 4] },
+      { color: som.Color.BLACK, srcSquare: [8, 8], dstSquare: [2, 2], promote: true },
+      { color: som.Color.WHITE, srcSquare: [3, 1], dstSquare: [2, 2] },
+      { color: som.Color.BLACK, srcSquare: null, dstSquare: [5, 5], srcPiece: som.Piece.KA },
+    ].forEach((e, i) => {
+      data = standard.applyEvent(game, { type: som.EventType.MOVE, ...e } as any);
+      expect([i, data.violations]).toEqual([i, []]);
+      game = tree.appendChild(game, data);
+    });
+
+    expect(data.state.nextTurn).toEqual(som.Color.WHITE);
+    expect(data.moveNum).toEqual(5);
   });
 
   test("isNeverMovable", () => {

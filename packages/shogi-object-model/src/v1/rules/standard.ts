@@ -73,33 +73,6 @@ export function newRootGameNode(state = HIRATE_STATE, moveNum = 0): GameNode {
   });
 }
 
-// export function cloneGameNode(
-//   node: GameNode,
-//   opts: {
-//     recursiveParent?: boolean;
-//   },
-// ): GameNode {
-//   const fixedOpts = {
-//     recursiveParent: opts.recursiveParent !== undefined ? opts.recursiveParent : false,
-//   };
-//   return {
-//     ...node,
-//     byEvent: node.byEvent ? cloneEvent(node.byEvent) : undefined,
-//     violations: [...node.violations],
-//     children: [...node.children],
-//     parent: !fixedOpts.recursiveParent
-//       ? node.parent
-//       : node.parent
-//         ? cloneGameNode(node.parent, opts)
-//         : undefined,
-//   };
-// }
-
-// function findParent(leaf: GameNode, cond: (node: GameNode) => boolean): GameNode | null {
-//   const node = leaf.parent;
-//   return node ? (cond(node) ? node : findParent(node, cond)) : null;
-// }
-
 export function applyEvent(current: GameNode, event: Event): GameNodeData {
   const currentData = tree.getValue(current);
   const nextData: GameNodeData = {
@@ -198,36 +171,46 @@ export function applyEvent(current: GameNode, event: Event): GameNodeData {
           throw new Error("assert");
         }
         // # dstPiece!, promote!
-      } else if (e.srcPiece) {
+      } else if (e.srcPiece || e.dstPiece) {
+        const shouldDrop = () => {
+          isDrop = true;
+          if (
+            e.promote ||
+            !isHeads(piece) ||
+            (e.dstPiece && e.dstPiece !== piece) ||
+            (e.srcPiece && e.srcPiece !== piece)
+          ) {
+            nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+            return nextData;
+          }
+          e.srcSquare = null;
+          e.srcPiece = piece;
+          e.dstPiece = piece;
+          e.promote = false;
+          return null;
+        };
+        const piece = (e.srcPiece || e.dstPiece)!;
         // in case of japanese notations style.
         // # srcPiece!
         if (
           e.srcSquare === null ||
           (event.movements && event.movements.indexOf(Movement.DROPPED) !== -1)
         ) {
-          isDrop = true;
-          if (e.promote || !isHeads(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
-            nextData.violations.push(Violation.INVALID_MOVE_EVENT);
-            return nextData;
+          const r = shouldDrop();
+          if (r) {
+            return r;
           }
-          e.srcSquare = null;
-          e.dstPiece = e.srcPiece;
-          e.promote = false;
-          // ## srcSquare!, dstPiece!, promote!
+          // ## srcSquare!, srcPiece!, dstPiece!, promote!
         } else {
           const matches = filterBoardSquare(currentData.state.board, cp => {
             return cp !== null && cp.color === event.color && cp.piece === e.srcPiece;
           }) as Array<[ColorPiece, Square]>;
           if (matches.length === 0) {
-            isDrop = true;
-            if (e.promote || !isHeads(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
-              nextData.violations.push(Violation.INVALID_MOVE_EVENT);
-              return nextData;
+            const r = shouldDrop();
+            if (r) {
+              return r;
             }
-            e.srcSquare = null;
-            e.dstPiece = e.srcPiece;
-            e.promote = false;
-            // ### srcSquare!, dstPiece!, promote!
+            // ## srcSquare!, srcPiece!, dstPiece!, promote!
           } else {
             const candidates: Array<{
               srcCP: ColorPiece;
@@ -243,15 +226,11 @@ export function applyEvent(current: GameNode, event: Event): GameNodeData {
               }
             }
             if (candidates.length === 0) {
-              isDrop = true;
-              if (e.promote || !isHeads(e.srcPiece) || (e.dstPiece && e.dstPiece !== e.srcPiece)) {
-                nextData.violations.push(Violation.INVALID_MOVE_EVENT);
-                return nextData;
+              const r = shouldDrop();
+              if (r) {
+                return r;
               }
-              e.srcSquare = null;
-              e.dstPiece = e.srcPiece;
-              e.promote = false;
-              // #### srcSquare!, dstPiece!, promote!
+              // ## srcSquare!, srcPiece!, dstPiece!, promote!
             } else {
               isDrop = false;
               if (candidates.length > 1) {
@@ -267,13 +246,23 @@ export function applyEvent(current: GameNode, event: Event): GameNodeData {
                 return nextData;
               }
               // #### promote!
-              const dstPiece = e.promote ? promote(e.srcPiece) : e.srcPiece;
-              if (!dstPiece || (e.dstPiece && e.dstPiece !== dstPiece)) {
-                nextData.violations.push(Violation.INVALID_MOVE_EVENT);
-                return nextData;
+              if (e.dstPiece) {
+                // ##### e.dstPiece!
+                if (e.promote && isHeads(e.dstPiece)) {
+                  nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                  return nextData;
+                }
+                e.srcPiece = e.dstPiece;
+              } else {
+                // ##### e.srcPiece!
+                const dstPiece = e.promote ? promote(piece) : piece;
+                if (!dstPiece) {
+                  nextData.violations.push(Violation.INVALID_MOVE_EVENT);
+                  return nextData;
+                }
+                e.dstPiece = dstPiece;
               }
-              e.dstPiece = dstPiece;
-              // #### dstPiece!
+              // #### srcPiece!, dstPiece!
             }
             // ### srcSquare!, dstPiece!, promote!
           }

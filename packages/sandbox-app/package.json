@@ -6,7 +6,7 @@
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
-    "build": "rimraf out && tsc",
+    "build": "rimraf ../../releases/sandbox-app && cross-env NODE_ENV=production parcel build index.html --out-dir ../../releases/sandbox-app --public-url /releases/sandbox-app/ --no-source-maps",
     "lint": "tslint src/**/*",
     "test": "jest",
     "dev": "parcel index.html"
@@ -34,6 +34,7 @@
   },
   "devDependencies": {
     "@types/jest": "^23.3.1",
+    "cross-env": "^5.2.0",
     "jest": "^23.5.0",
     "rimraf": "^2.6.2",
     "ts-jest": "^23.0.1",

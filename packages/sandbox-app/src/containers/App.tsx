@@ -16,11 +16,12 @@ import {
 import MenuIcon from "@material-ui/icons/Menu";
 import InsertDriveFileIcon from "@material-ui/icons/InsertDriveFile";
 import { RootState, EngineState, EnginePhase } from "../state";
-import { newEngine, newGame, setGameState, go } from "../actions/engine_manager";
+import { newEngine, newGame, setOption, setGameState, go, stop } from "../actions/engine_manager";
 import { setCurrentGameNode } from "../actions/game";
 import LogView from "../components/LogView";
 import EngineSetupForm from "../components/EngineSetupForm";
 import EngineConfigurationForm from "../components/EngineConfigurationForm";
+import EngineGoForm from "../components/EngineGoForm";
 import { Pane, PaneHeader, PaneBody, colors } from "../components/common";
 import LoadRecordDialog from "../components/LoadRecordDialog";
 import RecordEventList from "../components/RecordEventList";
@@ -42,6 +43,8 @@ interface AppDispatchProps {
   newGame: typeof newGame;
   setGameState: typeof setGameState;
   go: typeof go;
+  setOption: typeof setOption;
+  stop: typeof stop;
   setCurrentGameNode: typeof setCurrentGameNode;
 }
 
@@ -125,7 +128,12 @@ class App extends React.Component<AppProps, AppState> {
         enginePanel = (
           <EngineConfigurationForm
             engineOptions={engineState.engineInfo!.options}
-            onSubmit={() => this.props.newGame(engineState.engineId!)}
+            onSubmit={vals => {
+              for (const name of Object.keys(vals)) {
+                this.props.setOption(engineState.engineId!, name, vals[name]);
+              }
+              this.props.newGame(engineState.engineId!);
+            }}
           />
         );
         break;
@@ -134,24 +142,20 @@ class App extends React.Component<AppProps, AppState> {
         enginePanel = <LinearProgress />;
         break;
       }
-      case EnginePhase.SET_GAME_STATE: {
-        // TODO: form of go options
-        enginePanel = (
-          <div>
-            <Button
-              onClick={() => {
-                this.props.setGameState(engineState.engineId!, currentGameNode);
-                this.props.go(engineState.engineId!);
-              }}
-            >
-              Go
-            </Button>
-          </div>
-        );
-        break;
-      }
+      case EnginePhase.SET_GAME_STATE:
       case EnginePhase.GOING: {
-        enginePanel = <LinearProgress />;
+        enginePanel = (
+          <EngineGoForm
+            isGoing={engineState.phase === EnginePhase.GOING}
+            onGo={opts => {
+              this.props.setGameState(engineState.engineId!, currentGameNode);
+              this.props.go(engineState.engineId!, opts);
+            }}
+            onStop={() => {
+              this.props.stop(engineState.engineId!);
+            }}
+          />
+        );
         break;
       }
       default: {
@@ -302,5 +306,5 @@ export default connect<AppStateProps, AppDispatchProps, {}, RootState>(
     engineState: state.engine,
     currentGameNode: state.game.currentGameNode,
   }),
-  { newEngine, newGame, setGameState, go, setCurrentGameNode },
+  { newEngine, newGame, setOption, setGameState, go, stop, setCurrentGameNode },
 )(App);

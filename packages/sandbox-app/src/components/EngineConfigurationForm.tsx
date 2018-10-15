@@ -1,40 +1,118 @@
 import React from "react";
-import { FormControl, Button } from "@material-ui/core";
-import { EngineOptions } from "@hiryu/usi-engine/src";
-import styled from "styled-components";
+import { FormControl, Button, TextField, FormControlLabel, Checkbox } from "@material-ui/core";
+import { EngineOptions, EngineOptionDefinition } from "@hiryu/usi-engine";
 
-const Pre = styled.pre`
-  font-size: 0.6em;
-  height: 6em;
-  overflow: auto;
-  white-space: pre-wrap;
-  margin: 0 0 0.3rem;
-  border-left: 3px solid #cce;
-  padding-left: 0.5em;
-`;
+interface EngineOptionFormProps {
+  opt: EngineOptionDefinition;
+  value?: string;
+  onChange: (name: string, value: string) => void;
+}
+
+function EngineOptionForm(props: EngineOptionFormProps) {
+  const { opt, value, onChange } = props;
+  const id = `engine-option-form-${opt.name}`;
+  switch (opt.type) {
+    case "string": {
+      return (
+        <TextField
+          id={id}
+          label={opt.name}
+          value={value || opt.default}
+          onChange={e => {
+            onChange(opt.name, e.target.value);
+          }}
+        />
+      );
+    }
+    case "spin": {
+      return (
+        <TextField
+          id={id}
+          label={opt.name}
+          type="number"
+          value={value || opt.default}
+          onChange={e => {
+            onChange(opt.name, e.target.value);
+          }}
+        />
+      );
+    }
+    case "button": {
+      return <Button variant="outlined">{opt.name}</Button>;
+    }
+    case "check": {
+      return (
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={value !== undefined ? value === "true" : opt.default}
+              onChange={e => {
+                onChange(opt.name, e.target.checked ? "true" : "false");
+              }}
+            />
+          }
+          label={opt.name}
+        />
+      );
+    }
+  }
+  return (
+    <span>
+      {opt.name} {opt.type}
+    </span>
+  );
+}
 
 export interface EngineConfigurationFormProps {
   engineOptions: EngineOptions;
-  onSubmit: () => any;
+  onSubmit: (optionValues: { [name: string]: string }) => any;
 }
 
-export interface EngineConfigurationFormState {}
+export interface EngineConfigurationFormState {
+  optionValues: { [name: string]: string };
+}
 
 export default class EngineConfigurationForm extends React.Component<
   EngineConfigurationFormProps,
   EngineConfigurationFormState
 > {
+  state: EngineConfigurationFormState = {
+    optionValues: {},
+  };
+
   render() {
-    const lines = [];
-    for (const k of Object.keys(this.props.engineOptions)) {
-      const opt = this.props.engineOptions[k];
-      lines.push(JSON.stringify(opt));
+    const forms = [];
+    for (const name of Object.keys(this.props.engineOptions)) {
+      const opt = this.props.engineOptions[name];
+      forms.push(
+        <FormControl margin="dense" style={{ marginRight: 12 }}>
+          <EngineOptionForm
+            opt={opt}
+            value={this.state.optionValues[name]}
+            onChange={(name, value) => {
+              this.setState({
+                optionValues: {
+                  ...this.state.optionValues,
+                  [name]: value,
+                },
+              });
+            }}
+          />
+        </FormControl>,
+      );
     }
     return (
       <React.Fragment>
-        <Pre>{lines.join("\n")}</Pre>
-        <FormControl>
-          <Button size="small" color="primary" onClick={() => this.props.onSubmit()}>
+        <div style={{ display: "flex", flexWrap: "wrap", maxHeight: 300, overflow: "auto" }}>
+          {forms}
+        </div>
+        <FormControl margin="normal">
+          <Button
+            size="small"
+            variant="outlined"
+            color="primary"
+            onClick={() => this.props.onSubmit(this.state.optionValues)}
+          >
             OK
           </Button>
         </FormControl>

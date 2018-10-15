@@ -1,1 +1,1 @@
-# @hiryu/skeleton
+# @hiryu/sandbox-app

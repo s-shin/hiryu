@@ -149,7 +149,7 @@ export const recordParser = (() => {
           many(movement),
           optional(string("成"), ""),
           optional(src, null),
-          desc(many(notNewline), "TODO"),
+          desc(many(notNewline), "TODO: time"),
         ),
         vs => ({
           type: EventType.MOVE as EventType.MOVE,
@@ -162,7 +162,7 @@ export const recordParser = (() => {
           srcSquare: vs[4],
         }),
       ),
-      constant(string("投了"), {
+      constant(seq(string("投了"), desc(many(notNewline), "TODO: time")), {
         type: EventType.RESIGN as EventType.RESIGN,
         color: Color.BLACK, // tmp
       }),
@@ -173,7 +173,7 @@ export const recordParser = (() => {
     transform(seq(moveNum, many1(charIn(" \t")), eventBody), vs => vs[2]),
     "event",
   );
-  const eventLines = desc(filterNull(sepBy(oneOf(event, ignore), newline)), "eventLine");
+  const eventLines = desc(filterNull(sepBy(oneOf(event, ignore), newline)), "eventLines");
 
   const record = desc(
     transform(

@@ -123,33 +123,48 @@ describe("kif", () => {
   test("parseRecord", () => {
     const r = kif.parseRecord(sample);
     expect(r).not.toBeInstanceOf(Error);
-    // fs.writeFileSync("a.json", JSON.stringify(r, undefined, 2));
+    // fs.writeFileSync("tmp/sample.json", JSON.stringify(r, undefined, 2));
   });
 
-  test("detectEncoding and parse", () => {
-    const data = fs.readFileSync(
-      path.resolve(__dirname, "__test__/sample_swks_sakura_ne_jp_wars_kifsearch.kif"),
-      // path.resolve(__dirname, "__test__/sample_swks_sakura_ne_jp_wars_kifsearch_02.kif"),
-    );
-    const encoding = kif.detectEncoding(data);
-    let text: string;
-    try {
-      // Exception will be thrown if node isn't built with --with-intl=full-icu.
-      // cf. https://nodejs.org/api/intl.html
-      const decoder = new util.TextDecoder(encoding);
-      text = decoder.decode(data);
-    } catch (e) {
-      text = Encoding.convert(data, {
-        from: encoding.toUpperCase(),
-        to: "UNICODE",
-        type: "string",
+  {
+    const fixtures: Array<{
+      name: string;
+      encoding?: "utf-8" | "sjis";
+    }> = [
+      {
+        name: "swks_sakura_ne_jp_wars_kifsearch_01",
+      },
+      {
+        name: "swks_sakura_ne_jp_wars_kifsearch_02",
+      },
+      {
+        name: "shogidb2_com_01",
+        encoding: "utf-8",
+      },
+    ];
+    for (const fixture of fixtures) {
+      test(`parse ${fixture.name}`, () => {
+        const data = fs.readFileSync(path.resolve(__dirname, "__test__", `${fixture.name}.kif`));
+        const encoding = fixture.encoding || kif.detectEncoding(data);
+        let text: string;
+        try {
+          // Exception will be thrown if node isn't built with --with-intl=full-icu.
+          // cf. https://nodejs.org/api/intl.html
+          const decoder = new util.TextDecoder(encoding);
+          text = decoder.decode(data);
+        } catch (e) {
+          text = Encoding.convert(data, {
+            from: encoding.toUpperCase(),
+            to: "UNICODE",
+            type: "string",
+          });
+        }
+        // const fd = fs.openSync("a.log", "w");
+        // const r = kif.parseRecord(text, msg => fs.writeSync(fd, `${msg}\n`));
+        const r = kif.parseRecord(text);
+        expect(r).not.toBeInstanceOf(Error);
+        // fs.writeFileSync("a.json", JSON.stringify(r, undefined, 2));
       });
     }
-    // fs.writeFileSync("a.kif", text);
-    // const fd = fs.openSync("a.log", "w");
-    // const r = kif.parseRecord(text, msg => fs.writeSync(fd, `${msg}\n`));
-    const r = kif.parseRecord(text);
-    expect(r).not.toBeInstanceOf(Error);
-    // fs.writeFileSync("a.json", JSON.stringify(r, undefined, 2));
-  });
+  }
 });

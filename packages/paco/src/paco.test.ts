@@ -15,7 +15,7 @@ import {
   execute,
 } from "./index";
 import { json } from "./json";
-import { BasicParserTracer, many1 } from "@hiryu/paco/src/paco";
+import { many1 } from "@hiryu/paco/src/paco";
 
 describe("paco", () => {
   const reader = new StringReader("foo\nbar");

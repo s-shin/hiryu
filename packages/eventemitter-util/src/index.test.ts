@@ -1,4 +1,4 @@
-import { listenEvent, EventListenerPool } from "./index";
+import { EventListenerPool } from "./index";
 import * as events from "events";
 
 describe("EventListenerPool", () => {

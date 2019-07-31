@@ -14,7 +14,7 @@ export interface InteractableGameState {
 export default function interactable(WrappedComponent: GameComponent): {
     new (props: InteractableGameProps): {
         render(): JSX.Element;
-        setActiveGameObject(obj?: import("@hiryu/react-shogi-object-model/src/entities").BoardSquare | import("@hiryu/react-shogi-object-model/src/entities").HandPiece | undefined): void;
+        setActiveGameObject(obj?: import("./entities").BoardSquare | import("./entities").HandPiece | undefined): void;
         resetActivatedState(): void;
         updateActiveGameObject(obj: GameObject): void;
         setState<K extends "activeGameObject" | "promotionSelector">(state: InteractableGameState | ((prevState: Readonly<InteractableGameState>, props: Readonly<InteractableGameProps>) => InteractableGameState | Pick<InteractableGameState, K> | null) | Pick<InteractableGameState, K> | null, callback?: (() => void) | undefined): void;

@@ -53,7 +53,7 @@ describe("tree", () => {
       path: { points: [], depth: 1 },
     });
 
-    const n3 = tree.appendChild(tree.getParentNode(tree.appendChild(n2, 3)), 4);
+    const n3 = tree.appendChild(tree.getParentNode(tree.appendChild(n2, 3))!, 4);
     expect(n3).toEqual({
       tree: { values: [1, 2, 3], forks: { 2: [{ values: [4], forks: {} }] } },
       path: { points: [{ depth: 2, forkIndex: 0 }], depth: 0 },
@@ -89,13 +89,13 @@ describe("tree", () => {
   it("getParentNode", () => {
     expect(tree.getParentNode(sampleRootNode)).toBeUndefined();
     expect(
-      tree.getParentNode({ tree: sampleTrees[0], path: { points: [], depth: 1 } }).path,
+      tree.getParentNode({ tree: sampleTrees[0], path: { points: [], depth: 1 } })!.path,
     ).toEqual(tree.ROOT_PATH);
     expect(
       tree.getParentNode({
         tree: sampleTrees[0],
         path: { depth: 0, points: [{ depth: 1, forkIndex: 0 }] },
-      }).path,
+      })!.path,
     ).toEqual(tree.ROOT_PATH);
   });
 

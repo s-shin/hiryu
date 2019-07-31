@@ -30,7 +30,7 @@ exports.pathEquals = pathEquals;
 function nodeEquals(lhs, rhs, opts) {
     return opts && opts.strict
         ? lodash_isequal_1.default(lhs, rhs)
-        : lhs.tree === lhs.tree && pathEquals(lhs.path, rhs.path);
+        : lhs.tree === rhs.tree && pathEquals(lhs.path, rhs.path);
 }
 exports.nodeEquals = nodeEquals;
 function updateNodePath(node, path) {

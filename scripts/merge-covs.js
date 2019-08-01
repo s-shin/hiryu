@@ -1,9 +1,9 @@
 const path = require("path");
-const createReporter = require("istanbul-api").createReporter;
+const istanbulReport = require("istanbul-lib-report");
+const istanbulReports = require("istanbul-reports");
 const istanbulCoverage = require("istanbul-lib-coverage");
 
 const map = istanbulCoverage.createCoverageMap();
-const reporter = createReporter();
 
 const cov_final_json_paths = process.argv.slice(2);
 if (cov_final_json_paths.length === 0) {
@@ -18,5 +18,9 @@ for (const p of cov_final_json_paths) {
   }
 }
 
-reporter.addAll(["text", "lcov", "json"]);
-reporter.write(map);
+const context = istanbulReport.createContext();
+
+const tree = istanbulReport.summarizers.pkg(map);
+for (name of ["text", "lcov", "json"]) {
+  tree.visit(istanbulReports.create(name, {}), context);
+}

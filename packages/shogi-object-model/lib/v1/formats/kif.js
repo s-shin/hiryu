@@ -96,7 +96,7 @@ exports.recordParser = (() => {
     const movementParsers = "打".split("").map(s => paco_1.transform(paco_1.string(s), v => ja.parseMovement(v)));
     const movement = paco_1.desc(paco_1.oneOf(...movementParsers), "movements");
     const src = paco_1.desc(paco_1.transform(paco_1.seq(paco_1.char("("), paco_1.seq(hanNum, hanNum), paco_1.char(")")), vs => vs[1]), "src");
-    const eventBody = paco_1.desc(paco_1.oneOf(paco_1.transform(paco_1.seq(dst, piece, paco_1.many(movement), paco_1.optional(paco_1.string("成"), ""), paco_1.optional(src, null), paco_1.desc(paco_1.many(notNewline), "TODO")), vs => ({
+    const eventBody = paco_1.desc(paco_1.oneOf(paco_1.transform(paco_1.seq(dst, piece, paco_1.many(movement), paco_1.optional(paco_1.string("成"), ""), paco_1.optional(src, null), paco_1.desc(paco_1.many(notNewline), "TODO: time")), vs => ({
         type: definitions_1.EventType.MOVE,
         color: definitions_1.Color.BLACK,
         dstSquare: (vs[0] !== "same" ? vs[0] : undefined),
@@ -105,12 +105,12 @@ exports.recordParser = (() => {
         movements: vs[2],
         promote: vs[3].length > 0,
         srcSquare: vs[4],
-    })), paco_1.constant(paco_1.string("投了"), {
+    })), paco_1.constant(paco_1.seq(paco_1.string("投了"), paco_1.desc(paco_1.many(notNewline), "TODO: time")), {
         type: definitions_1.EventType.RESIGN,
         color: definitions_1.Color.BLACK,
     })), "eventBody");
     const event = paco_1.desc(paco_1.transform(paco_1.seq(moveNum, paco_1.many1(paco_1.charIn(" \t")), eventBody), vs => vs[2]), "event");
-    const eventLines = paco_1.desc(paco_1.filterNull(paco_1.sepBy(paco_1.oneOf(event, ignore), newline)), "eventLine");
+    const eventLines = paco_1.desc(paco_1.filterNull(paco_1.sepBy(paco_1.oneOf(event, ignore), newline)), "eventLines");
     const record = paco_1.desc(paco_1.transform(paco_1.seq(meta, paco_1.optional(metaEnd, ""), eventLines, paco_1.many(ignoreLine), paco_1.eof), vs => (Object.assign({}, vs[0], { events: vs[2] }))), "record");
     return record;
 })();

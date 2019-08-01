@@ -167,7 +167,7 @@ function applyEvent(current, event) {
                 }
                 else {
                     const matches = definitions_1.filterBoardSquare(currentData.state.board, cp => {
-                        return cp !== null && cp.color === event.color && cp.piece === e.srcPiece;
+                        return cp !== null && cp.color === event.color && cp.piece === piece;
                     });
                     if (matches.length === 0) {
                         const r = shouldDrop();

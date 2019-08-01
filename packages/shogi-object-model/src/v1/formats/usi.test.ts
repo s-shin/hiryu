@@ -43,10 +43,12 @@ describe("usi", () => {
     expect(() => {
       sfen = usi.getSFEN(defs.Handicap.NONE);
     }).not.toThrow();
+    // @ts-ignore
     expect(sfen).toEqual({
       state: defs.HIRATE_STATE,
       nextMoveNum: 1,
     });
+    // @ts-ignore
     expect(usi.stringifySFEN(sfen)).toEqual(usi.getSFENString(defs.Handicap.NONE));
   });
 });

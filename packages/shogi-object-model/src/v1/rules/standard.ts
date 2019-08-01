@@ -172,6 +172,7 @@ export function applyEvent(current: GameNode, event: Event): GameNodeData {
         }
         // # dstPiece!, promote!
       } else if (e.srcPiece || e.dstPiece) {
+        const piece = (e.srcPiece || e.dstPiece)!;
         const shouldDrop = () => {
           isDrop = true;
           if (
@@ -189,7 +190,6 @@ export function applyEvent(current: GameNode, event: Event): GameNodeData {
           e.promote = false;
           return null;
         };
-        const piece = (e.srcPiece || e.dstPiece)!;
         // in case of japanese notations style.
         // # srcPiece!
         if (

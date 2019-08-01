@@ -36,11 +36,11 @@ export function listenEvent<Event, Callback>(
 export class EventListenerPool {
   listeners: DisposableEventListener[] = [];
 
-  listen<Event, Callback>(emitter: EventEmitter<Event, Callback>, event: Event, cb: Callback) {
+  listen<Event, Callback>(emitter: EventEmitter<Event, Callback>, event: Event, cb: Callback): void {
     this.listeners.push(listenEvent(emitter, event, cb));
   }
 
-  dispose() {
+  dispose(): void {
     for (const listener of this.listeners) {
       listener.dispose();
     }

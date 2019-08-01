@@ -136,7 +136,7 @@ export interface Info {
 export abstract class EngineAdapter {
   private engine?: Engine;
 
-  bindEngine(engine: Engine) {
+  bindEngine(engine: Engine): void {
     this.engine = engine;
   }
 
@@ -159,27 +159,27 @@ export abstract class EngineAdapter {
    */
   abstract exit(): void;
 
-  debug(msg: string, ...args: any[]) {
+  debug(msg: string, ...args: any[]): void {
     this.engine!._debug(msg, ...args);
   }
 
-  onReady() {
+  onReady(): void {
     this.engine!._onReady();
   }
 
-  onError(err: Error) {
+  onError(err: Error): void {
     this.engine!._error(err);
   }
 
-  onReadLine(line: string) {
+  onReadLine(line: string): void {
     this.engine!._onReadLine(line);
   }
 
-  onBeforeExit() {
+  onBeforeExit(): void {
     this.engine!._onBeforeExit();
   }
 
-  onAfterExit() {
+  onAfterExit(): void {
     this.engine!._onAfterExit();
   }
 }
@@ -232,16 +232,16 @@ export class Engine {
   // User Methods
   //----------------------------------------------------------------------------
 
-  start() {
+  start(): void {
     this.adapter.start();
   }
 
-  setOption(name: string, value: string) {
+  setOption(name: string, value: string): void {
     this.assertState(EngineState.SET_OPTIONS);
     this.writeln(`setoption name ${name} value ${value}`);
   }
 
-  newGame() {
+  newGame(): void {
     this.assertState(EngineState.SET_OPTIONS, EngineState.GAME_OVER);
     this.writeln("isready");
   }
@@ -250,12 +250,12 @@ export class Engine {
    * @param state SFEN or startpos
    * @param moves string of moves joined with one space.
    */
-  setGameState(state = "startpos", moves = "") {
+  setGameState(state = "startpos", moves = ""): void {
     this.assertState(EngineState.IS_READY);
     this.writeln(`position ${state} moves ${moves}`);
   }
 
-  go(opts: GoOptions = DEFAULT_GO_OPTIONS) {
+  go(opts: GoOptions = DEFAULT_GO_OPTIONS): void {
     this.assertState(EngineState.IS_READY);
     const cmd = ["go"];
     if (opts.ponder) {
@@ -283,7 +283,7 @@ export class Engine {
     this.changeState(EngineState.IS_GOING);
   }
 
-  stop() {
+  stop(): void {
     if (this.state === EngineState.IS_READY) {
       return;
     }
@@ -291,7 +291,7 @@ export class Engine {
     this.writeln("stop");
   }
 
-  quit(force = false) {
+  quit(force = false): void {
     this.writeln("quit");
     this.changeState(EngineState.EXITING);
     if (force) {
@@ -299,7 +299,7 @@ export class Engine {
     }
   }
 
-  gameOver(type: "win" | "lose" | "draw") {
+  gameOver(type: "win" | "lose" | "draw"): void {
     this.assertState(EngineState.IS_READY);
     this.writeln(`gameover ${type}`);
     this.changeState(EngineState.GAME_OVER);
@@ -311,7 +311,7 @@ export class Engine {
   on(name: "info", cb: (info: Info) => void): void;
   on(name: "bestmove", cb: (move: BestMove) => void): void;
   on(name: "error", cb: (err: Error) => void): void;
-  on(name: string, cb: (...args: any[]) => void) {
+  on(name: string, cb: (...args: any[]) => void): void {
     this.eventEmitter.on(name, cb);
   }
 
@@ -321,7 +321,7 @@ export class Engine {
   removeListener(name: "info", cb: (info: Info) => void): void;
   removeListener(name: "bestmove", cb: (move: BestMove) => void): void;
   removeListener(name: "error", cb: (err: Error) => void): void;
-  removeListener(name: string, cb: (...args: any[]) => void) {
+  removeListener(name: string, cb: (...args: any[]) => void): void {
     this.eventEmitter.removeListener(name, cb);
   }
 
@@ -331,7 +331,7 @@ export class Engine {
   off(name: "info", cb: (info: Info) => void): void;
   off(name: "bestmove", cb: (move: BestMove) => void): void;
   off(name: "error", cb: (err: Error) => void): void;
-  off(name: string, cb: (...args: any[]) => void) {
+  off(name: string, cb: (...args: any[]) => void): void {
     this.eventEmitter.off(name, cb);
   }
 
@@ -339,11 +339,11 @@ export class Engine {
   // Methods for EngineAdapter
   //----------------------------------------------------------------------------
 
-  _debug(msg: string, ...args: any[]) {
+  _debug(msg: string, ...args: any[]): void {
     this.emitDebug(msg, ...args);
   }
 
-  _error(err: Error) {
+  _error(err: Error): void {
     if (this.state !== EngineState.EXITED) {
       this.changeState(EngineState.ERROR);
     }
@@ -356,21 +356,21 @@ export class Engine {
   /**
    * This method should be called when child process is ready.
    */
-  _onReady() {
+  _onReady(): void {
     this.changeState(EngineState.CHECK_USI);
     this.writeln("usi");
   }
 
-  _onBeforeExit() {
+  _onBeforeExit(): void {
     this.changeState(EngineState.EXITING);
   }
 
-  _onAfterExit() {
+  _onAfterExit(): void {
     this.changeState(EngineState.EXITED);
     this.emitExit();
   }
 
-  _onReadLine(line: string) {
+  _onReadLine(line: string): void {
     this.emitDebug(`< ${line}`);
     line = line.trim();
     if (line.length === 0) {
@@ -517,7 +517,7 @@ export class Engine {
     this._error(new Error(`unexpected line: ${line}`));
   }
 
-  private parseInfoArgs(args: string[]) {
+  private parseInfoArgs(args: string[]): Info {
     const info: any = {};
     let i = 0;
     let stopper = 0;
@@ -598,29 +598,29 @@ export class Engine {
 
   //---
 
-  private emitDebug(msg: string, ...args: any[]) {
+  private emitDebug(msg: string, ...args: any[]): void {
     this.eventEmitter.emit("debug", msg, ...args);
   }
-  private emitError(err: Error) {
+  private emitError(err: Error): void {
     this.eventEmitter.emit("error", err);
   }
-  private emitExit() {
+  private emitExit(): void {
     this.eventEmitter.emit("exit");
   }
-  private emitConfigure(availableOptions: EngineOptions) {
+  private emitConfigure(availableOptions: EngineOptions): void {
     this.eventEmitter.emit("configure", availableOptions);
   }
-  private emitReady() {
+  private emitReady(): void {
     this.eventEmitter.emit("ready");
   }
-  private emitInfo(info: Info) {
+  private emitInfo(info: Info): void {
     this.eventEmitter.emit("info", info);
   }
-  private emitBestMove(move: BestMove) {
+  private emitBestMove(move: BestMove): void {
     this.eventEmitter.emit("bestmove", move);
   }
 
-  private changeState(state: EngineState) {
+  private changeState(state: EngineState): void {
     if (state === this.state) {
       return;
     }
@@ -634,7 +634,7 @@ export class Engine {
     this.state = state;
   }
 
-  private assertState(...states: EngineState[]) {
+  private assertState(...states: EngineState[]): void {
     if (states.indexOf(this.state) === -1) {
       const statesStr = states.map(s => EngineState[s]).join("/");
       this._error(
@@ -643,7 +643,7 @@ export class Engine {
     }
   }
 
-  private writeln(line: string) {
+  private writeln(line: string): void {
     this.emitDebug(`> ${line}`);
     this.adapter.writeln(line);
   }

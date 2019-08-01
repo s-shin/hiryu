@@ -29,6 +29,7 @@ import GameControlPanel, { ControlType } from "../components/GameControlPanel";
 import AnalysisResult from "../components/AnalysisResult";
 import { newAnalysisResult } from "../utils/game";
 
+// eslint-disable-next-line
 interface AppOwnProps {
   //
 }
@@ -80,7 +81,7 @@ const Column1 = styled.div`
 
 const Column2 = styled.div`
   grid-area: c2;
-  border: 0 solid ${colors.border}
+  border: 0 solid ${colors.border};
   border-width: 0 1px;
   display: grid;
   height: 100%;

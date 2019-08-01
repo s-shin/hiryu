@@ -90,6 +90,7 @@ class RecordEventList extends React.Component<RecordEventListProps, RecordEventL
               >
                 {siblings.map(n => (
                   <MenuItem
+                    key={tree.getValue(n).id}
                     onClick={() => {
                       this.props.onSelect(n, depth);
                       this.setState({ ...this.state, menu: null });

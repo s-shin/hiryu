@@ -7,7 +7,7 @@
   "types": "./lib/index.d.ts",
   "scripts": {
     "build": "rimraf out && tsc",
-    "lint": "tslint src/**/*",
+    "lint": "eslint --ext .ts,.tsx,.js,.jsx src/",
     "test": "echo no tests",
     "dev": "parcel index.html"
   },
@@ -21,13 +21,6 @@
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
     "styled-components": "^3.4.5"
-  },
-  "devDependencies": {
-    "jest": "^24.8.0",
-    "rimraf": "^2.6.3",
-    "ts-jest": "^24.0.2",
-    "tslint": "^5.11.0",
-    "typescript": "^3.5.3"
   },
   "files": [
     "package.json",

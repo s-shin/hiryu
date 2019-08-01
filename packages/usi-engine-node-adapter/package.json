@@ -10,20 +10,13 @@
   },
   "scripts": {
     "build": "rimraf lib && tsc",
-    "lint": "tslint src/**/*",
+    "lint": "eslint --ext .ts,.tsx,.js,.jsx src/",
     "test": "echo no tests"
   },
   "dependencies": {
     "@hiryu/usi-engine": "^0.1.0",
     "@types/jest": "^23.3.1",
     "yargs": "^13.3.0"
-  },
-  "devDependencies": {
-    "jest": "^24.8.0",
-    "rimraf": "^2.6.3",
-    "ts-jest": "^24.0.2",
-    "tslint": "^5.11.0",
-    "typescript": "^3.5.3"
   },
   "files": [
     "package.json",

@@ -77,7 +77,7 @@ class LoadRecordDialog extends React.Component<LoadRecordDialogProps, LoadRecord
               </DropzoneOverlay>
             )}
             <DialogContentText>
-              Copy &amp; paste the content of a "kif" file or drag and drop it here.
+              Copy &amp; paste the content of a &quot;kif&quot; file or drag and drop it here.
             </DialogContentText>
             <TextField
               id="load-record-dialog-record"

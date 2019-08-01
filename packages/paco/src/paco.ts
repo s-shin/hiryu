@@ -511,7 +511,7 @@ export const validate = <V>(p: Parser<V>, cond: (v: V) => Error | undefined) =>
 export class LazyParser<V> implements Parser<V> {
   name = "lazy";
 
-  public parser?: Parser<V>;
+  parser?: Parser<V>;
 
   parse(reader: Reader, tracer: ParserTracer): ParseResult<V> {
     if (!this.parser) {

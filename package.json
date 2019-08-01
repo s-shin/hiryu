@@ -4,8 +4,18 @@
   "author": "Shintaro Seki <s2pch.luck@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "@types/jest": "^23.3.1",
+    "@typescript-eslint/eslint-plugin": "^1.13.0",
+    "@typescript-eslint/parser": "^1.13.0",
+    "eslint": "^5.16.0",
+    "eslint-config-prettier": "^6.0.0",
+    "eslint-plugin-react": "^7.14.3",
+    "jest": "^24.8.0",
     "lerna": "^3.16.4",
-    "prettier": "^1.18.2"
+    "prettier": "^1.18.2",
+    "rimraf": "^2.6.3",
+    "ts-jest": "^24.0.2",
+    "typescript": "^3.5.3"
   },
   "private": true,
   "scripts": {

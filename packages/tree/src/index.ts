@@ -326,7 +326,7 @@ export class NodeWrapper<T> {
     return new NodeWrapper(node);
   }
 
-  constructor(public node: Node<T>) {
+  constructor(public readonly node: Node<T>) {
     this.currentTree = getLastForkTree(node.tree, node.path);
   }
 

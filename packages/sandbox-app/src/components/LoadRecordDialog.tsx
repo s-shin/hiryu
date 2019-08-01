@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useCallback } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -9,7 +9,7 @@ import {
   Button,
 } from "@material-ui/core";
 import InsertDriveFileIcon from "@material-ui/icons/InsertDriveFile";
-import Dropzone from "react-dropzone";
+import { useDropzone } from "react-dropzone";
 import styled from "styled-components";
 import * as som from "@hiryu/shogi-object-model";
 import * as tree from "@hiryu/tree";
@@ -32,6 +32,25 @@ const DropzoneOverlayInner = styled.div`
   text-align: center;
   color: #666;
 `;
+
+// TODO: corrent types
+function Dropzone(props: any) {
+  const onDrop = useCallback(files => props.onDrop(files), []);
+  const { getRootProps, isDragActive } = useDropzone({ onDrop });
+
+  return (
+    <div {...getRootProps()}>
+      {isDragActive && (
+        <DropzoneOverlay>
+          <DropzoneOverlayInner>
+            <InsertDriveFileIcon fontSize="large" color="inherit" />
+          </DropzoneOverlayInner>
+        </DropzoneOverlay>
+      )}
+      {props.children}
+    </div>
+  );
+}
 
 export interface LoadRecordDialogProps {
   open: boolean;
@@ -59,23 +78,7 @@ class LoadRecordDialog extends React.Component<LoadRecordDialogProps, LoadRecord
       >
         <DialogTitle>Load Record</DialogTitle>
         <DialogContent>
-          <Dropzone
-            disableClick
-            style={{ position: "relative" }}
-            onDrop={files => {
-              this.setIsDropzoneActive(false);
-              this.loadFile(files[0]);
-            }}
-            onDragEnter={() => this.setIsDropzoneActive(true)}
-            onDragLeave={() => this.setIsDropzoneActive(false)}
-          >
-            {this.state.isDropzoneActive && (
-              <DropzoneOverlay>
-                <DropzoneOverlayInner>
-                  <InsertDriveFileIcon fontSize="large" color="inherit" />
-                </DropzoneOverlayInner>
-              </DropzoneOverlay>
-            )}
+          <Dropzone onDrop={files => this.loadFile(files[0])}>
             <DialogContentText>
               Copy &amp; paste the content of a &quot;kif&quot; file or drag and drop it here.
             </DialogContentText>

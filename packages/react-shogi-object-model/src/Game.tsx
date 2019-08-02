@@ -17,7 +17,7 @@ const Container = styled.div`
   display: flex;
 `;
 
-const HandColumn = styled<{ color?: som.Color }, "div">("div")`
+const HandColumn = styled.div<{ color?: som.Color }>`
   ${props =>
     props.color === som.Color.WHITE &&
     css`

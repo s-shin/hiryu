@@ -1,5 +1,5 @@
 import React from "react";
-import styled, { css } from "./styled-components";
+import styled, { css } from "styled-components";
 import * as som from "@hiryu/shogi-object-model";
 
 const HandContainer = styled.div`
@@ -11,7 +11,7 @@ const HandHeader = styled.h4`
   font-size: 1em;
 `
 
-const HandPiece = styled<{ isActive: boolean }, "div">("div")`
+const HandPiece = styled.div<{ isActive: boolean }>`
   line-height: 1;
   writing-mode: vertical-rl;
   margin-bottom: 0.1em;

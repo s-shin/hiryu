@@ -1,5 +1,5 @@
 import React from "react";
-import styled, { css, InterpolationValue } from "styled-components";
+import styled, { css, FlattenSimpleInterpolation } from "styled-components";
 import * as som from "@hiryu/shogi-object-model";
 import { PromotionSelectorProps } from "./entities";
 
@@ -13,12 +13,16 @@ const Cell = styled.td`
   padding: 0;
 `;
 
-const BasicSquare = styled.div`
+const basicSquareStyle = css`
   width: 1.6em;
   height: 1.8em;
   line-height: 1.8em;
   text-align: center;
   user-select: none;
+`;
+
+const BasicSquare = styled.div`
+  ${basicSquareStyle}
 `;
 
 const squareStyles = {
@@ -31,17 +35,19 @@ const squareStyles = {
   // candidate: ...
 };
 
-const BoardSquare = styled<
-  { css?: InterpolationValue[]; rotate: boolean } & React.HTMLAttributes<HTMLDivElement>
->(({ css, rotate, ...rest }) => <BasicSquare {...rest} />)`
+// TODO: actually want to write like this:
+// const BoardSquare = styled<...>(BasicSquare)``
+const BoardSquare = styled.div<{ css?: FlattenSimpleInterpolation; rotate: boolean }>`
+  ${basicSquareStyle};
+  ${props => props.css};
   ${props =>
     props.rotate &&
     css`
       transform: rotate(180deg);
-    `} ${props => props.css};
+    `};
 `;
 
-const PromotionSelectorView = styled<{ square: som.Square }, "div">("div")`
+const PromotionSelectorView = styled.div<{ square: som.Square }>`
   position: absolute;
   top: -1px;
   left: -50%;
@@ -92,27 +98,26 @@ export function Board(props: BoardProps) {
           >
             {cp ? som.formats.ja.stringifyPiece(cp.piece).replace("王", "玉") : ""}
           </BoardSquare>
-          {props.promotionSelector &&
-            som.squareEquals(props.promotionSelector.dstSquare, [x, y]) && (
-              <PromotionSelectorView square={[x, y]}>
-                <BasicSquare
-                  onClick={e => {
-                    e.stopPropagation();
-                    props.promotionSelector!.onSelect(true);
-                  }}
-                >
-                  {som.formats.ja.stringifyPiece(som.promote(props.promotionSelector.piece)!)}
-                </BasicSquare>
-                <BasicSquare
-                  onClick={e => {
-                    e.stopPropagation();
-                    props.promotionSelector!.onSelect(false);
-                  }}
-                >
-                  {som.formats.ja.stringifyPiece(props.promotionSelector.piece)}
-                </BasicSquare>
-              </PromotionSelectorView>
-            )}
+          {props.promotionSelector && som.squareEquals(props.promotionSelector.dstSquare, [x, y]) && (
+            <PromotionSelectorView square={[x, y]}>
+              <BasicSquare
+                onClick={e => {
+                  e.stopPropagation();
+                  props.promotionSelector!.onSelect(true);
+                }}
+              >
+                {som.formats.ja.stringifyPiece(som.promote(props.promotionSelector.piece)!)}
+              </BasicSquare>
+              <BasicSquare
+                onClick={e => {
+                  e.stopPropagation();
+                  props.promotionSelector!.onSelect(false);
+                }}
+              >
+                {som.formats.ja.stringifyPiece(props.promotionSelector.piece)}
+              </BasicSquare>
+            </PromotionSelectorView>
+          )}
         </Cell>,
       );
     }

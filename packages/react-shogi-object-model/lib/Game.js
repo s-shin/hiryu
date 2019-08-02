@@ -19,7 +19,7 @@ const entities_1 = require("./entities");
 const Container = styled_components_1.default.div `
   display: flex;
 `;
-const HandColumn = styled_components_1.default("div") `
+const HandColumn = styled_components_1.default.div `
   ${props => props.color === som.Color.WHITE &&
     styled_components_1.css `
       transform: rotate(180deg);

@@ -19,6 +19,10 @@
     "typescript": "^3.5.3"
   },
   "private": true,
+  "resolutions": {
+    "**/@types/react": "16.8.6",
+    "**/hoist-non-react-statics": "3.3.0"
+  },
   "scripts": {
     "test": "lerna run test",
     "test-with-cov": "lerna run test -- --coverage && node scripts/merge-covs.js $(find ./packages -name coverage-final.json)"

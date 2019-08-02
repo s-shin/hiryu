@@ -11,7 +11,7 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = __importDefault(require("react"));
-const styled_components_1 = __importStar(require("./styled-components"));
+const styled_components_1 = __importStar(require("styled-components"));
 const som = __importStar(require("@hiryu/shogi-object-model"));
 const HandContainer = styled_components_1.default.div `
   user-select: none;
@@ -20,7 +20,7 @@ const HandHeader = styled_components_1.default.h4 `
   margin: 0 0 0.2em 0;
   font-size: 1em;
 `;
-const HandPiece = styled_components_1.default("div") `
+const HandPiece = styled_components_1.default.div `
   line-height: 1;
   writing-mode: vertical-rl;
   margin-bottom: 0.1em;

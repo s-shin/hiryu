@@ -30,10 +30,6 @@ const Move = styled<{ bold: boolean }, "span">("span")`
     `};
 `;
 
-export interface AnalysisResultProps {
-  result: AnalysisResult;
-}
-
 function stringifyScore(score?: Score, invert: boolean = false): number | string {
   if (!score) {
     return "?";
@@ -61,7 +57,11 @@ function stringifyScore(score?: Score, invert: boolean = false): number | string
   return "?";
 }
 
-const AnalysisResult: React.SFC<AnalysisResultProps> = props => {
+export interface AnalysisResultProps {
+  result: AnalysisResult;
+}
+
+const AnalysisResult: React.FC<AnalysisResultProps> = props => {
   const items = props.result.variations.map((variation, i) => {
     const moves: JSX.Element[] = [];
     const data = tree.getValue(variation.startGameNode);

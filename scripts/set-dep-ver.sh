@@ -43,7 +43,8 @@ for pkg_path in packages/*; do
     if [[ "$ver" != 'null' ]]; then
       echo "${pkg_path} > ${key} > ${opt_dep}: ${ver} => ${new_ver}"
       if $opt_execute; then
-        perl -i -pe "s|\\Q\"${opt_dep}\": \"${ver}\"\\E|\"${opt_dep}\": \"${new_ver}\"|" "${pkg_path}/package.json"
+        DEP="$opt_dep" VER1="$ver" VER2="$new_ver" \
+        ruby -i -pne '$_ = $_.sub %Q("#{ENV["DEP"]}": "#{ENV["VER1"]}"), %Q("#{ENV["DEP"]}": "#{ENV["VER2"]}")' "${pkg_path}/package.json"
       fi
     fi
   done

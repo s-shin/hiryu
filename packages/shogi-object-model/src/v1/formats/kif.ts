@@ -204,5 +204,5 @@ export function parseRecord(data: string, log?: (msg: string) => void) {
     e.color = c;
     c = flipColor(c);
   }
-  return r.value!;
+  return record;
 }

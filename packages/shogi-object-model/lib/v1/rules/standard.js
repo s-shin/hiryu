@@ -139,6 +139,7 @@ function applyEvent(current, event) {
                 // # dstPiece!, promote!
             }
             else if (e.srcPiece || e.dstPiece) {
+                const piece = (e.srcPiece || e.dstPiece);
                 const shouldDrop = () => {
                     isDrop = true;
                     if (e.promote ||
@@ -154,7 +155,6 @@ function applyEvent(current, event) {
                     e.promote = false;
                     return null;
                 };
-                const piece = (e.srcPiece || e.dstPiece);
                 // in case of japanese notations style.
                 // # srcPiece!
                 if (e.srcSquare === null ||

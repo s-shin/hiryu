@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useCallback } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -10,7 +10,7 @@ import {
 } from "@material-ui/core";
 import InsertDriveFileIcon from "@material-ui/icons/InsertDriveFile";
 import { useDropzone } from "react-dropzone";
-import styled from "styled-components";
+import styled from "@emotion/styled";
 import * as som from "@hiryu/shogi-object-model";
 import * as tree from "@hiryu/tree";
 
@@ -33,8 +33,11 @@ const DropzoneOverlayInner = styled.div`
   color: #666;
 `;
 
-// TODO: corrent types
-function Dropzone(props: any) {
+interface DropzoneProps {
+  onDrop(files: any[]): void;
+}
+
+const Dropzone: React.FC<DropzoneProps> = props => {
   const onDrop = useCallback(files => props.onDrop(files), []);
   const { getRootProps, isDragActive } = useDropzone({ onDrop });
 

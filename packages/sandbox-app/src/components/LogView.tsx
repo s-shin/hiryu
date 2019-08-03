@@ -1,5 +1,6 @@
 import React from "react";
-import styled, { css } from "styled-components";
+import { css } from "@emotion/core";
+import styled from "@emotion/styled";
 import { LogEntry, LogLevel } from "../state";
 
 const level2color = {
@@ -26,7 +27,7 @@ const level2color = {
   `,
 };
 
-const Line = styled<{ level?: LogLevel }, "p">("p")`
+const Line = styled.p<{ level?: LogLevel }>`
   margin: 0px;
   padding: 0px;
   line-height: 1.5;

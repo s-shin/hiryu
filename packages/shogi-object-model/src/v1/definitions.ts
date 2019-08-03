@@ -162,6 +162,8 @@ export interface RecordFile {
 // Constants
 //------------------------------------------------------------------------------
 
+export const PIECES: Piece[] = Object.keys(Piece) as Piece[];
+
 export const MIN_SQUARE_NUMBER: SquareNumber = 1;
 export const MAX_SQUARE_NUMBER: SquareNumber = 9;
 
@@ -271,6 +273,10 @@ export const HIRATE_STATE = getHirateState();
 //------------------------------------------------------------------------------
 // Methods
 //------------------------------------------------------------------------------
+
+export function isPiece(v: any): v is Piece {
+  return Piece[v] !== undefined;
+}
 
 const PROMOTE_MAP: {
   [piece: string]: Piece;

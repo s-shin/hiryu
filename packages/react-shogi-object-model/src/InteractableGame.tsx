@@ -6,7 +6,7 @@ import useGameInteraction, { GameInteractionHookProps } from "./useGameInteracti
 
 export type InteractableGameProps = GameInteractionHookProps;
 
-export default function InteractableGame(props: InteractableGameProps) {
+export const InteractableGame: React.FC<InteractableGameProps> = props => {
   const interaction = useGameInteraction(props);
 
   const data = tree.getValue(props.gameNode);

@@ -3,13 +3,33 @@
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
+  "files": [
+    "package.json",
+    "README.md",
+    "lib",
+    "schema"
+  ],
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
     "build": "rimraf lib && tsc",
+    "build_sample": "cd sample && tsc",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx src/",
-    "test": "jest",
-    "build_sample": "cd sample && tsc"
+    "test": "jest"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    }
   },
   "dependencies": {
     "@hiryu/paco": "^0.1.0",
@@ -18,25 +38,5 @@
   },
   "devDependencies": {
     "encoding-japanese": "^1.0.29"
-  },
-  "files": [
-    "package.json",
-    "README.md",
-    "lib",
-    "schema"
-  ],
-  "jest": {
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
-    ]
   }
 }

@@ -11,24 +11,25 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = __importDefault(require("react"));
-const styled_components_1 = __importStar(require("styled-components"));
+const core_1 = require("@emotion/core");
+const styled_1 = __importDefault(require("@emotion/styled"));
 const som = __importStar(require("@hiryu/shogi-object-model"));
 const Hand_1 = __importDefault(require("./Hand"));
 const Board_1 = __importDefault(require("./Board"));
 const entities_1 = require("./entities");
-const Container = styled_components_1.default.div `
+const Container = styled_1.default.div `
   display: flex;
 `;
-const HandColumn = styled_components_1.default.div `
+const HandColumn = styled_1.default.div `
   ${props => props.color === som.Color.WHITE &&
-    styled_components_1.css `
+    core_1.css `
       transform: rotate(180deg);
     `};
 `;
-const BoardColumn = styled_components_1.default.div `
+const BoardColumn = styled_1.default.div `
   margin: 0 0.5em;
 `;
-function Game(props) {
+exports.Game = props => {
     const state = props.state;
     const active = props.activeGameObject;
     return (react_1.default.createElement(Container, null,
@@ -53,7 +54,6 @@ function Game(props) {
                     color: som.Color.BLACK,
                     piece,
                 }) }))));
-}
-exports.Game = Game;
-exports.default = Game;
+};
+exports.default = exports.Game;
 //# sourceMappingURL=Game.js.map

@@ -11,45 +11,44 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = __importDefault(require("react"));
-const styled_components_1 = __importStar(require("styled-components"));
+const core_1 = require("@emotion/core");
+const styled_1 = __importDefault(require("@emotion/styled"));
 const som = __importStar(require("@hiryu/shogi-object-model"));
-const Table = styled_components_1.default.table `
+const Table = styled_1.default.table `
   border-collapse: collapse;
 `;
-const Cell = styled_components_1.default.td `
+const Cell = styled_1.default.td `
   position: relative;
   border: 1px solid;
   padding: 0;
 `;
-const basicSquareStyle = styled_components_1.css `
+const basicSquareStyle = core_1.css `
   width: 1.6em;
   height: 1.8em;
   line-height: 1.8em;
   text-align: center;
   user-select: none;
 `;
-const BasicSquare = styled_components_1.default.div `
+const BasicSquare = styled_1.default.div `
   ${basicSquareStyle}
 `;
 const squareStyles = {
-    selected: styled_components_1.css `
+    selected: core_1.css `
     color: red;
   `,
-    lastMovedTo: styled_components_1.css `
+    lastMovedTo: core_1.css `
     font-weight: bold;
   `,
 };
-// TODO: actually want to write like this:
-// const BoardSquare = styled<...>(BasicSquare)``
-const BoardSquare = styled_components_1.default.div `
+const BoardSquare = styled_1.default.div `
   ${basicSquareStyle};
   ${props => props.css};
   ${props => props.rotate &&
-    styled_components_1.css `
+    core_1.css `
       transform: rotate(180deg);
     `};
 `;
-const PromotionSelectorView = styled_components_1.default.div `
+const PromotionSelectorView = styled_1.default.div `
   position: absolute;
   top: -1px;
   left: -50%;
@@ -62,7 +61,7 @@ const PromotionSelectorView = styled_components_1.default.div `
     border-right: 1px solid;
   }
 `;
-function Board(props) {
+exports.Board = props => {
     const { highlight } = props;
     const rows = [];
     for (const y of som.SQUARE_NUMBERS) {
@@ -97,7 +96,6 @@ function Board(props) {
     return (react_1.default.createElement("div", null,
         react_1.default.createElement(Table, null,
             react_1.default.createElement("tbody", null, rows))));
-}
-exports.Board = Board;
-exports.default = Board;
+};
+exports.default = exports.Board;
 //# sourceMappingURL=Board.js.map

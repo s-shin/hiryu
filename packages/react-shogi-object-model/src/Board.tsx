@@ -1,5 +1,6 @@
 import React from "react";
-import styled, { css, FlattenSimpleInterpolation } from "styled-components";
+import { css, SerializedStyles } from "@emotion/core";
+import styled from "@emotion/styled";
 import * as som from "@hiryu/shogi-object-model";
 import { PromotionSelectorProps } from "./entities";
 
@@ -35,9 +36,7 @@ const squareStyles = {
   // candidate: ...
 };
 
-// TODO: actually want to write like this:
-// const BoardSquare = styled<...>(BasicSquare)``
-const BoardSquare = styled.div<{ css?: FlattenSimpleInterpolation; rotate: boolean }>`
+const BoardSquare = styled.div<{ css?: SerializedStyles; rotate: boolean }>`
   ${basicSquareStyle};
   ${props => props.css};
   ${props =>
@@ -71,7 +70,7 @@ export interface BoardProps {
   };
 }
 
-export function Board(props: BoardProps) {
+export const Board: React.FC<BoardProps> = props => {
   const { highlight } = props;
   const rows = [];
   for (const y of som.SQUARE_NUMBERS) {

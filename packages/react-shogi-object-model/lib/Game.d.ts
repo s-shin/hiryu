@@ -1,4 +1,4 @@
-/// <reference types="react" />
+import React from "react";
 import * as som from "@hiryu/shogi-object-model";
 import { GameObject, PromotionSelectorProps } from "./entities";
 export interface GameProps {
@@ -8,5 +8,5 @@ export interface GameProps {
     promotionSelector?: PromotionSelectorProps;
     lastMovedTo?: som.Square;
 }
-export declare function Game(props: GameProps): JSX.Element;
+export declare const Game: React.FC<GameProps>;
 export default Game;

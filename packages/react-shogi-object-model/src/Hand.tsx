@@ -1,5 +1,6 @@
 import React from "react";
-import styled, { css } from "styled-components";
+import { css } from "@emotion/core";
+import styled from "@emotion/styled";
 import * as som from "@hiryu/shogi-object-model";
 
 const HandContainer = styled.div`
@@ -29,7 +30,7 @@ export interface HandProps {
   onClickPiece: (piece: som.Piece) => void;
 }
 
-export function Hand(props: HandProps) {
+export const Hand: React.FC<HandProps> = props => {
   const els = [];
   const pieces = [som.Piece.FU, som.Piece.KY, som.Piece.KE, som.Piece.GI, som.Piece.KI, som.Piece.KA, som.Piece.HI];
   for (const p of pieces) {

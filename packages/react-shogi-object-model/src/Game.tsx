@@ -1,17 +1,10 @@
 import React from "react";
-import styled, { css } from "styled-components";
+import { css } from "@emotion/core";
+import styled from "@emotion/styled";
 import * as som from "@hiryu/shogi-object-model";
 import Hand from "./Hand";
 import Board from "./Board";
 import { GameObject, GameObjectType, PromotionSelectorProps } from "./entities";
-
-export interface GameProps {
-  state: som.State;
-  activeGameObject?: GameObject;
-  onClickGameObject: (obj: GameObject) => void;
-  promotionSelector?: PromotionSelectorProps;
-  lastMovedTo?: som.Square;
-}
 
 const Container = styled.div`
   display: flex;
@@ -29,9 +22,16 @@ const BoardColumn = styled.div`
   margin: 0 0.5em;
 `;
 
-export function Game(props: GameProps) {
-  const state = props.state;
+export interface GameProps {
+  state: som.State;
+  activeGameObject?: GameObject;
+  onClickGameObject: (obj: GameObject) => void;
+  promotionSelector?: PromotionSelectorProps;
+  lastMovedTo?: som.Square;
+}
 
+export const Game: React.FC<GameProps> = props => {
+  const state = props.state;
   const active = props.activeGameObject;
 
   return (

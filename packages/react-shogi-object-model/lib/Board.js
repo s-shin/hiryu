@@ -1,15 +1,4 @@
 "use strict";
-var __rest = (this && this.__rest) || function (s, e) {
-    var t = {};
-    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
-        t[p] = s[p];
-    if (s != null && typeof Object.getOwnPropertySymbols === "function")
-        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
-            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
-                t[p[i]] = s[p[i]];
-        }
-    return t;
-};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -22,41 +11,44 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = __importDefault(require("react"));
-const styled_components_1 = __importStar(require("styled-components"));
+const core_1 = require("@emotion/core");
+const styled_1 = __importDefault(require("@emotion/styled"));
 const som = __importStar(require("@hiryu/shogi-object-model"));
-const Table = styled_components_1.default.table `
+const Table = styled_1.default.table `
   border-collapse: collapse;
 `;
-const Cell = styled_components_1.default.td `
+const Cell = styled_1.default.td `
   position: relative;
   border: 1px solid;
   padding: 0;
 `;
-const BasicSquare = styled_components_1.default.div `
+const basicSquareStyle = core_1.css `
   width: 1.6em;
   height: 1.8em;
   line-height: 1.8em;
   text-align: center;
   user-select: none;
 `;
+const BasicSquare = styled_1.default.div `
+  ${basicSquareStyle}
+`;
 const squareStyles = {
-    selected: styled_components_1.css `
+    selected: core_1.css `
     color: red;
   `,
-    lastMovedTo: styled_components_1.css `
+    lastMovedTo: core_1.css `
     font-weight: bold;
   `,
 };
-const BoardSquare = styled_components_1.default((_a) => {
-    var { css, rotate } = _a, rest = __rest(_a, ["css", "rotate"]);
-    return react_1.default.createElement(BasicSquare, Object.assign({}, rest));
-}) `
+const BoardSquare = styled_1.default.div `
+  ${basicSquareStyle};
+  ${props => props.css};
   ${props => props.rotate &&
-    styled_components_1.css `
+    core_1.css `
       transform: rotate(180deg);
-    `} ${props => props.css};
+    `};
 `;
-const PromotionSelectorView = styled_components_1.default("div") `
+const PromotionSelectorView = styled_1.default.div `
   position: absolute;
   top: -1px;
   left: -50%;
@@ -69,7 +61,7 @@ const PromotionSelectorView = styled_components_1.default("div") `
     border-right: 1px solid;
   }
 `;
-function Board(props) {
+exports.Board = props => {
     const { highlight } = props;
     const rows = [];
     for (const y of som.SQUARE_NUMBERS) {
@@ -89,8 +81,7 @@ function Board(props) {
                         e.stopPropagation();
                         props.onClickSquare([x, y]);
                     } }, cp ? som.formats.ja.stringifyPiece(cp.piece).replace("王", "玉") : ""),
-                props.promotionSelector &&
-                    som.squareEquals(props.promotionSelector.dstSquare, [x, y]) && (react_1.default.createElement(PromotionSelectorView, { square: [x, y] },
+                props.promotionSelector && som.squareEquals(props.promotionSelector.dstSquare, [x, y]) && (react_1.default.createElement(PromotionSelectorView, { square: [x, y] },
                     react_1.default.createElement(BasicSquare, { onClick: e => {
                             e.stopPropagation();
                             props.promotionSelector.onSelect(true);
@@ -105,7 +96,6 @@ function Board(props) {
     return (react_1.default.createElement("div", null,
         react_1.default.createElement(Table, null,
             react_1.default.createElement("tbody", null, rows))));
-}
-exports.Board = Board;
-exports.default = Board;
+};
+exports.default = exports.Board;
 //# sourceMappingURL=Board.js.map

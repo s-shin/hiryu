@@ -1,4 +1,4 @@
-/// <reference types="react" />
+import React from "react";
 import * as som from "@hiryu/shogi-object-model";
 import { PromotionSelectorProps } from "./entities";
 export interface BoardProps {
@@ -10,5 +10,5 @@ export interface BoardProps {
         lastMovedTo?: som.Square;
     };
 }
-export declare function Board(props: BoardProps): JSX.Element;
+export declare const Board: React.FC<BoardProps>;
 export default Board;

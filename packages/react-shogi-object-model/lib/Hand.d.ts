@@ -1,4 +1,4 @@
-/// <reference types="react" />
+import React from "react";
 import * as som from "@hiryu/shogi-object-model";
 export interface HandProps {
     hand: som.Hand;
@@ -6,5 +6,5 @@ export interface HandProps {
     activePiece?: som.Piece;
     onClickPiece: (piece: som.Piece) => void;
 }
-export declare function Hand(props: HandProps): JSX.Element;
+export declare const Hand: React.FC<HandProps>;
 export default Hand;

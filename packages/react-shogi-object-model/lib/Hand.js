@@ -11,25 +11,26 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const react_1 = __importDefault(require("react"));
-const styled_components_1 = __importStar(require("./styled-components"));
+const core_1 = require("@emotion/core");
+const styled_1 = __importDefault(require("@emotion/styled"));
 const som = __importStar(require("@hiryu/shogi-object-model"));
-const HandContainer = styled_components_1.default.div `
+const HandContainer = styled_1.default.div `
   user-select: none;
 `;
-const HandHeader = styled_components_1.default.h4 `
+const HandHeader = styled_1.default.h4 `
   margin: 0 0 0.2em 0;
   font-size: 1em;
 `;
-const HandPiece = styled_components_1.default("div") `
+const HandPiece = styled_1.default.div `
   line-height: 1;
   writing-mode: vertical-rl;
   margin-bottom: 0.1em;
-  ${props => props.isActive && styled_components_1.css `
+  ${props => props.isActive && core_1.css `
     color: red;
   `}
 `;
-const PieceCharacter = styled_components_1.default.span ``;
-function Hand(props) {
+const PieceCharacter = styled_1.default.span ``;
+exports.Hand = props => {
     const els = [];
     const pieces = [som.Piece.FU, som.Piece.KY, som.Piece.KE, som.Piece.GI, som.Piece.KI, som.Piece.KA, som.Piece.HI];
     for (const p of pieces) {
@@ -46,7 +47,6 @@ function Hand(props) {
     return (react_1.default.createElement(HandContainer, null,
         react_1.default.createElement(HandHeader, null, som.formats.ja.stringifyColor(props.color)),
         els));
-}
-exports.Hand = Hand;
-exports.default = Hand;
+};
+exports.default = exports.Hand;
 //# sourceMappingURL=Hand.js.map

@@ -3,35 +3,21 @@
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
-  "main": "./lib/index.js",
-  "types": "./lib/index.d.ts",
-  "scripts": {
-    "build": "rimraf out && tsc",
-    "lint": "eslint --ext .ts,.tsx,.js,.jsx src/",
-    "test": "echo no tests",
-    "dev": "parcel example/index.html"
-  },
-  "dependencies": {
-    "@hiryu/shogi-object-model": "^0.1.0",
-    "@types/react": "^16.4.12",
-    "@types/react-dom": "^16.0.7"
-  },
-  "peerDependencies": {
-    "react": "^16.8.6",
-    "react-dom": "^16.8.6",
-    "styled-components": "^3.4.5"
-  },
   "files": [
     "package.json",
     "README.md",
     "lib",
     "schema"
   ],
+  "main": "./lib/index.js",
+  "types": "./lib/index.d.ts",
+  "scripts": {
+    "build": "rimraf out && tsc",
+    "dev": "parcel example/index.html",
+    "lint": "eslint --ext .ts,.tsx,.js,.jsx src/",
+    "test": "echo no tests"
+  },
   "jest": {
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
     "moduleFileExtensions": [
       "ts",
       "tsx",
@@ -39,6 +25,28 @@
       "jsx",
       "json",
       "node"
-    ]
+    ],
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    }
+  },
+  "dependencies": {
+    "@hiryu/shogi-object-model": "^0.1.0",
+    "@hiryu/tree": "^0.1.0"
+  },
+  "devDependencies": {
+    "@emotion/core": "^10.0.15",
+    "@emotion/styled": "^10.0.15",
+    "@types/react": "^16.8.24",
+    "@types/react-dom": "^16.8.5",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
+  },
+  "peerDependencies": {
+    "@emotion/core": "^10.0.15",
+    "@emotion/styled": "^10.0.15",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
   }
 }

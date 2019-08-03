@@ -3,13 +3,32 @@
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
+  "files": [
+    "package.json",
+    "README.md",
+    "lib"
+  ],
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
     "build": "rimraf ../../releases/sandbox-app && cross-env NODE_ENV=production parcel build index.html --out-dir ../../releases/sandbox-app --public-url /hiryu/releases/sandbox-app/ --no-source-maps",
+    "dev": "parcel index.html",
     "lint": "eslint --ext .ts,.tsx,.js,.jsx src/",
-    "test": "jest",
-    "dev": "parcel index.html"
+    "test": "jest"
+  },
+  "jest": {
+    "moduleFileExtensions": [
+      "ts",
+      "tsx",
+      "js",
+      "jsx",
+      "json",
+      "node"
+    ],
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    }
   },
   "dependencies": {
     "@hiryu/react-shogi-object-model": "^0.1.0",
@@ -34,24 +53,5 @@
   },
   "devDependencies": {
     "cross-env": "^5.2.0"
-  },
-  "files": [
-    "package.json",
-    "README.md",
-    "lib"
-  ],
-  "jest": {
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
-    "moduleFileExtensions": [
-      "ts",
-      "tsx",
-      "js",
-      "jsx",
-      "json",
-      "node"
-    ]
   }
 }

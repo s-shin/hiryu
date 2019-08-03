@@ -2,6 +2,11 @@
   "name": "@hiryu/eventemitter-util",
   "version": "0.1.0",
   "license": "MIT",
+  "files": [
+    "package.json",
+    "README.md",
+    "lib"
+  ],
   "main": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
@@ -9,16 +14,7 @@
     "lint": "eslint --ext .ts,.tsx,.js,.jsx src/",
     "test": "jest"
   },
-  "files": [
-    "package.json",
-    "README.md",
-    "lib"
-  ],
   "jest": {
-    "transform": {
-      "^.+\\.tsx?$": "ts-jest"
-    },
-    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
     "moduleFileExtensions": [
       "ts",
       "tsx",
@@ -26,6 +22,10 @@
       "jsx",
       "json",
       "node"
-    ]
+    ],
+    "testRegex": "(/__tests__/.*|(\\.|/)(test|spec))\\.(jsx?|tsx?)$",
+    "transform": {
+      "^.+\\.tsx?$": "ts-jest"
+    }
   }
 }

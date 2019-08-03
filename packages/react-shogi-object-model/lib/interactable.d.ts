@@ -17,15 +17,14 @@ export default function interactable(WrappedComponent: GameComponent): {
         setActiveGameObject(obj?: import("./entities").BoardSquare | import("./entities").HandPiece | undefined): void;
         resetActivatedState(): void;
         updateActiveGameObject(obj: GameObject): void;
+        context: any;
         setState<K extends "activeGameObject" | "promotionSelector">(state: InteractableGameState | ((prevState: Readonly<InteractableGameState>, props: Readonly<InteractableGameProps>) => InteractableGameState | Pick<InteractableGameState, K> | null) | Pick<InteractableGameState, K> | null, callback?: (() => void) | undefined): void;
         forceUpdate(callBack?: (() => void) | undefined): void;
-        readonly props: Readonly<{
-            children?: React.ReactNode;
-        }> & Readonly<InteractableGameProps>;
+        readonly props: Readonly<React.PropsWithChildren<InteractableGameProps>>;
         state: Readonly<InteractableGameState>;
-        context: any;
         refs: {
             [key: string]: React.ReactInstance;
         };
     };
+    contextType?: React.Context<any> | undefined;
 };

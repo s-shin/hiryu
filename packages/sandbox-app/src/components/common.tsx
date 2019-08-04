@@ -1,5 +1,5 @@
 import React from "react";
-import styled from "@hiryu/react-shogi-object-model/src/styled-components";
+import styled from "@emotion/styled";
 import { Grid, Typography } from "@material-ui/core";
 import { GridProps } from "@material-ui/core/Grid";
 
@@ -26,9 +26,7 @@ const PaneHeaderInner = styled(PaneInnerBase)`
   background-color: #f3f3f3;
 `;
 
-const PaneHeaderBody = styled(Typography).attrs({
-  variant: "caption",
-})`
+const PaneHeaderBody = styled(Typography)`
   text-transform: uppercase;
   margin: 0.5rem;
 `;
@@ -36,7 +34,7 @@ const PaneHeaderBody = styled(Typography).attrs({
 export const PaneHeader: React.SFC<GridProps> = props => (
   <Grid item {...{ ...props, children: undefined }}>
     <PaneHeaderInner>
-      <PaneHeaderBody>{props.children}</PaneHeaderBody>
+      <PaneHeaderBody variant="caption">{props.children}</PaneHeaderBody>
     </PaneHeaderInner>
   </Grid>
 );

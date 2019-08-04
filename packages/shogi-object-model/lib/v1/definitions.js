@@ -62,6 +62,7 @@ var Handicap;
 //------------------------------------------------------------------------------
 // Constants
 //------------------------------------------------------------------------------
+exports.PIECES = Object.keys(Piece);
 exports.MIN_SQUARE_NUMBER = 1;
 exports.MAX_SQUARE_NUMBER = 9;
 function getSquareNumbers() {
@@ -157,6 +158,10 @@ exports.HIRATE_STATE = getHirateState();
 //------------------------------------------------------------------------------
 // Methods
 //------------------------------------------------------------------------------
+function isPiece(v) {
+    return Piece[v] !== undefined;
+}
+exports.isPiece = isPiece;
 const PROMOTE_MAP = {
     [Piece.FU]: Piece.TO,
     [Piece.KY]: Piece.NY,

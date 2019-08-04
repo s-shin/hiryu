@@ -21,4 +21,5 @@ exports.InteractableGame = props => {
     return (react_1.default.createElement(Game_1.default, { state: data.state, activeGameObject: interaction.activeGameObject, promotionSelector: interaction.promotionSelector, onClickGameObject: obj => interaction.updateActiveGameObject(obj), lastMovedTo: (data.byEvent && data.byEvent.type == som.EventType.MOVE && data.byEvent.dstSquare) ||
             undefined }));
 };
+exports.default = exports.InteractableGame;
 //# sourceMappingURL=InteractableGame.js.map

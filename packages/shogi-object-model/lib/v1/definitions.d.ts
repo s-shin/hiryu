@@ -129,6 +129,7 @@ export interface RecordFile {
     version: "v1";
     record: Record;
 }
+export declare const PIECES: Piece[];
 export declare const MIN_SQUARE_NUMBER: SquareNumber;
 export declare const MAX_SQUARE_NUMBER: SquareNumber;
 export declare function getSquareNumbers(): SquareNumber[];
@@ -144,6 +145,7 @@ export declare function getEmptyHands(): Hands;
 export declare const EMPTY_HANDS: Hands;
 export declare function getHirateState(): State;
 export declare const HIRATE_STATE: State;
+export declare function isPiece(v: any): v is Piece;
 export declare function promote(piece: Piece, alt?: Piece): Piece | undefined;
 export declare function demote(piece: Piece, alt?: Piece): Piece | undefined;
 export declare function canPromote(piece: Piece): boolean;

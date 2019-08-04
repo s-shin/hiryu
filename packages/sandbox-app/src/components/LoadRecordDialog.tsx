@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -7,10 +7,14 @@ import {
   DialogActions,
   TextField,
   Button,
+  Select,
+  FormControl,
+  InputLabel,
+  MenuItem,
 } from "@material-ui/core";
 import InsertDriveFileIcon from "@material-ui/icons/InsertDriveFile";
 import { useDropzone } from "react-dropzone";
-import styled from "styled-components";
+import styled from "@emotion/styled";
 import * as som from "@hiryu/shogi-object-model";
 import * as tree from "@hiryu/tree";
 
@@ -33,10 +37,13 @@ const DropzoneOverlayInner = styled.div`
   color: #666;
 `;
 
-// TODO: corrent types
-function Dropzone(props: any) {
+interface DropzoneProps {
+  onDrop(files: any[]): void;
+}
+
+const Dropzone: React.FC<DropzoneProps> = props => {
   const onDrop = useCallback(files => props.onDrop(files), []);
-  const { getRootProps, isDragActive } = useDropzone({ onDrop });
+  const { getRootProps, isDragActive } = useDropzone({ onDrop, noKeyboard: true });
 
   return (
     <div {...getRootProps()}>
@@ -52,66 +59,31 @@ function Dropzone(props: any) {
   );
 }
 
+enum RecordFormatType {
+  KIF = "kif",
+  SHOGIWARS = "shogiwars"
+}
+
+// TODO: define this kind of type in som.
+type RecordParser = (data: string) => som.Record | Error;
+
+const recordParsers: {
+  [type: string]: RecordParser;
+} = {
+  [RecordFormatType.KIF]: data => som.formats.kif.parseRecord(data),
+  [RecordFormatType.SHOGIWARS]: data => som.formats.shogiwars.parseRecord(data),
+};
+
 export interface LoadRecordDialogProps {
   open: boolean;
   onClose: (result?: { record: som.Record; rootGameNode: som.rules.standard.GameNode }) => void;
 }
 
-export interface LoadRecordDialogState {
-  recordData: string;
-  isDropzoneActive: boolean;
-}
+export const LoadRecordDialog: React.FC<LoadRecordDialogProps> = props => {
+  const [recordFormat, setRecordFormat] = useState(RecordFormatType.KIF);
+  const [recordData, setRecordData] = useState("");
 
-class LoadRecordDialog extends React.Component<LoadRecordDialogProps, LoadRecordDialogState> {
-  state = {
-    recordData: "",
-    isDropzoneActive: false,
-  };
-
-  render() {
-    return (
-      <Dialog
-        open={this.props.open}
-        fullWidth
-        scroll="body"
-        onBackdropClick={() => this.props.onClose()}
-      >
-        <DialogTitle>Load Record</DialogTitle>
-        <DialogContent>
-          <Dropzone onDrop={files => this.loadFile(files[0])}>
-            <DialogContentText>
-              Copy &amp; paste the content of a &quot;kif&quot; file or drag and drop it here.
-            </DialogContentText>
-            <TextField
-              id="load-record-dialog-record"
-              label="Content of Record File"
-              placeholder="開始日時：..."
-              multiline
-              margin="normal"
-              fullWidth
-              autoFocus
-              value={this.state.recordData}
-              onChange={e => this.setState({ ...this.state, recordData: e.target.value })}
-            />
-          </Dropzone>
-        </DialogContent>
-        <DialogActions>
-          <Button color="primary" onClick={() => this.props.onClose()}>
-            Cancel
-          </Button>
-          <Button color="primary" onClick={() => this.loadRecord()}>
-            Load
-          </Button>
-        </DialogActions>
-      </Dialog>
-    );
-  }
-
-  setIsDropzoneActive(isActive: boolean) {
-    this.setState({ ...this.state, isDropzoneActive: isActive });
-  }
-
-  loadFile(file: File) {
+  function loadFile(file: File) {
     const reader = new FileReader();
     reader.addEventListener("loadend", () => {
       const buf = reader.result as ArrayBuffer;
@@ -119,14 +91,15 @@ class LoadRecordDialog extends React.Component<LoadRecordDialogProps, LoadRecord
       const encoding = som.formats.kif.detectEncoding(data);
       console.log({ file, encoding });
       const decoder = new TextDecoder(encoding);
-      this.setState({ ...this.state, recordData: decoder.decode(data) });
-      this.loadRecord();
+      setRecordData(decoder.decode(data));
+      loadRecord();
     });
     reader.readAsArrayBuffer(file);
   }
 
-  loadRecord() {
-    const r = som.formats.kif.parseRecord(this.state.recordData);
+  function loadRecord() {
+    const r = recordParsers[recordFormat](recordData);
+    // TODO: error handling
     console.log(r);
     if (r instanceof Error) {
       return;
@@ -153,8 +126,56 @@ class LoadRecordDialog extends React.Component<LoadRecordDialogProps, LoadRecord
         a: som.formats.usi.stringifySFEN({ nextMoveNum: v.moveNum + 1, state: v.state }),
       });
     }
-    this.props.onClose({ record: r, rootGameNode });
+    props.onClose({ record: r, rootGameNode });
   }
-}
+
+  return (
+    <Dialog
+      open={props.open}
+      fullWidth
+      scroll="body"
+      onBackdropClick={() => props.onClose()}
+    >
+      <DialogTitle>Load Record</DialogTitle>
+      <DialogContent>
+        <Dropzone onDrop={files => loadFile(files[0])}>
+          <DialogContentText>
+            Input the format and the content of the record to be loaded or drag and drop the file here.
+          </DialogContentText>
+          <FormControl>
+            <InputLabel>Format</InputLabel>
+            <Select
+              value={recordFormat}
+              onChange={e => setRecordFormat(e.target.value as RecordFormatType)}
+             >
+              <MenuItem value={RecordFormatType.KIF}>Kif (.kif)</MenuItem>
+              <MenuItem value={RecordFormatType.SHOGIWARS}>Shogiwars</MenuItem>
+            </Select>
+          </FormControl>
+          <TextField
+            id="load-record-dialog-record"
+            label="Content"
+            placeholder="開始日時：..."
+            multiline
+            margin="normal"
+            fullWidth
+            autoFocus
+            InputLabelProps={{ shrink: true }}
+            value={recordData}
+            onChange={e => setRecordData(e.target.value)}
+          />
+        </Dropzone>
+      </DialogContent>
+      <DialogActions>
+        <Button color="primary" onClick={() => props.onClose()}>
+          Cancel
+        </Button>
+        <Button color="primary" onClick={() => loadRecord()}>
+          Load
+        </Button>
+      </DialogActions>
+    </Dialog>
+  );
+};
 
 export default LoadRecordDialog;

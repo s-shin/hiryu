@@ -24,3 +24,5 @@ export const InteractableGame: React.FC<InteractableGameProps> = props => {
     />
   );
 }
+
+export default InteractableGame;

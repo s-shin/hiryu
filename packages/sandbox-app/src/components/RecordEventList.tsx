@@ -22,19 +22,19 @@ const EventListItem = styled.span`
     content: attr(data-marker) ".";
     margin-right: 0.5em;
     text-align: right;
-    width: 2.2em;
+    width: 2.5em;
   }
 `;
 
 const StyledList = withStyles({
   root: {
-    width: "11em",
+    width: "11.4em",
   }
 })(List);
 
 const StyledListItem = withStyles({
   root: {
-    paddingLeft: 0,
+    paddingLeft: "4px",
   }
 })(ListItem);
 

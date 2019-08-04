@@ -1,4 +1,4 @@
-import { parseRecord } from "./shogiwars-kif";
+import { parseRecord } from "./shogiwars";
 
 const samples = [
   // https://kif-pona.heroz.jp/games/itoshinTV-oyabinK-20190722_111709

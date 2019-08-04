@@ -132,7 +132,7 @@ function parseRecord(data, log) {
         e.color = c;
         c = definitions_1.flipColor(c);
     }
-    return r.value;
+    return record;
 }
 exports.parseRecord = parseRecord;
 //# sourceMappingURL=kif.js.map

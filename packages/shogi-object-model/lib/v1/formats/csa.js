@@ -58,12 +58,18 @@ exports.recordParser = (() => {
     const piece = paco_1.desc(paco_1.oneOf(...definitions_1.PIECES.map(p => paco_1.constant(paco_1.string(p), p))), "piece");
     const firstTurnLine = paco_1.desc(paco_1.transform(paco_1.seq(color, newline), vs => vs[0]), "firstTurn");
     const moveLine = paco_1.desc(paco_1.transform(paco_1.seq(color, square, square, piece), vs => {
-        return {};
+        return {
+            type: definitions_1.EventType.MOVE,
+            color: vs[0],
+            srcSquare: vs[1],
+            dstSquare: vs[2] || undefined,
+            dstPiece: vs[3],
+        };
     }), "moveLine");
     const timeLine = paco_1.desc(paco_1.seq(paco_1.char("T"), paco_1.many(notNewline), newline), "timeLine");
     const moveEvent = paco_1.seq(moveLine, paco_1.optional(timeLine, null));
     const specialLine = paco_1.desc(paco_1.transform(paco_1.seq(paco_1.char("%"), paco_1.oneOf(...["TORYO"].map(s => paco_1.string(s))), newline), vs => null), "specialLine");
-    const record = paco_1.seq(paco_1.optional(versionLine, "TODO"), paco_1.optional(playerLines, null), paco_1.many(metaEntryLine), setupLines, firstTurnLine, paco_1.many(paco_1.oneOf(moveEvent, specialLine)));
+    const record = paco_1.desc(paco_1.transform(paco_1.seq(paco_1.optional(versionLine, "TODO"), paco_1.optional(playerLines, null), paco_1.many(metaEntryLine), setupLines, firstTurnLine, paco_1.many(paco_1.oneOf(moveEvent, specialLine))), vs => ({ vs })), "record");
     return record;
 })();
 function preprocessRecordData(data) {
@@ -83,12 +89,8 @@ function parseRecord(data, log) {
         return r.error;
     }
     const record = r.value;
-    let c = definitions_1.Color.BLACK;
-    for (const e of record.events) {
-        e.color = c;
-        c = flipColor(c);
-    }
-    return r.value;
+    // TODO
+    return record;
 }
 exports.parseRecord = parseRecord;
 //# sourceMappingURL=csa.js.map

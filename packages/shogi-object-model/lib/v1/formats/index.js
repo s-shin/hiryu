@@ -13,4 +13,6 @@ const usi = __importStar(require("./usi"));
 exports.usi = usi;
 const kif = __importStar(require("./kif"));
 exports.kif = kif;
+const shogiwars = __importStar(require("./shogiwars"));
+exports.shogiwars = shogiwars;
 //# sourceMappingURL=index.js.map

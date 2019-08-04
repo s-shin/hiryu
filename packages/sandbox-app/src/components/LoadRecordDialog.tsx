@@ -39,7 +39,7 @@ interface DropzoneProps {
 
 const Dropzone: React.FC<DropzoneProps> = props => {
   const onDrop = useCallback(files => props.onDrop(files), []);
-  const { getRootProps, isDragActive } = useDropzone({ onDrop });
+  const { getRootProps, isDragActive } = useDropzone({ onDrop, noKeyboard: true });
 
   return (
     <div {...getRootProps()}>

@@ -9,6 +9,7 @@ import {
   IconButton,
   Menu,
   MenuItem,
+  withStyles,
 } from "@material-ui/core";
 import AddIcon from "@material-ui/icons/Add";
 import styled from "@emotion/styled";
@@ -21,9 +22,21 @@ const EventListItem = styled.span`
     content: attr(data-marker) ".";
     margin-right: 0.5em;
     text-align: right;
-    width: 2.5em;
+    width: 2.2em;
   }
 `;
+
+const StyledList = withStyles({
+  root: {
+    width: "11em",
+  }
+})(List);
+
+const StyledListItem = withStyles({
+  root: {
+    paddingLeft: 0,
+  }
+})(ListItem);
 
 export interface RecordEventListProps {
   current: som.rules.standard.GameNode;
@@ -104,16 +117,16 @@ class RecordEventList extends React.Component<RecordEventListProps, RecordEventL
           );
         }
         items.push(
-          <ListItem
+          <StyledListItem
             key={depth}
             button
             selected={isSelected}
             onClick={() => this.props.onSelect(node, depth)}
-            style={{ padding: 10 }}
+            dense
           >
             {text}
             {action}
-          </ListItem>,
+          </StyledListItem>,
         );
         return true;
       },
@@ -121,9 +134,9 @@ class RecordEventList extends React.Component<RecordEventListProps, RecordEventL
     );
 
     return (
-      <List dense style={{ width: "10em" }}>
+      <StyledList dense>
         {items}
-      </List>
+      </StyledList>
     );
   }
 }

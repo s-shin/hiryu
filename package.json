@@ -29,6 +29,7 @@
     "typescript": "^3.5.3"
   },
   "resolutions": {
+    "**/@types/react": "16.8.24",
     "**/hoist-non-react-statics": "3.3.0"
   }
 }

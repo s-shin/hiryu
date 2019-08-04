@@ -68,7 +68,7 @@ const engine: Reducer<EngineState, EngineManagerAction> = (state = initialState,
     }
     case EngineManagerActionType.INFO: {
       const { info } = action;
-      if (!info.multipv || !info.pv) {
+      if (!info.multipv && !info.pv) {
         return state;
       }
       const gameNode = state.analyzedGameNode!;

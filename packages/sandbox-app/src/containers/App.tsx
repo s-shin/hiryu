@@ -92,6 +92,7 @@ const App: React.FC = () => {
   // TODO: devide into component or container
   let enginePanel;
   switch (engineState.phase) {
+    case EnginePhase.INIT:
     case EnginePhase.SETTING_UP_ENGINE: {
       enginePanel = (
         <EngineSetupForm

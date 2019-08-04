@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { FormControl, Input, InputLabel, Button, CircularProgress, Grid } from "@material-ui/core";
 
 export interface EngineSetupFormProps {
@@ -6,27 +6,22 @@ export interface EngineSetupFormProps {
   connecting?: boolean;
 }
 
-export interface EngineSetupFormState {
-  engineURL: string;
-}
+export const EngineSetupForm: React.FC<EngineSetupFormProps> = props => {
+  const [engineURL, setEngineURL] = useState("ws://127.0.0.1:3001");
 
-export default class EngineSetupForm extends React.Component<EngineSetupFormProps, EngineSetupFormState> {
-  state = {
-    engineURL: "ws://127.0.0.1:3001",
-  };
-
-  render() {
-    return (
-      <Grid container spacing={8} alignItems="flex-end">
+  return (
+    // https://material-ui.com/components/grid/#negative-margin
+    <div style={{ overflow: "hidden" }}>
+      <Grid container spacing={1} alignItems="flex-end">
         <Grid item>
           <FormControl>
             <InputLabel htmlFor="engine-setup-form-engine-url">Engine URL</InputLabel>
             <Input
               id="engine-setup-form-engine-url"
               placeholder="ws://..."
-              value={this.state.engineURL}
-              onChange={e => this.setState({ ...this.state, engineURL: e.target.value })}
-              disabled={this.props.connecting}
+              value={engineURL}
+              onChange={e => setEngineURL(e.target.value)}
+              disabled={props.connecting}
             />
           </FormControl>
         </Grid>
@@ -35,14 +30,14 @@ export default class EngineSetupForm extends React.Component<EngineSetupFormProp
             <Button
               size="small"
               color="primary"
-              onClick={() => this.props.onSubmit(this.state.engineURL)}
-              disabled={this.props.connecting}
+              onClick={() => props.onSubmit(engineURL)}
+              disabled={props.connecting}
             >
               Connect
             </Button>
           </FormControl>
         </Grid>
-        {this.props.connecting && (
+        {props.connecting && (
           <Grid item style={{ paddingBottom: "7px" }}>
             <FormControl>
               <CircularProgress size={16} />
@@ -50,6 +45,8 @@ export default class EngineSetupForm extends React.Component<EngineSetupFormProp
           </Grid>
         )}
       </Grid>
-    );
-  }
-}
+    </div>
+  );
+};
+
+export default EngineSetupForm;

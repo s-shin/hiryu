@@ -4,7 +4,6 @@ agent:
   machine:
     type: e1-standard-2
     os_image: ubuntu1804
-
 blocks:
   - name: Test
     task:
@@ -13,8 +12,25 @@ blocks:
           commands:
             - checkout
             - sem-version node 12
-            - cache restore
-            - npm install
-            - cache store
-            - npm run build --if-present
-            - npm test
+            - cache restore node_modules
+            - yarn
+            - cache store node_modules
+            - yarn test-with-cov
+      env_vars:
+        - name: CODECOV_TOKEN
+          value: 112ea800-0779-4823-aa4f-3a4c8f2e1d82
+        - name: CC_TEST_REPORTER_ID
+          value: 2437c27f7764c0ca46dae26164037700587c93bbf4be68aa2953f89dea1e33e1
+      prologue:
+        commands:
+          - >-
+            curl -L
+            https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64
+            > ./cc-test-reporter
+          - chmod +x ./cc-test-reporter
+          - ./cc-test-reporter before-build
+      epilogue:
+        on_pass:
+          commands:
+            - ./cc-test-reporter after-build
+            - 'bash <(curl -s https://codecov.io/bash)'

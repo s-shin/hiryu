@@ -16,11 +16,7 @@ blocks:
             - yarn
             - cache store node_modules
             - yarn test-with-cov
-      env_vars:
-        - name: CODECOV_TOKEN
-          value: 112ea800-0779-4823-aa4f-3a4c8f2e1d82
-        - name: CC_TEST_REPORTER_ID
-          value: 2437c27f7764c0ca46dae26164037700587c93bbf4be68aa2953f89dea1e33e1
+      env_vars: []
       prologue:
         commands:
           - >-
@@ -34,3 +30,5 @@ blocks:
           commands:
             - ./cc-test-reporter after-build
             - 'bash <(curl -s https://codecov.io/bash)'
+      secrets:
+        - name: hiryu_secrets

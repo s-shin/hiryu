@@ -1,0 +1,25 @@
+version: v1.0
+name: Test MyApp
+agent:
+  machine:
+    type: e1-standard-2
+    os_image: ubuntu1804
+blocks:
+  - name: Test
+    task:
+      jobs:
+        - name: Test
+          commands:
+            - checkout
+            - sem-version node 12
+            - cache restore node_modules
+            - yarn
+            - cache store node_modules
+            - yarn test-with-cov
+      env_vars: []
+      epilogue:
+        on_pass:
+          commands:
+            - 'bash <(curl -s https://codecov.io/bash)'
+      secrets:
+        - name: hiryu_secrets
